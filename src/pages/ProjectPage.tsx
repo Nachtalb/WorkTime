@@ -168,16 +168,16 @@ export function ProjectPage() {
         return;
       }
 
-      // Handle Ctrl+Shift+S for full project TXT export
-      if (e.ctrlKey && e.shiftKey && e.key === 'S' && project) {
+      // Handle Ctrl+Alt+S for full project TXT export
+      if (e.ctrlKey && e.altKey && e.key === 's' && project) {
         e.preventDefault();
         const txt = exportProjectAsTxt(project, tasks, false);
         downloadFile(txt, `${project.name || 'project'}-full.txt`, 'text/plain');
         return;
       }
 
-      // Handle Ctrl+Shift+E for full project CSV export
-      if (e.ctrlKey && e.shiftKey && e.key === 'E' && project) {
+      // Handle Ctrl+Alt+E for full project CSV export
+      if (e.ctrlKey && e.altKey && e.key === 'e' && project) {
         e.preventDefault();
         const csv = exportProjectAsCsv(project, tasks, false);
         downloadFile(csv, `${project.name || 'project'}-full.csv`, 'text/csv');

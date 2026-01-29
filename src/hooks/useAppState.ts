@@ -23,6 +23,7 @@ export interface UseAppStateReturn {
   // Global timer
   startGlobalTimer: () => Promise<void>;
   stopGlobalTimer: () => Promise<void>;
+  updateGlobalTimerStartTime: (timerId: string, newStartTime: number) => Promise<void>;
 
   // Projects
   createProject: (name: string) => Promise<Project>;
@@ -203,6 +204,15 @@ export function useAppState(): UseAppStateReturn {
     setGlobalTimerActive(false);
     await saveState({ globalTimerActive: false });
   }, [globalTimers, saveState]);
+
+  const updateGlobalTimerStartTime = useCallback(async (timerId: string, newStartTime: number) => {
+    const timer = globalTimers.find(t => t.id === timerId);
+    if (timer) {
+      const updatedTimer = { ...timer, startTime: newStartTime };
+      await db.saveGlobalTimer(updatedTimer);
+      setGlobalTimers(prev => prev.map(t => t.id === timerId ? updatedTimer : t));
+    }
+  }, [globalTimers]);
 
   // Projects
   const createProject = useCallback(async (name: string): Promise<Project> => {
@@ -493,6 +503,7 @@ export function useAppState(): UseAppStateReturn {
     goToProject,
     startGlobalTimer,
     stopGlobalTimer,
+    updateGlobalTimerStartTime,
     createProject,
     updateProject,
     deleteProject,

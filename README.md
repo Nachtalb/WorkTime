@@ -30,8 +30,9 @@ A keyboard-first time tracking web application for tracking time spent on differ
 - `Delete` - Delete selected project
 - `Ctrl+S` - Export today as TXT
 - `Ctrl+E` - Export today as CSV
-- `Ctrl+Shift+E` - Export full database
-- `Ctrl+Shift+I` - Import database
+- `Ctrl+Alt+E` - Export full database
+- `Ctrl+Alt+I` - Import database
+- `Ctrl+Alt+C` - Change global timer start time
 - `Ctrl+O` - Open today overview
 - `?` - Show help
 
@@ -43,8 +44,8 @@ A keyboard-first time tracking web application for tracking time spent on differ
 - `F2` - Rename project
 - `Ctrl+S` - Export project today as TXT
 - `Ctrl+E` - Export project today as CSV
-- `Ctrl+Shift+S` - Export full project as TXT
-- `Ctrl+Shift+E` - Export full project as CSV
+- `Ctrl+Alt+S` - Export full project as TXT
+- `Ctrl+Alt+E` - Export full project as CSV
 - `?` - Show help
 - Start typing to create a new task
 

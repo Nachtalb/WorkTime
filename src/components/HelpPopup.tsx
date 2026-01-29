@@ -21,8 +21,9 @@ const overviewShortcuts: Shortcut[] = [
   { keys: ['Delete'], description: 'Delete selected project' },
   { keys: ['Ctrl', 'S'], description: 'Export today as TXT' },
   { keys: ['Ctrl', 'E'], description: 'Export today as CSV' },
-  { keys: ['Ctrl', 'Shift', 'E'], description: 'Export full database' },
-  { keys: ['Ctrl', 'Shift', 'I'], description: 'Import database' },
+  { keys: ['Ctrl', 'Alt', 'E'], description: 'Export full database' },
+  { keys: ['Ctrl', 'Alt', 'I'], description: 'Import database' },
+  { keys: ['Ctrl', 'Alt', 'C'], description: 'Change global timer start time' },
   { keys: ['Ctrl', 'O'], description: 'Open today overview' },
   { keys: ['?'], description: 'Show this help' },
 ];
@@ -35,8 +36,8 @@ const projectShortcuts: Shortcut[] = [
   { keys: ['F2'], description: 'Rename project' },
   { keys: ['Ctrl', 'S'], description: 'Export project today as TXT' },
   { keys: ['Ctrl', 'E'], description: 'Export project today as CSV' },
-  { keys: ['Ctrl', 'Shift', 'S'], description: 'Export full project as TXT' },
-  { keys: ['Ctrl', 'Shift', 'E'], description: 'Export full project as CSV' },
+  { keys: ['Ctrl', 'Alt', 'S'], description: 'Export full project as TXT' },
+  { keys: ['Ctrl', 'Alt', 'E'], description: 'Export full project as CSV' },
   { keys: ['?'], description: 'Show this help' },
 ];
 

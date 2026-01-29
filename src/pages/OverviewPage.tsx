@@ -6,6 +6,7 @@ import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
 import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
 import { ImportPopup } from '../components/ImportPopup';
+import { StartTimeEditorPopup } from '../components/StartTimeEditorPopup';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import {
   formatDuration,
@@ -35,6 +36,7 @@ export function OverviewPage() {
     getCurrentTaskDuration,
     exportFullDb,
     importFullDb,
+    updateGlobalTimerStartTime,
   } = useApp();
 
   const [filter, setFilter] = useState('');
@@ -42,6 +44,7 @@ export function OverviewPage() {
   const [showHelp, setShowHelp] = useState(false);
   const [showTodayOverview, setShowTodayOverview] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [showStartTimeEditor, setShowStartTimeEditor] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
 
@@ -89,7 +92,7 @@ export function OverviewPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle if modals are open
-      if (showHelp || showTodayOverview || showImport || projectToDelete) return;
+      if (showHelp || showTodayOverview || showImport || showStartTimeEditor || projectToDelete) return;
 
       // Handle Escape
       if (e.key === 'Escape') {
@@ -182,17 +185,24 @@ export function OverviewPage() {
         return;
       }
 
-      // Handle Ctrl+Shift+E for full export
-      if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+      // Handle Ctrl+Alt+E for full export
+      if (e.ctrlKey && e.altKey && e.key === 'e') {
         e.preventDefault();
         exportFullDb();
         return;
       }
 
-      // Handle Ctrl+Shift+I for import
-      if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+      // Handle Ctrl+Alt+I for import
+      if (e.ctrlKey && e.altKey && e.key === 'i') {
         e.preventDefault();
         setShowImport(true);
+        return;
+      }
+
+      // Handle Ctrl+Alt+C for changing global timer start time
+      if (e.ctrlKey && e.altKey && e.key === 'c') {
+        e.preventDefault();
+        setShowStartTimeEditor(true);
         return;
       }
 
@@ -241,6 +251,7 @@ export function OverviewPage() {
     showHelp,
     showTodayOverview,
     showImport,
+    showStartTimeEditor,
     projectToDelete,
     goToLanding,
     goToProject,
@@ -365,6 +376,13 @@ export function OverviewPage() {
         isOpen={showImport}
         onClose={() => setShowImport(false)}
         onImport={importFullDb}
+      />
+
+      <StartTimeEditorPopup
+        isOpen={showStartTimeEditor}
+        onClose={() => setShowStartTimeEditor(false)}
+        globalTimers={globalTimers}
+        onUpdateTimer={updateGlobalTimerStartTime}
       />
 
       <ConfirmDialog
