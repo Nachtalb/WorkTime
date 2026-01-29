@@ -436,7 +436,7 @@ input {
   background: var(--color-active-bg);
 }
 
-.task-item.active.selected {
+.task-item.active.selected, .project-card.active.selected {
   background: linear-gradient(to right, var(--color-active-bg), var(--color-primary-light));
 }
 
