@@ -34,6 +34,7 @@ const projectShortcuts: Shortcut[] = [
   { keys: ['Arrow keys'], description: 'Navigate between tasks' },
   { keys: ['Enter'], description: 'Start selected task / confirm rename' },
   { keys: ['Delete'], description: 'Delete selected task' },
+  { keys: ['Space'], description: 'Start new task with same description' },
   { keys: ['F2'], description: 'Rename project' },
   { keys: ['Ctrl', 'S'], description: 'Export project today as TXT' },
   { keys: ['Ctrl', 'E'], description: 'Export project today as CSV' },

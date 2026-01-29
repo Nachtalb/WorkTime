@@ -236,6 +236,16 @@ export function ProjectPage() {
         return;
       }
 
+      // Handle Space for duplicating selected task as new active task
+      if (e.key === ' ' && selectedTaskId && !isTypingNewTask && !editingTaskId) {
+        e.preventDefault();
+        const task = flattenedTasks.find((t) => t.id === selectedTaskId);
+        if (task && currentProjectId) {
+          createTask(currentProjectId, task.description);
+        }
+        return;
+      }
+
       // Handle arrow keys for navigation
       if ((e.key === 'ArrowUp' || e.key === 'ArrowLeft') && flattenedTasks.length > 0) {
         e.preventDefault();
