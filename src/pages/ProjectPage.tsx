@@ -272,6 +272,7 @@ export function ProjectPage() {
         !isTypingNewTask &&
         !editingTaskId
       ) {
+        e.preventDefault();
         setIsTypingNewTask(true);
         setNewTaskText(e.key);
         setSelectedTaskId(null);
