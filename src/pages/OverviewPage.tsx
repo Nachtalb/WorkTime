@@ -131,7 +131,7 @@ export function OverviewPage() {
       }
 
       // Handle "o" for "Other" project
-      if (e.key === 'o' && !filter) {
+      if (e.key === 'o' && !filter && !e.ctrlKey) {
         e.preventDefault();
         const otherProject = getOtherProject();
         if (otherProject) {
