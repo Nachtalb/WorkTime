@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkTime - Project Time Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Landing Page -->
+    <div id="landing-page" class="page">
+        <div class="landing-content">
+            <div class="datetime-display">
+                <div id="current-time" class="current-time"></div>
+                <div id="current-date" class="current-date"></div>
+            </div>
+            <button id="start-btn" class="start-button">
+                <span class="start-icon">▶</span>
+                <span>Start Working</span>
+            </button>
+            <div class="hint">Press <kbd>Enter</kbd> to start</div>
+        </div>
+    </div>
+
+    <!-- Overview Page -->
+    <div id="overview-page" class="page hidden">
+        <div class="page-header">
+            <h1>Projects</h1>
+            <div class="global-timer-display">
+                <div id="overview-global-time" class="global-time"></div>
+                <div id="overview-task-time" class="task-time"></div>
+            </div>
+        </div>
+        <div class="filter-display" id="filter-display"></div>
+        <div id="projects-grid" class="projects-grid"></div>
+        <div class="overview-hints">
+            <span><kbd>1-0</kbd> Filter</span>
+            <span><kbd>↑↓←→</kbd> Navigate</span>
+            <span><kbd>Enter</kbd> Open</span>
+            <span><kbd>N</kbd> New</span>
+            <span><kbd>O</kbd> Others</span>
+            <span><kbd>?</kbd> Help</span>
+        </div>
+    </div>
+
+    <!-- Project Page -->
+    <div id="project-page" class="page hidden">
+        <div class="page-header">
+            <h1 id="project-title" class="project-title"></h1>
+            <div class="global-timer-display">
+                <div id="project-global-time" class="global-time"></div>
+                <div id="project-task-time" class="task-time"></div>
+            </div>
+        </div>
+        <div id="project-tags" class="project-tags"></div>
+        <div id="new-task-input-container" class="new-task-container hidden">
+            <input type="text" id="new-task-input" class="new-task-input" placeholder="Type task description...">
+            <span class="hint-inline">Press <kbd>Enter</kbd> to start task, <kbd>Esc</kbd> to cancel</span>
+        </div>
+        <div id="tasks-container" class="tasks-container"></div>
+        <div class="project-hints">
+            <span>Start typing to add task</span>
+            <span><kbd>↑↓</kbd> Navigate</span>
+            <span><kbd>Enter</kbd> Start/Rename</span>
+            <span><kbd>F2</kbd> Rename project</span>
+            <span><kbd>Esc</kbd> Back</span>
+            <span><kbd>?</kbd> Help</span>
+        </div>
+    </div>
+
+    <!-- Help Popup -->
+    <div id="help-popup" class="popup hidden">
+        <div class="popup-content help-content">
+            <h2>Keyboard Shortcuts</h2>
+            <div id="help-shortcuts" class="shortcuts-list"></div>
+            <div class="popup-footer">Press <kbd>Esc</kbd> or <kbd>?</kbd> to close</div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Popup -->
+    <div id="delete-popup" class="popup hidden">
+        <div class="popup-content">
+            <h2>Confirm Delete</h2>
+            <p id="delete-message"></p>
+            <div class="popup-actions">
+                <span><kbd>Enter</kbd> or <kbd>Space</kbd> = Yes</span>
+                <span><kbd>Esc</kbd> = No</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Project Popup -->
+    <div id="rename-popup" class="popup hidden">
+        <div class="popup-content">
+            <h2>Rename Project</h2>
+            <input type="text" id="rename-input" class="rename-input" placeholder="Project name...">
+            <div class="popup-actions">
+                <span><kbd>Enter</kbd> = Confirm</span>
+                <span><kbd>Esc</kbd> = Cancel</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Popup -->
+    <div id="import-popup" class="popup hidden">
+        <div class="popup-content">
+            <h2>Import Data</h2>
+            <p>Select an exported JSON file to import. This will overwrite existing data.</p>
+            <input type="file" id="import-file" accept=".json">
+            <div class="popup-actions">
+                <span><kbd>Esc</kbd> = Cancel</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today Overview Popup -->
+    <div id="today-popup" class="popup hidden">
+        <div class="popup-content today-content">
+            <h2>Today's Overview</h2>
+            <div id="today-stats" class="today-stats"></div>
+            <div id="today-timeline" class="today-timeline"></div>
+            <div id="today-chart" class="today-chart"></div>
+            <div class="popup-footer">Press <kbd>Esc</kbd> or <kbd>Ctrl+O</kbd> to close</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
