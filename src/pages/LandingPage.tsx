@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../hooks/AppContext';
 import { getCurrentTime, getCurrentDate } from '../utils/time';
 import { HelpPopup } from '../components/HelpPopup';
+import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
 
 export function LandingPage() {
-  const { startGlobalTimer, goToOverview } = useApp();
+  const { startGlobalTimer, goToOverview, globalTimers, tasks, projects } = useApp();
   const [time, setTime] = useState(getCurrentTime());
   const [date, setDate] = useState(getCurrentDate());
   const [showHelp, setShowHelp] = useState(false);
+  const [showTodayOverview, setShowTodayOverview] = useState(false);
 
   // Update time every second
   useEffect(() => {
@@ -27,7 +29,14 @@ export function LandingPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle if a modal is open
-      if (showHelp) return;
+      if (showHelp || showTodayOverview) return;
+
+      // Handle Ctrl+O for today overview
+      if (e.ctrlKey && e.key === 'o') {
+        e.preventDefault();
+        setShowTodayOverview(true);
+        return;
+      }
 
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -40,7 +49,7 @@ export function LandingPage() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleStart, showHelp]);
+  }, [handleStart, showHelp, showTodayOverview]);
 
   return (
     <div className="page landing-page">
@@ -58,6 +67,14 @@ export function LandingPage() {
       </p>
 
       <HelpPopup isOpen={showHelp} onClose={() => setShowHelp(false)} currentPage="landing" />
+
+      <TodayOverviewPopup
+        isOpen={showTodayOverview}
+        onClose={() => setShowTodayOverview(false)}
+        globalTimers={globalTimers}
+        tasks={tasks}
+        projects={projects}
+      />
     </div>
   );
 }
