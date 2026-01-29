@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useApp } from '../hooks/AppContext';
+import { useLiveTick } from '../hooks/useLiveTick';
 import type { Task } from '../types';
 import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
@@ -43,6 +44,9 @@ export function OverviewPage() {
   const [showImport, setShowImport] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
+
+  // Live tick for updating timer displays every second
+  useLiveTick(globalTimerActive || activeTaskId !== null);
 
   // Sort projects by lastUsed (most recent first), with "Other" always available
   const sortedProjects = useMemo(() => {
