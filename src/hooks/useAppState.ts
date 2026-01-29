@@ -55,6 +55,7 @@ export interface UseAppStateReturn {
   getTodayGlobalDuration: () => number;
   getCurrentTaskDuration: () => number;
   getTodayGlobalTimers: () => GlobalTimer[];
+  getActiveTaskInfo: () => { projectName: string; taskDescription: string } | null;
 }
 
 export function useAppState(): UseAppStateReturn {
@@ -260,6 +261,21 @@ export function useAppState(): UseAppStateReturn {
 
   // Tasks
   const createTask = useCallback(async (projectId: string, description: string): Promise<Task> => {
+    // Stop current active task first
+    if (activeTaskId) {
+      const currentTask = tasks.find(t => t.id === activeTaskId);
+      if (currentTask && !currentTask.endTime) {
+        const endTime = Date.now();
+        const updatedTask = {
+          ...currentTask,
+          endTime,
+          duration: endTime - currentTask.startTime,
+        };
+        await db.saveTask(updatedTask);
+        setTasks(prev => prev.map(t => t.id === activeTaskId ? updatedTask : t));
+      }
+    }
+
     const newTask: Task = {
       id: uuidv4(),
       projectId,
@@ -268,8 +284,21 @@ export function useAppState(): UseAppStateReturn {
     };
     await db.saveTask(newTask);
     setTasks(prev => [...prev, newTask]);
+
+    // Set the new task as active immediately
+    setActiveTaskId(newTask.id);
+    await saveState({ activeTaskId: newTask.id });
+
+    // Update project lastUsed
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      const updatedProject = { ...project, lastUsed: Date.now() };
+      await db.saveProject(updatedProject);
+      setProjects(prev => prev.map(p => p.id === projectId ? updatedProject : p));
+    }
+
     return newTask;
-  }, []);
+  }, [activeTaskId, tasks, projects, saveState]);
 
   const startTask = useCallback(async (taskId: string) => {
     // Stop current active task first
@@ -489,6 +518,17 @@ export function useAppState(): UseAppStateReturn {
     return globalTimers.filter(t => t.date === today);
   }, [globalTimers]);
 
+  const getActiveTaskInfo = useCallback(() => {
+    if (!activeTaskId) return null;
+    const activeTask = tasks.find(t => t.id === activeTaskId);
+    if (!activeTask) return null;
+    const project = projects.find(p => p.id === activeTask.projectId);
+    return {
+      projectName: project?.name || 'Unknown',
+      taskDescription: activeTask.description,
+    };
+  }, [activeTaskId, tasks, projects]);
+
   return {
     projects,
     tasks,
@@ -525,5 +565,6 @@ export function useAppState(): UseAppStateReturn {
     getTodayGlobalDuration,
     getCurrentTaskDuration,
     getTodayGlobalTimers,
+    getActiveTaskInfo,
   };
 }

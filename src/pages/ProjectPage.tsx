@@ -38,6 +38,7 @@ export function ProjectPage() {
     getTotalDuration,
     getTodayGlobalDuration,
     getCurrentTaskDuration,
+    getActiveTaskInfo,
   } = useApp();
 
   const [newTaskText, setNewTaskText] = useState('');
@@ -209,8 +210,7 @@ export function ProjectPage() {
       if (isTypingNewTask) {
         if (e.key === 'Enter' && newTaskText.trim()) {
           e.preventDefault();
-          createTask(currentProjectId!, newTaskText.trim()).then((task) => {
-            startTask(task.id);
+          createTask(currentProjectId!, newTaskText.trim()).then(() => {
             setNewTaskText('');
             setIsTypingNewTask(false);
           });
@@ -369,6 +369,7 @@ export function ProjectPage() {
           globalDuration={getTodayGlobalDuration()}
           taskDuration={getCurrentTaskDuration()}
           isActive={globalTimerActive}
+          activeTaskInfo={getActiveTaskInfo()}
         />
       </div>
 

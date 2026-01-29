@@ -34,6 +34,7 @@ export function OverviewPage() {
     getTotalDuration,
     getTodayGlobalDuration,
     getCurrentTaskDuration,
+    getActiveTaskInfo,
     exportFullDb,
     importFullDb,
     updateGlobalTimerStartTime,
@@ -291,6 +292,7 @@ export function OverviewPage() {
           globalDuration={getTodayGlobalDuration()}
           taskDuration={getCurrentTaskDuration()}
           isActive={globalTimerActive}
+          activeTaskInfo={getActiveTaskInfo()}
         />
       </div>
 

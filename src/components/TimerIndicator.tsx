@@ -4,12 +4,20 @@ interface TimerIndicatorProps {
   globalDuration: number;
   taskDuration: number;
   isActive: boolean;
+  activeTaskInfo?: { projectName: string; taskDescription: string } | null;
 }
 
-export function TimerIndicator({ globalDuration, taskDuration, isActive }: TimerIndicatorProps) {
+export function TimerIndicator({ globalDuration, taskDuration, isActive, activeTaskInfo }: TimerIndicatorProps) {
   if (!isActive && globalDuration === 0) {
     return null;
   }
+
+  // Truncate task description if too long
+  const truncatedDescription = activeTaskInfo?.taskDescription
+    ? activeTaskInfo.taskDescription.length > 30
+      ? activeTaskInfo.taskDescription.substring(0, 30) + '...'
+      : activeTaskInfo.taskDescription
+    : null;
 
   return (
     <div className="timer-indicator">
@@ -17,8 +25,10 @@ export function TimerIndicator({ globalDuration, taskDuration, isActive }: Timer
         {isActive && <div className="timer-dot" />}
         <span>{formatDurationShort(globalDuration)}</span>
       </div>
-      {taskDuration > 0 && (
-        <div className="timer-secondary">Task: {formatDurationShort(taskDuration)}</div>
+      {taskDuration > 0 && activeTaskInfo && (
+        <div className="timer-secondary">
+          {activeTaskInfo.projectName} - {truncatedDescription} {formatDurationShort(taskDuration)}
+        </div>
       )}
     </div>
   );
