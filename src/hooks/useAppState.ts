@@ -62,14 +62,41 @@ export function useAppState(): UseAppStateReturn {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [globalTimers, setGlobalTimers] = useState<GlobalTimer[]>([]);
-  const [currentPage, setCurrentPage] = useState<Page>('landing');
-  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
-  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
-  const [globalTimerActive, setGlobalTimerActive] = useState(false);
+  const [currentPage, setCurrentPageState] = useState<Page>('landing');
+  const [currentProjectId, setCurrentProjectIdState] = useState<string | null>(null);
+  const [activeTaskId, setActiveTaskIdState] = useState<string | null>(null);
+  const [globalTimerActive, setGlobalTimerActiveState] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [undoStack, setUndoStack] = useState<UndoAction[]>([]);
 
   const initialized = useRef(false);
+
+  // Refs to track latest state values for saveState (avoids stale closure issues)
+  const currentPageRef = useRef<Page>('landing');
+  const currentProjectIdRef = useRef<string | null>(null);
+  const activeTaskIdRef = useRef<string | null>(null);
+  const globalTimerActiveRef = useRef(false);
+
+  // Wrapper setters that update both state and ref synchronously
+  const setCurrentPage = useCallback((page: Page) => {
+    currentPageRef.current = page;
+    setCurrentPageState(page);
+  }, []);
+
+  const setCurrentProjectId = useCallback((id: string | null) => {
+    currentProjectIdRef.current = id;
+    setCurrentProjectIdState(id);
+  }, []);
+
+  const setActiveTaskId = useCallback((id: string | null) => {
+    activeTaskIdRef.current = id;
+    setActiveTaskIdState(id);
+  }, []);
+
+  const setGlobalTimerActive = useCallback((active: boolean) => {
+    globalTimerActiveRef.current = active;
+    setGlobalTimerActiveState(active);
+  }, []);
 
   // Load initial state
   useEffect(() => {
@@ -110,16 +137,16 @@ export function useAppState(): UseAppStateReturn {
     init();
   }, []);
 
-  // Save app state whenever it changes
+  // Save app state - uses refs to always get latest values (avoids stale closure issues)
   const saveState = useCallback(async (state: Partial<AppState>) => {
     const fullState: AppState = {
-      currentPage: state.currentPage ?? currentPage,
-      currentProjectId: state.currentProjectId ?? currentProjectId,
-      activeTaskId: state.activeTaskId ?? activeTaskId,
-      globalTimerActive: state.globalTimerActive ?? globalTimerActive,
+      currentPage: state.currentPage ?? currentPageRef.current,
+      currentProjectId: state.currentProjectId ?? currentProjectIdRef.current,
+      activeTaskId: state.activeTaskId ?? activeTaskIdRef.current,
+      globalTimerActive: state.globalTimerActive ?? globalTimerActiveRef.current,
     };
     await db.saveAppState(fullState);
-  }, [currentPage, currentProjectId, activeTaskId, globalTimerActive]);
+  }, []);
 
   // Navigation
   const goToLanding = useCallback(async () => {
