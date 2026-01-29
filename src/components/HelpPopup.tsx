@@ -8,6 +8,7 @@ interface Shortcut {
 
 const landingShortcuts: Shortcut[] = [
   { keys: ['Enter'], description: 'Start tracking global time' },
+  { keys: ['Ctrl', 'O'], description: 'Open today overview' },
   { keys: ['?'], description: 'Show this help' },
 ];
 
