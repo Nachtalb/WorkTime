@@ -436,6 +436,10 @@ input {
   background: var(--color-active-bg);
 }
 
+.task-item.active.selected {
+  background: linear-gradient(to right, var(--color-active-bg), var(--color-primary-light));
+}
+
 .task-time {
   font-size: 14px;
   color: var(--color-text-muted);
