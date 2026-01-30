@@ -638,6 +638,10 @@ export function OverviewPage() {
                 {project.onHoldAt && !project.doneAt && <span className="project-card-id on-hold" title={`On hold since ${getTooltipDate(project.onHoldAt)} at ${formatTime(project.onHoldAt)}`}>On Hold</span>}
               </div>
 
+              {project.subtitle && (
+                <div className="project-card-subtitle">{project.subtitle}</div>
+              )}
+
               {(lastTask || lastNote) && (
                 <div className="project-card-activity">
                   {lastTask && (

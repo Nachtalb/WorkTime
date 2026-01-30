@@ -58,6 +58,8 @@ export function ProjectPage() {
   const [editingTaskText, setEditingTaskText] = useState('');
   const [isRenamingProject, setIsRenamingProject] = useState(false);
   const [projectNameEdit, setProjectNameEdit] = useState('');
+  const [isEditingSubtitle, setIsEditingSubtitle] = useState(false);
+  const [subtitleEdit, setSubtitleEdit] = useState('');
   const [showHelp, setShowHelp] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
 
@@ -81,6 +83,7 @@ export function ProjectPage() {
   const newTaskInputRef = useRef<HTMLInputElement>(null);
   const editTaskInputRef = useRef<HTMLInputElement>(null);
   const projectNameInputRef = useRef<HTMLInputElement>(null);
+  const subtitleInputRef = useRef<HTMLInputElement>(null);
   const editNoteInputRef = useRef<HTMLTextAreaElement>(null);
 
   const project = currentProjectId ? getProjectById(currentProjectId) : null;
@@ -196,6 +199,14 @@ export function ProjectPage() {
     }
   }, [isRenamingProject]);
 
+  useEffect(() => {
+    if (isEditingSubtitle && subtitleInputRef.current) {
+      const input = subtitleInputRef.current;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  }, [isEditingSubtitle]);
+
   // Initialize project name for editing
   useEffect(() => {
     if (project && isRenamingProject) {
@@ -227,6 +238,9 @@ export function ProjectPage() {
         } else if (isRenamingProject) {
           setIsRenamingProject(false);
           setProjectNameEdit('');
+        } else if (isEditingSubtitle) {
+          setIsEditingSubtitle(false);
+          setSubtitleEdit('');
         } else if (selectedTaskId || selectedNoteId) {
           setSelectedTaskId(null);
           setSelectedNoteId(null);
@@ -237,9 +251,17 @@ export function ProjectPage() {
       }
 
       // Handle F2 for renaming project (only when not in edit mode)
-      if (e.key === 'F2' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther) {
+      if (e.key === 'F2' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle && project && !project.isOther) {
         e.preventDefault();
         setIsRenamingProject(true);
+        return;
+      }
+
+      // Handle F3 for editing subtitle (only when not in edit mode)
+      if (e.key === 'F3' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle && project && !project.isOther) {
+        e.preventDefault();
+        setSubtitleEdit(project.subtitle || '');
+        setIsEditingSubtitle(true);
         return;
       }
 
@@ -602,6 +624,31 @@ export function ProjectPage() {
               {project.name || 'Unnamed Project'}
               {project.isOther && <span className="tag">Special</span>}
             </h1>
+          )}
+
+          {isEditingSubtitle ? (
+            <input
+              ref={subtitleInputRef}
+              type="text"
+              className="project-subtitle-input"
+              placeholder="Add a subtitle..."
+              value={subtitleEdit}
+              onChange={(e) => setSubtitleEdit(e.target.value)}
+              onBlur={() => {
+                updateProject(currentProjectId!, { subtitle: subtitleEdit || undefined });
+                setIsEditingSubtitle(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  updateProject(currentProjectId!, { subtitle: subtitleEdit || undefined });
+                  setIsEditingSubtitle(false);
+                }
+              }}
+            />
+          ) : (
+            project.subtitle && (
+              <div className="project-subtitle">{project.subtitle}</div>
+            )
           )}
 
           <div className="project-tags">

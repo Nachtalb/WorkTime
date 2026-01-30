@@ -420,6 +420,30 @@ input {
   background: var(--color-bg-secondary);
 }
 
+.project-subtitle {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-top: -8px;
+}
+
+.project-subtitle-input {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  background: var(--color-bg-secondary);
+  width: 300px;
+  margin-top: -8px;
+}
+
+.project-card-subtitle {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-top: -8px;
+  margin-bottom: 8px;
+}
+
 .project-tags {
   display: flex;
   flex-wrap: wrap;

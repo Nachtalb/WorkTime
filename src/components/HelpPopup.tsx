@@ -87,6 +87,7 @@ const projectShortcuts: ShortcutCategory[] = [
     title: 'Project',
     shortcuts: [
       { keys: ['F2'], description: 'Rename project' },
+      { keys: ['F3'], description: 'Edit subtitle' },
       { keys: ['Ctrl', 'D'], description: 'Mark as done' },
       { keys: ['Ctrl', 'H'], description: 'Toggle on hold' },
     ],

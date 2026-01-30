@@ -19,6 +19,7 @@ export interface Note {
 export interface Project {
   id: string;
   name: string;
+  subtitle?: string; // optional subtitle
   createdAt: number; // timestamp
   lastUsed: number; // timestamp
   isOther?: boolean; // special "Other" project
