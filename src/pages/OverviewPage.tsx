@@ -1,7 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { useApp } from '../hooks/AppContext';
 import { useLiveTick } from '../hooks/useLiveTick';
-import type { Task, Note, TaskPriority } from '../types';
+import type { Task, Note, ProjectPriority } from '../types';
 import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
 import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
@@ -41,7 +41,7 @@ export function OverviewPage() {
     exportFullDb,
     importFullDb,
     updateGlobalTimerStartTime,
-    updateTask,
+    updateProject,
   } = useApp();
 
   const [filter, setFilter] = useState('');
@@ -126,13 +126,13 @@ export function OverviewPage() {
     return projectNotes[0];
   }, [notes]);
 
-  // Cycle task priority
-  const cyclePriority = useCallback((taskId: string, direction: 'up' | 'down') => {
-    const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
+  // Cycle project priority
+  const cyclePriority = useCallback((projectId: string, direction: 'up' | 'down') => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project || project.isOther) return;
 
-    const priorities: TaskPriority[] = ['normal', 'medium', 'high'];
-    const currentIndex = priorities.indexOf(task.priority || 'normal');
+    const priorities: ProjectPriority[] = ['normal', 'medium', 'high'];
+    const currentIndex = priorities.indexOf(project.priority || 'normal');
     let newIndex: number;
 
     if (direction === 'up') {
@@ -142,9 +142,9 @@ export function OverviewPage() {
     }
 
     if (newIndex !== currentIndex) {
-      updateTask(taskId, { priority: priorities[newIndex] });
+      updateProject(projectId, { priority: priorities[newIndex] });
     }
-  }, [tasks, updateTask]);
+  }, [projects, updateProject]);
 
   // Check if a project has the active task
   const isProjectActive = (projectId: string): boolean => {
@@ -233,14 +233,11 @@ export function OverviewPage() {
         return columns || 1;
       };
 
-      // Handle Ctrl+Up/Down for task priority
+      // Handle Ctrl+Up/Down for project priority
       if (e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && filteredProjects.length > 0) {
         e.preventDefault();
         const selectedProject = filteredProjects[selectedIndex];
-        const lastTask = getLastTask(selectedProject.id);
-        if (lastTask) {
-          cyclePriority(lastTask.id, e.key === 'ArrowUp' ? 'up' : 'down');
-        }
+        cyclePriority(selectedProject.id, e.key === 'ArrowUp' ? 'up' : 'down');
         return;
       }
 
@@ -566,8 +563,8 @@ export function OverviewPage() {
             >
               <div className="project-card-header">
                 <span className="project-card-title">
-                  {lastTask?.priority === 'high' && <span className="priority-indicator">‼️</span>}
-                  {lastTask?.priority === 'medium' && <span className="priority-indicator">❗</span>}
+                  {project.priority === 'high' && <span className="priority-indicator">‼️</span>}
+                  {project.priority === 'medium' && <span className="priority-indicator">❗</span>}
                   {project.name || 'Unnamed Project'}
                 </span>
                 {project.isOther && <span className="project-card-id">Special</span>}

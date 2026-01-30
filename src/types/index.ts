@@ -1,4 +1,4 @@
-export type TaskPriority = 'normal' | 'medium' | 'high';
+export type ProjectPriority = 'normal' | 'medium' | 'high';
 
 export interface Task {
   id: string;
@@ -7,7 +7,6 @@ export interface Task {
   startTime: number; // timestamp
   endTime?: number; // timestamp
   duration?: number; // milliseconds, calculated when task ends
-  priority?: TaskPriority; // default is 'normal'
 }
 
 export interface Note {
@@ -25,6 +24,7 @@ export interface Project {
   isOther?: boolean; // special "Other" project
   doneAt?: number; // timestamp when marked as done
   onHoldAt?: number; // timestamp when marked as on hold
+  priority?: ProjectPriority; // default is 'normal'
 }
 
 export interface GlobalTimer {

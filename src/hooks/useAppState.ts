@@ -40,7 +40,7 @@ export interface UseAppStateReturn {
   createTask: (projectId: string, description: string) => Promise<Task>;
   startTask: (taskId: string) => Promise<void>;
   stopActiveTask: () => Promise<void>;
-  updateTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
+  updateTask: (taskId: string, updates: Partial<Task>, skipLastUsed?: boolean) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
   getTasksByProject: (projectId: string) => Task[];
   getActiveTask: () => Task | undefined;
@@ -431,19 +431,21 @@ export function useAppState(): UseAppStateReturn {
     await saveState({ activeTaskId: null });
   }, [activeTaskId, tasks, saveState]);
 
-  const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) => {
+  const updateTask = useCallback(async (taskId: string, updates: Partial<Task>, skipLastUsed?: boolean) => {
     const task = tasks.find(t => t.id === taskId);
     if (task) {
       const updatedTask = { ...task, ...updates };
       await db.saveTask(updatedTask);
       setTasks(prev => prev.map(t => t.id === taskId ? updatedTask : t));
 
-      // Update project lastUsed
-      const project = projects.find(p => p.id === task.projectId);
-      if (project) {
-        const updatedProject = { ...project, lastUsed: Date.now() };
-        await db.saveProject(updatedProject);
-        setProjects(prev => prev.map(p => p.id === task.projectId ? updatedProject : p));
+      // Update project lastUsed (unless explicitly skipped, e.g. for priority changes)
+      if (!skipLastUsed) {
+        const project = projects.find(p => p.id === task.projectId);
+        if (project) {
+          const updatedProject = { ...project, lastUsed: Date.now() };
+          await db.saveProject(updatedProject);
+          setProjects(prev => prev.map(p => p.id === task.projectId ? updatedProject : p));
+        }
       }
     }
   }, [tasks, projects]);

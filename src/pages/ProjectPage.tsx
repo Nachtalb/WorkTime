@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useApp } from '../hooks/AppContext';
 import { useLiveTick } from '../hooks/useLiveTick';
-import type { Task, Note, TaskPriority } from '../types';
+import type { Task, Note, ProjectPriority } from '../types';
 import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -138,13 +138,12 @@ export function ProjectPage() {
     return result;
   }, [notesByDay]);
 
-  // Cycle task priority
-  const cyclePriority = useCallback((taskId: string, direction: 'up' | 'down') => {
-    const task = projectTasks.find(t => t.id === taskId);
-    if (!task) return;
+  // Cycle project priority
+  const cyclePriority = useCallback((direction: 'up' | 'down') => {
+    if (!project || project.isOther) return;
 
-    const priorities: TaskPriority[] = ['normal', 'medium', 'high'];
-    const currentIndex = priorities.indexOf(task.priority || 'normal');
+    const priorities: ProjectPriority[] = ['normal', 'medium', 'high'];
+    const currentIndex = priorities.indexOf(project.priority || 'normal');
     let newIndex: number;
 
     if (direction === 'up') {
@@ -154,9 +153,9 @@ export function ProjectPage() {
     }
 
     if (newIndex !== currentIndex) {
-      updateTask(taskId, { priority: priorities[newIndex] });
+      updateProject(currentProjectId!, { priority: priorities[newIndex] });
     }
-  }, [projectTasks, updateTask]);
+  }, [project, currentProjectId, updateProject]);
 
   // Focus management
   useEffect(() => {
@@ -409,10 +408,10 @@ export function ProjectPage() {
         return;
       }
 
-      // Handle Ctrl+Up/Down for task priority
-      if (e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && activeColumn === 'tasks' && selectedTaskId) {
+      // Handle Ctrl+Up/Down for project priority
+      if (e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
         e.preventDefault();
-        cyclePriority(selectedTaskId, e.key === 'ArrowUp' ? 'up' : 'down');
+        cyclePriority(e.key === 'ArrowUp' ? 'up' : 'down');
         return;
       }
 
@@ -601,6 +600,8 @@ export function ProjectPage() {
             />
           ) : (
             <h1 className="project-title">
+              {project.priority === 'high' && <span className="priority-indicator">‼️</span>}
+              {project.priority === 'medium' && <span className="priority-indicator">❗</span>}
               {project.name || 'Unnamed Project'}
               {project.isOther && <span className="tag">Special</span>}
             </h1>
@@ -805,11 +806,7 @@ export function ProjectPage() {
                               }}
                             />
                           ) : (
-                            <span className="task-description">
-                              {task.priority === 'high' && <span className="priority-indicator">‼️</span>}
-                              {task.priority === 'medium' && <span className="priority-indicator">❗</span>}
-                              {task.description}
-                            </span>
+                            <span className="task-description">{task.description}</span>
                           )}
 
                           <span className={`task-duration ${isActive ? 'active' : ''}`}>
