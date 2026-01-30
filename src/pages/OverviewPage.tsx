@@ -55,14 +55,36 @@ export function OverviewPage() {
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [sortBy, setSortBy] = useState<'lastUsed' | 'createdAt' | 'doneAt' | 'name' | 'priority'>('lastUsed');
-  const [sortAsc, setSortAsc] = useState(false);
+  const [sortBy, setSortBy] = useState<'lastUsed' | 'createdAt' | 'doneAt' | 'name' | 'priority'>(() => {
+    const saved = localStorage.getItem('worktime-sortBy');
+    return (saved as 'lastUsed' | 'createdAt' | 'doneAt' | 'name' | 'priority') || 'lastUsed';
+  });
+  const [sortAsc, setSortAsc] = useState(() => {
+    const saved = localStorage.getItem('worktime-sortAsc');
+    return saved === 'true';
+  });
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [hideDone, setHideDone] = useState(false);
+  const [hideDone, setHideDone] = useState(() => {
+    const saved = localStorage.getItem('worktime-hideDone');
+    return saved === 'true';
+  });
   const [errorShakeProjectId, setErrorShakeProjectId] = useState<string | null>(null);
 
   // Live tick for updating timer displays every second
   useLiveTick(globalTimerActive || activeTaskId !== null);
+
+  // Persist sort and filter preferences
+  useEffect(() => {
+    localStorage.setItem('worktime-sortBy', sortBy);
+  }, [sortBy]);
+
+  useEffect(() => {
+    localStorage.setItem('worktime-sortAsc', String(sortAsc));
+  }, [sortAsc]);
+
+  useEffect(() => {
+    localStorage.setItem('worktime-hideDone', String(hideDone));
+  }, [hideDone]);
 
   // Sort projects based on selected sort option
   const sortedProjects = useMemo(() => {
