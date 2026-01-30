@@ -70,7 +70,7 @@ export function ProjectPage() {
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
   const [showDoneConfirm, setShowDoneConfirm] = useState(false);
   const [showDoneError, setShowDoneError] = useState(false);
-  const [showPriorityError, setShowPriorityError] = useState(false);
+  const [showActionError, setShowActionError] = useState(false);
 
   // Column selection (tasks or notes)
   const [activeColumn, setActiveColumn] = useState<Column>('tasks');
@@ -145,8 +145,8 @@ export function ProjectPage() {
 
     // Don't allow priority change on done projects - show error shake
     if (project.doneAt) {
-      setShowPriorityError(true);
-      setTimeout(() => setShowPriorityError(false), 400);
+      setShowActionError(true);
+      setTimeout(() => setShowActionError(false), 400);
       return;
     }
 
@@ -253,6 +253,12 @@ export function ProjectPage() {
       // Handle Ctrl+T for new task
       if (e.ctrlKey && e.key === 't' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject) {
         e.preventDefault();
+        // Don't allow adding tasks to done projects
+        if (project?.doneAt) {
+          setShowActionError(true);
+          setTimeout(() => setShowActionError(false), 400);
+          return;
+        }
         setActiveColumn('tasks');
         setIsTypingNewTask(true);
         setNewTaskText('');
@@ -282,6 +288,12 @@ export function ProjectPage() {
       // Handle Ctrl+H for toggling on hold status
       if (e.ctrlKey && e.key === 'h' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther) {
         e.preventDefault();
+        // Don't allow toggling on-hold for done projects
+        if (project.doneAt) {
+          setShowActionError(true);
+          setTimeout(() => setShowActionError(false), 400);
+          return;
+        }
         toggleProjectOnHold(currentProjectId!);
         return;
       }
@@ -388,6 +400,12 @@ export function ProjectPage() {
       // Handle Space for duplicating selected task as new active task
       if (e.key === ' ' && activeColumn === 'tasks' && selectedTaskId && !isTypingNewTask && !editingTaskId) {
         e.preventDefault();
+        // Don't allow adding tasks to done projects
+        if (project?.doneAt) {
+          setShowActionError(true);
+          setTimeout(() => setShowActionError(false), 400);
+          return;
+        }
         const task = flattenedTasks.find((t) => t.id === selectedTaskId);
         if (task && currentProjectId) {
           createTask(currentProjectId, task.description);
@@ -607,7 +625,7 @@ export function ProjectPage() {
               }}
             />
           ) : (
-            <h1 className={`project-title ${showPriorityError ? 'error-shake' : ''}`}>
+            <h1 className={`project-title ${showActionError ? 'error-shake' : ''}`}>
               {project.priority === 'high' && <span className="priority-indicator">‼️</span>}
               {project.priority === 'medium' && <span className="priority-indicator">❗</span>}
               {project.name || 'Unnamed Project'}
@@ -669,9 +687,16 @@ export function ProjectPage() {
             )}
 
             <button
-              className={`hold-button ${project.onHoldAt ? 'active' : ''}`}
-              onClick={() => toggleProjectOnHold(currentProjectId!)}
-              title={project.onHoldAt ? 'Resume project (Ctrl+H)' : 'Put on hold (Ctrl+H)'}
+              className={`hold-button ${project.onHoldAt ? 'active' : ''} ${project.doneAt ? 'disabled' : ''}`}
+              onClick={() => {
+                if (project.doneAt) {
+                  setShowActionError(true);
+                  setTimeout(() => setShowActionError(false), 400);
+                  return;
+                }
+                toggleProjectOnHold(currentProjectId!);
+              }}
+              title={project.doneAt ? 'Cannot toggle hold on done project' : project.onHoldAt ? 'Resume project (Ctrl+H)' : 'Put on hold (Ctrl+H)'}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="6" y="4" width="4" height="16"/>

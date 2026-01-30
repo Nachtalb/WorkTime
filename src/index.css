@@ -1157,6 +1157,18 @@ input {
   color: var(--color-warning);
 }
 
+.hold-button.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--color-text-muted);
+  color: var(--color-text-muted);
+}
+
+.hold-button.disabled:hover {
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
 /* Overview Title Section */
 .overview-title-section {
   display: flex;

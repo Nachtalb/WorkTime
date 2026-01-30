@@ -55,7 +55,7 @@ export function OverviewPage() {
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [sortBy, setSortBy] = useState<'lastUsed' | 'createdAt' | 'doneAt' | 'name'>('lastUsed');
+  const [sortBy, setSortBy] = useState<'lastUsed' | 'createdAt' | 'doneAt' | 'name' | 'priority'>('lastUsed');
   const [sortAsc, setSortAsc] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [hideDone, setHideDone] = useState(false);
@@ -89,6 +89,23 @@ export function OverviewPage() {
         case 'name':
           comparison = a.name.localeCompare(b.name);
           break;
+        case 'priority': {
+          // Priority order: high > medium > normal > onhold > done
+          const getPriorityScore = (p: typeof a) => {
+            if (p.doneAt) return 0;
+            if (p.onHoldAt) return 1;
+            if (!p.priority || p.priority === 'normal') return 2;
+            if (p.priority === 'medium') return 3;
+            if (p.priority === 'high') return 4;
+            return 2;
+          };
+          comparison = getPriorityScore(b) - getPriorityScore(a);
+          // If same priority, sort by lastUsed
+          if (comparison === 0) {
+            comparison = b.lastUsed - a.lastUsed;
+          }
+          break;
+        }
       }
       return sortAsc ? -comparison : comparison;
     });
@@ -225,7 +242,7 @@ export function OverviewPage() {
       // Handle "s" to cycle sort options
       if (e.key === 's' && !filter && !e.ctrlKey) {
         e.preventDefault();
-        const sortOptions: Array<'lastUsed' | 'createdAt' | 'doneAt' | 'name'> = ['lastUsed', 'createdAt', 'doneAt', 'name'];
+        const sortOptions: Array<'lastUsed' | 'createdAt' | 'doneAt' | 'name' | 'priority'> = ['lastUsed', 'createdAt', 'doneAt', 'name', 'priority'];
         const currentIndex = sortOptions.indexOf(sortBy);
         const nextIndex = (currentIndex + 1) % sortOptions.length;
         setSortBy(sortOptions[nextIndex]);
@@ -492,6 +509,7 @@ export function OverviewPage() {
             <option value="createdAt">Created</option>
             <option value="doneAt">Done Date</option>
             <option value="name">Name</option>
+            <option value="priority">Priority</option>
           </select>
           <button
             className="sort-direction-btn"
