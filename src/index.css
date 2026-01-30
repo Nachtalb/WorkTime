@@ -365,6 +365,10 @@ input {
   color: var(--color-success);
 }
 
+.priority-indicator {
+  margin-right: 4px;
+}
+
 /* Project Page */
 .project-page {
   gap: 24px;
@@ -404,6 +408,13 @@ input {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* Tags in project page only have borders */
+.project-page .project-tags .tag {
+  border-width: thin;
+  border-style: solid;
+  border-color: currentColor;
 }
 
 .new-task-input {

@@ -1,3 +1,5 @@
+export type TaskPriority = 'normal' | 'medium' | 'high';
+
 export interface Task {
   id: string;
   projectId: string;
@@ -5,6 +7,7 @@ export interface Task {
   startTime: number; // timestamp
   endTime?: number; // timestamp
   duration?: number; // milliseconds, calculated when task ends
+  priority?: TaskPriority; // default is 'normal'
 }
 
 export interface Note {

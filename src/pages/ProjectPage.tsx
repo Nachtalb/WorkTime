@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useApp } from '../hooks/AppContext';
 import { useLiveTick } from '../hooks/useLiveTick';
-import type { Task, Note } from '../types';
+import type { Task, Note, TaskPriority } from '../types';
 import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -137,6 +137,26 @@ export function ProjectPage() {
     }
     return result;
   }, [notesByDay]);
+
+  // Cycle task priority
+  const cyclePriority = useCallback((taskId: string, direction: 'up' | 'down') => {
+    const task = projectTasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const priorities: TaskPriority[] = ['normal', 'medium', 'high'];
+    const currentIndex = priorities.indexOf(task.priority || 'normal');
+    let newIndex: number;
+
+    if (direction === 'up') {
+      newIndex = Math.min(priorities.length - 1, currentIndex + 1);
+    } else {
+      newIndex = Math.max(0, currentIndex - 1);
+    }
+
+    if (newIndex !== currentIndex) {
+      updateTask(taskId, { priority: priorities[newIndex] });
+    }
+  }, [projectTasks, updateTask]);
 
   // Focus management
   useEffect(() => {
@@ -389,6 +409,13 @@ export function ProjectPage() {
         return;
       }
 
+      // Handle Ctrl+Up/Down for task priority
+      if (e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && activeColumn === 'tasks' && selectedTaskId) {
+        e.preventDefault();
+        cyclePriority(selectedTaskId, e.key === 'ArrowUp' ? 'up' : 'down');
+        return;
+      }
+
       // Handle Up/Down arrow keys for navigation within column
       if (e.key === 'ArrowUp') {
         e.preventDefault();
@@ -500,6 +527,7 @@ export function ProjectPage() {
     project,
     tasks,
     notes,
+    cyclePriority,
   ]);
 
   const handleDeleteConfirm = useCallback(() => {
@@ -777,7 +805,11 @@ export function ProjectPage() {
                               }}
                             />
                           ) : (
-                            <span className="task-description">{task.description}</span>
+                            <span className="task-description">
+                              {task.priority === 'high' && <span className="priority-indicator">‼️</span>}
+                              {task.priority === 'medium' && <span className="priority-indicator">❗</span>}
+                              {task.description}
+                            </span>
                           )}
 
                           <span className={`task-duration ${isActive ? 'active' : ''}`}>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { useApp } from '../hooks/AppContext';
 import { useLiveTick } from '../hooks/useLiveTick';
-import type { Task, Note } from '../types';
+import type { Task, Note, TaskPriority } from '../types';
 import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
 import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
@@ -41,6 +41,7 @@ export function OverviewPage() {
     exportFullDb,
     importFullDb,
     updateGlobalTimerStartTime,
+    updateTask,
   } = useApp();
 
   const [filter, setFilter] = useState('');
@@ -116,6 +117,26 @@ export function OverviewPage() {
       .sort((a, b) => b.createdAt - a.createdAt);
     return projectNotes[0];
   };
+
+  // Cycle task priority
+  const cyclePriority = useCallback((taskId: string, direction: 'up' | 'down') => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const priorities: TaskPriority[] = ['normal', 'medium', 'high'];
+    const currentIndex = priorities.indexOf(task.priority || 'normal');
+    let newIndex: number;
+
+    if (direction === 'up') {
+      newIndex = Math.min(priorities.length - 1, currentIndex + 1);
+    } else {
+      newIndex = Math.max(0, currentIndex - 1);
+    }
+
+    if (newIndex !== currentIndex) {
+      updateTask(taskId, { priority: priorities[newIndex] });
+    }
+  }, [tasks, updateTask]);
 
   // Check if a project has the active task
   const isProjectActive = (projectId: string): boolean => {
@@ -196,6 +217,17 @@ export function OverviewPage() {
         const columns = gridStyle.getPropertyValue('grid-template-columns').split(' ').length;
         return columns || 1;
       };
+
+      // Handle Ctrl+Up/Down for task priority
+      if (e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && filteredProjects.length > 0) {
+        e.preventDefault();
+        const selectedProject = filteredProjects[selectedIndex];
+        const lastTask = getLastTask(selectedProject.id);
+        if (lastTask) {
+          cyclePriority(lastTask.id, e.key === 'ArrowUp' ? 'up' : 'down');
+        }
+        return;
+      }
 
       if (e.key === 'ArrowUp') {
         e.preventDefault();
@@ -326,6 +358,7 @@ export function OverviewPage() {
     exportFullDb,
     isCreatingNew,
     sortedProjects,
+    cyclePriority,
   ]);
 
   // Reset selected index when filtered projects change
@@ -483,6 +516,8 @@ export function OverviewPage() {
             >
               <div className="project-card-header">
                 <span className="project-card-title">
+                  {lastTask?.priority === 'high' && <span className="priority-indicator">‼️</span>}
+                  {lastTask?.priority === 'medium' && <span className="priority-indicator">❗</span>}
                   {project.name || 'Unnamed Project'}
                 </span>
                 {project.isOther && <span className="project-card-id">Special</span>}
