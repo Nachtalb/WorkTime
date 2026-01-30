@@ -31,10 +31,13 @@ const overviewShortcuts: Shortcut[] = [
 
 const projectShortcuts: Shortcut[] = [
   { keys: ['Esc'], description: 'Go back to overview (or cancel current action)' },
-  { keys: ['Arrow keys'], description: 'Navigate between tasks' },
-  { keys: ['Enter'], description: 'Start selected task / confirm rename' },
-  { keys: ['Delete'], description: 'Delete selected task' },
-  { keys: ['Space'], description: 'Start new task with same description' },
+  { keys: ['Up/Down'], description: 'Navigate within column (tasks or notes)' },
+  { keys: ['Left/Right'], description: 'Switch between tasks and notes columns' },
+  { keys: ['Enter'], description: 'Edit selected task or note' },
+  { keys: ['Delete'], description: 'Delete selected task or note' },
+  { keys: ['Space'], description: 'Start new task with same description (tasks only)' },
+  { keys: ['Ctrl', 'T'], description: 'Create new task' },
+  { keys: ['Ctrl', 'N'], description: 'Create new note' },
   { keys: ['F2'], description: 'Rename project' },
   { keys: ['Ctrl', 'S'], description: 'Export project today as TXT' },
   { keys: ['Ctrl', 'E'], description: 'Export project today as CSV' },

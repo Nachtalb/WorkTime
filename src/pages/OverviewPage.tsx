@@ -23,6 +23,7 @@ export function OverviewPage() {
   const {
     projects,
     tasks,
+    notes,
     globalTimers,
     activeTaskId,
     globalTimerActive,
@@ -173,7 +174,7 @@ export function OverviewPage() {
       // Handle Ctrl+S for export TXT
       if (e.ctrlKey && e.key === 's' && !e.shiftKey) {
         e.preventDefault();
-        const txt = exportTodayAsTxt(tasks, projects, globalTimers);
+        const txt = exportTodayAsTxt(tasks, projects, globalTimers, notes);
         downloadFile(txt, `worktime-today-${new Date().toISOString().split('T')[0]}.txt`, 'text/plain');
         return;
       }
@@ -181,7 +182,7 @@ export function OverviewPage() {
       // Handle Ctrl+E for export CSV
       if (e.ctrlKey && e.key === 'e' && !e.shiftKey) {
         e.preventDefault();
-        const csv = exportTodayAsCsv(tasks);
+        const csv = exportTodayAsCsv(tasks, notes);
         downloadFile(csv, `worktime-today-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
         return;
       }
@@ -259,6 +260,7 @@ export function OverviewPage() {
     createProject,
     getOtherProject,
     tasks,
+    notes,
     projects,
     globalTimers,
     exportFullDb,

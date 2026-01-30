@@ -7,6 +7,13 @@ export interface Task {
   duration?: number; // milliseconds, calculated when task ends
 }
 
+export interface Note {
+  id: string;
+  projectId: string;
+  content: string;
+  createdAt: number; // timestamp
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -30,8 +37,9 @@ export interface AppState {
 }
 
 export interface UndoAction {
-  type: 'task_delete';
-  task: Task;
+  type: 'task_delete' | 'note_delete';
+  task?: Task;
+  note?: Note;
   previousActiveTaskId: string | null;
 }
 

@@ -1,6 +1,6 @@
 import { openDB } from 'idb';
 import type { DBSchema, IDBPDatabase } from 'idb';
-import type { Task, Project, GlobalTimer, AppState } from '../types';
+import type { Task, Project, GlobalTimer, AppState, Note } from '../types';
 
 interface WorkTimeDB extends DBSchema {
   projects: {
@@ -16,6 +16,14 @@ interface WorkTimeDB extends DBSchema {
       'by-startTime': number;
     };
   };
+  notes: {
+    key: string;
+    value: Note;
+    indexes: {
+      'by-projectId': string;
+      'by-createdAt': number;
+    };
+  };
   globalTimers: {
     key: string;
     value: GlobalTimer;
@@ -28,7 +36,7 @@ interface WorkTimeDB extends DBSchema {
 }
 
 const DB_NAME = 'worktime-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbInstance: IDBPDatabase<WorkTimeDB> | null = null;
 
@@ -36,22 +44,32 @@ export async function getDB(): Promise<IDBPDatabase<WorkTimeDB>> {
   if (dbInstance) return dbInstance;
 
   dbInstance = await openDB<WorkTimeDB>(DB_NAME, DB_VERSION, {
-    upgrade(db) {
-      // Projects store
-      const projectStore = db.createObjectStore('projects', { keyPath: 'id' });
-      projectStore.createIndex('by-lastUsed', 'lastUsed');
+    upgrade(db, oldVersion) {
+      // Version 1: Initial schema
+      if (oldVersion < 1) {
+        // Projects store
+        const projectStore = db.createObjectStore('projects', { keyPath: 'id' });
+        projectStore.createIndex('by-lastUsed', 'lastUsed');
 
-      // Tasks store
-      const taskStore = db.createObjectStore('tasks', { keyPath: 'id' });
-      taskStore.createIndex('by-projectId', 'projectId');
-      taskStore.createIndex('by-startTime', 'startTime');
+        // Tasks store
+        const taskStore = db.createObjectStore('tasks', { keyPath: 'id' });
+        taskStore.createIndex('by-projectId', 'projectId');
+        taskStore.createIndex('by-startTime', 'startTime');
 
-      // Global timers store
-      const timerStore = db.createObjectStore('globalTimers', { keyPath: 'id' });
-      timerStore.createIndex('by-date', 'date');
+        // Global timers store
+        const timerStore = db.createObjectStore('globalTimers', { keyPath: 'id' });
+        timerStore.createIndex('by-date', 'date');
 
-      // App state store
-      db.createObjectStore('appState', { keyPath: 'id' });
+        // App state store
+        db.createObjectStore('appState', { keyPath: 'id' });
+      }
+
+      // Version 2: Add notes store
+      if (oldVersion < 2) {
+        const noteStore = db.createObjectStore('notes', { keyPath: 'id' });
+        noteStore.createIndex('by-projectId', 'projectId');
+        noteStore.createIndex('by-createdAt', 'createdAt');
+      }
     },
   });
 
@@ -76,12 +94,16 @@ export async function saveProject(project: Project): Promise<void> {
 
 export async function deleteProject(id: string): Promise<void> {
   const db = await getDB();
-  // Also delete all tasks for this project
+  // Also delete all tasks and notes for this project
   const tasks = await getTasksByProject(id);
-  const tx = db.transaction(['projects', 'tasks'], 'readwrite');
+  const notes = await getNotesByProject(id);
+  const tx = db.transaction(['projects', 'tasks', 'notes'], 'readwrite');
   await tx.objectStore('projects').delete(id);
   for (const task of tasks) {
     await tx.objectStore('tasks').delete(task.id);
+  }
+  for (const note of notes) {
+    await tx.objectStore('notes').delete(note.id);
   }
   await tx.done;
 }
@@ -131,6 +153,32 @@ export async function getAllTasks(): Promise<Task[]> {
   return db.getAll('tasks');
 }
 
+// Notes
+export async function getNotesByProject(projectId: string): Promise<Note[]> {
+  const db = await getDB();
+  return db.getAllFromIndex('notes', 'by-projectId', projectId);
+}
+
+export async function getNote(id: string): Promise<Note | undefined> {
+  const db = await getDB();
+  return db.get('notes', id);
+}
+
+export async function saveNote(note: Note): Promise<void> {
+  const db = await getDB();
+  await db.put('notes', note);
+}
+
+export async function deleteNote(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('notes', id);
+}
+
+export async function getAllNotes(): Promise<Note[]> {
+  const db = await getDB();
+  return db.getAll('notes');
+}
+
 // Global Timers
 export async function getGlobalTimersByDate(date: string): Promise<GlobalTimer[]> {
   const db = await getDB();
@@ -162,6 +210,7 @@ export async function saveAppState(state: AppState): Promise<void> {
 export async function exportFullDatabase(): Promise<{
   projects: Project[];
   tasks: Task[];
+  notes: Note[];
   globalTimers: GlobalTimer[];
   appState: AppState | undefined;
   exportDate: string;
@@ -170,6 +219,7 @@ export async function exportFullDatabase(): Promise<{
   return {
     projects: await db.getAll('projects'),
     tasks: await db.getAll('tasks'),
+    notes: await db.getAll('notes'),
     globalTimers: await db.getAll('globalTimers'),
     appState: await db.get('appState', 'main'),
     exportDate: new Date().toISOString(),
@@ -179,15 +229,17 @@ export async function exportFullDatabase(): Promise<{
 export async function importFullDatabase(data: {
   projects: Project[];
   tasks: Task[];
+  notes?: Note[];
   globalTimers: GlobalTimer[];
   appState?: AppState;
 }): Promise<void> {
   const db = await getDB();
 
   // Clear all existing data
-  const tx = db.transaction(['projects', 'tasks', 'globalTimers', 'appState'], 'readwrite');
+  const tx = db.transaction(['projects', 'tasks', 'notes', 'globalTimers', 'appState'], 'readwrite');
   await tx.objectStore('projects').clear();
   await tx.objectStore('tasks').clear();
+  await tx.objectStore('notes').clear();
   await tx.objectStore('globalTimers').clear();
   await tx.objectStore('appState').clear();
   await tx.done;
@@ -198,6 +250,11 @@ export async function importFullDatabase(data: {
   }
   for (const task of data.tasks) {
     await db.put('tasks', task);
+  }
+  if (data.notes) {
+    for (const note of data.notes) {
+      await db.put('notes', note);
+    }
   }
   for (const timer of data.globalTimers) {
     await db.put('globalTimers', timer);

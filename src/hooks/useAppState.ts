@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import type { Task, Project, GlobalTimer, AppState, Page, UndoAction } from '../types';
+import type { Task, Project, GlobalTimer, AppState, Page, UndoAction, Note } from '../types';
 import * as db from '../services/database';
 import { getTodayDateString, isTimestampToday } from '../utils/time';
 
@@ -8,6 +8,7 @@ export interface UseAppStateReturn {
   // State
   projects: Project[];
   tasks: Task[];
+  notes: Note[];
   globalTimers: GlobalTimer[];
   currentPage: Page;
   currentProjectId: string | null;
@@ -41,6 +42,12 @@ export interface UseAppStateReturn {
   getTasksByProject: (projectId: string) => Task[];
   getActiveTask: () => Task | undefined;
 
+  // Notes
+  createNote: (projectId: string, content: string) => Promise<Note>;
+  updateNote: (noteId: string, updates: Partial<Note>) => Promise<void>;
+  deleteNote: (noteId: string) => Promise<void>;
+  getNotesByProject: (projectId: string) => Note[];
+
   // Undo
   undo: () => Promise<void>;
   canUndo: boolean;
@@ -61,6 +68,7 @@ export interface UseAppStateReturn {
 export function useAppState(): UseAppStateReturn {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [globalTimers, setGlobalTimers] = useState<GlobalTimer[]>([]);
   const [currentPage, setCurrentPageState] = useState<Page>('landing');
   const [currentProjectId, setCurrentProjectIdState] = useState<string | null>(null);
@@ -109,15 +117,17 @@ export function useAppState(): UseAppStateReturn {
         await db.ensureOtherProject();
 
         // Load all data
-        const [loadedProjects, loadedTasks, loadedTimers, savedState] = await Promise.all([
+        const [loadedProjects, loadedTasks, loadedNotes, loadedTimers, savedState] = await Promise.all([
           db.getAllProjects(),
           db.getAllTasks(),
+          db.getAllNotes(),
           db.getAllGlobalTimers(),
           db.getAppState(),
         ]);
 
         setProjects(loadedProjects);
         setTasks(loadedTasks);
+        setNotes(loadedNotes);
         setGlobalTimers(loadedTimers);
 
         if (savedState) {
@@ -271,6 +281,7 @@ export function useAppState(): UseAppStateReturn {
     await db.deleteProject(id);
     setProjects(prev => prev.filter(p => p.id !== id));
     setTasks(prev => prev.filter(t => t.projectId !== id));
+    setNotes(prev => prev.filter(n => n.projectId !== id));
 
     if (currentProjectId === id) {
       setCurrentProjectId(null);
@@ -447,20 +458,74 @@ export function useAppState(): UseAppStateReturn {
     return tasks.find(t => t.id === activeTaskId);
   }, [tasks, activeTaskId]);
 
+  // Notes
+  const createNote = useCallback(async (projectId: string, content: string): Promise<Note> => {
+    const newNote: Note = {
+      id: uuidv4(),
+      projectId,
+      content,
+      createdAt: Date.now(),
+    };
+    await db.saveNote(newNote);
+    setNotes(prev => [...prev, newNote]);
+
+    // Update project lastUsed
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      const updatedProject = { ...project, lastUsed: Date.now() };
+      await db.saveProject(updatedProject);
+      setProjects(prev => prev.map(p => p.id === projectId ? updatedProject : p));
+    }
+
+    return newNote;
+  }, [projects]);
+
+  const updateNote = useCallback(async (noteId: string, updates: Partial<Note>) => {
+    const note = notes.find(n => n.id === noteId);
+    if (note) {
+      const updatedNote = { ...note, ...updates };
+      await db.saveNote(updatedNote);
+      setNotes(prev => prev.map(n => n.id === noteId ? updatedNote : n));
+    }
+  }, [notes]);
+
+  const deleteNote = useCallback(async (noteId: string) => {
+    const note = notes.find(n => n.id === noteId);
+    if (!note) return;
+
+    // Save to undo stack
+    setUndoStack(prev => [...prev, {
+      type: 'note_delete',
+      note,
+      previousActiveTaskId: null,
+    }]);
+
+    await db.deleteNote(noteId);
+    setNotes(prev => prev.filter(n => n.id !== noteId));
+  }, [notes]);
+
+  const getNotesByProject = useCallback((projectId: string) => {
+    return notes.filter(n => n.projectId === projectId);
+  }, [notes]);
+
   // Undo
   const undo = useCallback(async () => {
     const action = undoStack[undoStack.length - 1];
     if (!action) return;
 
-    if (action.type === 'task_delete') {
+    if (action.type === 'task_delete' && action.task) {
       // Restore the task
       await db.saveTask(action.task);
-      setTasks(prev => [...prev, action.task]);
+      setTasks(prev => [...prev, action.task!]);
 
       if (action.previousActiveTaskId) {
         setActiveTaskId(action.previousActiveTaskId);
         await saveState({ activeTaskId: action.previousActiveTaskId });
       }
+    } else if (action.type === 'note_delete' && action.note) {
+      // Restore the note
+      await db.saveNote(action.note);
+      setNotes(prev => [...prev, action.note!]);
     }
 
     setUndoStack(prev => prev.slice(0, -1));
@@ -487,14 +552,16 @@ export function useAppState(): UseAppStateReturn {
     await db.importFullDatabase(data);
 
     // Reload all data
-    const [loadedProjects, loadedTasks, loadedTimers] = await Promise.all([
+    const [loadedProjects, loadedTasks, loadedNotes, loadedTimers] = await Promise.all([
       db.getAllProjects(),
       db.getAllTasks(),
+      db.getAllNotes(),
       db.getAllGlobalTimers(),
     ]);
 
     setProjects(loadedProjects);
     setTasks(loadedTasks);
+    setNotes(loadedNotes);
     setGlobalTimers(loadedTimers);
     setCurrentPage('landing');
     setCurrentProjectId(null);
@@ -559,6 +626,7 @@ export function useAppState(): UseAppStateReturn {
   return {
     projects,
     tasks,
+    notes,
     globalTimers,
     currentPage,
     currentProjectId,
@@ -583,6 +651,10 @@ export function useAppState(): UseAppStateReturn {
     deleteTask,
     getTasksByProject,
     getActiveTask,
+    createNote,
+    updateNote,
+    deleteNote,
+    getNotesByProject,
     undo,
     canUndo: undoStack.length > 0,
     exportFullDb,
