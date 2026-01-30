@@ -69,7 +69,6 @@ export function ProjectPage() {
   const [newNoteText, setNewNoteText] = useState('');
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
   const [showDoneConfirm, setShowDoneConfirm] = useState(false);
-  const [showDoneError, setShowDoneError] = useState(false);
   const [showActionError, setShowActionError] = useState(false);
 
   // Column selection (tasks or notes)
@@ -207,7 +206,7 @@ export function ProjectPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle if modals are open
-      if (showHelp || taskToDelete || noteToDelete || showDoneConfirm || showDoneError) return;
+      if (showHelp || taskToDelete || noteToDelete || showDoneConfirm) return;
 
       // Handle Escape
       if (e.key === 'Escape') {
@@ -250,8 +249,8 @@ export function ProjectPage() {
         return;
       }
 
-      // Handle Ctrl+T for new task
-      if (e.ctrlKey && e.key === 't' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject) {
+      // Handle 't' for new task
+      if (e.key === 't' && !e.ctrlKey && !e.altKey && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject) {
         e.preventDefault();
         // Don't allow adding tasks to done projects
         if (project?.doneAt) {
@@ -267,8 +266,8 @@ export function ProjectPage() {
         return;
       }
 
-      // Handle Ctrl+N for new note
-      if (e.ctrlKey && e.key === 'n' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject) {
+      // Handle 'n' for new note
+      if (e.key === 'n' && !e.ctrlKey && !e.altKey && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject) {
         e.preventDefault();
         setActiveColumn('notes');
         setIsTypingNewNote(true);
@@ -524,7 +523,6 @@ export function ProjectPage() {
     taskToDelete,
     noteToDelete,
     showDoneConfirm,
-    showDoneError,
     isTypingNewTask,
     isTypingNewNote,
     editingTaskId,
@@ -747,7 +745,8 @@ export function ProjectPage() {
             if (activeColumn === 'tasks' && newTaskText.trim()) {
               // Block task creation for done projects
               if (project?.doneAt) {
-                setShowDoneError(true);
+                setShowActionError(true);
+                setTimeout(() => setShowActionError(false), 400);
                 return;
               }
               createTask(currentProjectId!, newTaskText.trim()).then(() => {
@@ -996,13 +995,6 @@ export function ProjectPage() {
         confirmText="Mark Done"
       />
 
-      <ConfirmDialog
-        isOpen={showDoneError}
-        onConfirm={() => setShowDoneError(false)}
-        onCancel={() => setShowDoneError(false)}
-        message="This project is marked as done. Reopen it first to add new tasks."
-        confirmText="OK"
-      />
-    </div>
+          </div>
   );
 }
