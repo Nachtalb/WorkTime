@@ -38,6 +38,7 @@ const overviewShortcuts: ShortcutCategory[] = [
     shortcuts: [
       { keys: ['n'], description: 'New project' },
       { keys: ['o'], description: 'Open "Other"' },
+      { keys: ['t'], description: 'Open "ToDo"' },
       { keys: ['h'], description: 'Hide/show done' },
       { keys: ['s'], description: 'Cycle sort' },
       { keys: ['a'], description: 'Toggle asc/desc' },
@@ -77,7 +78,7 @@ const projectShortcuts: ShortcutCategory[] = [
   {
     title: 'Tasks & Notes',
     shortcuts: [
-      { keys: ['Space'], description: 'Duplicate task' },
+      { keys: ['Space'], description: 'Duplicate task / Toggle todo' },
       { keys: ['Del'], description: 'Delete item' },
       { keys: ['Ctrl', 'Z'], description: 'Undo delete' },
       { keys: ['Ctrl', '↑/↓'], description: 'Project priority' },

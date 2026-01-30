@@ -41,6 +41,7 @@ export function ProjectPage() {
     updateProject,
     deleteTask,
     deleteNote,
+    toggleNoteCompleted,
     markProjectDone,
     reopenProject,
     toggleProjectOnHold,
@@ -77,6 +78,10 @@ export function ProjectPage() {
   // Column selection (tasks or notes)
   const [activeColumn, setActiveColumn] = useState<Column>('tasks');
 
+  // For ToDo projects, always use notes column
+  const project = currentProjectId ? getProjectById(currentProjectId) : null;
+  const effectiveActiveColumn = project?.isTodo ? 'notes' : activeColumn;
+
   // Live tick for updating timer displays every second
   useLiveTick(globalTimerActive || activeTaskId !== null);
 
@@ -86,7 +91,6 @@ export function ProjectPage() {
   const subtitleInputRef = useRef<HTMLInputElement>(null);
   const editNoteInputRef = useRef<HTMLTextAreaElement>(null);
 
-  const project = currentProjectId ? getProjectById(currentProjectId) : null;
   const projectTasks = currentProjectId ? getTasksByProject(currentProjectId) : [];
   const projectNotes = currentProjectId ? getNotesByProject(currentProjectId) : [];
 
@@ -364,13 +368,13 @@ export function ProjectPage() {
       // Handle Enter for editing selected task or note
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (activeColumn === 'tasks' && selectedTaskId) {
+        if (effectiveActiveColumn === 'tasks' && selectedTaskId) {
           const task = flattenedTasks.find((t) => t.id === selectedTaskId);
           if (task) {
             setEditingTaskId(task.id);
             setEditingTaskText(task.description);
           }
-        } else if (activeColumn === 'notes' && selectedNoteId) {
+        } else if (effectiveActiveColumn === 'notes' && selectedNoteId) {
           const note = flattenedNotes.find((n) => n.id === selectedNoteId);
           if (note) {
             setEditingNoteId(note.id);
@@ -383,32 +387,40 @@ export function ProjectPage() {
       // Handle Delete for selected task or note
       if (e.key === 'Delete') {
         e.preventDefault();
-        if (activeColumn === 'tasks' && selectedTaskId) {
+        if (effectiveActiveColumn === 'tasks' && selectedTaskId) {
           setTaskToDelete(selectedTaskId);
-        } else if (activeColumn === 'notes' && selectedNoteId) {
+        } else if (effectiveActiveColumn === 'notes' && selectedNoteId) {
           setNoteToDelete(selectedNoteId);
         }
         return;
       }
 
-      // Handle Space for duplicating selected task as new active task
-      if (e.key === ' ' && activeColumn === 'tasks' && selectedTaskId && !isTypingNewTask && !editingTaskId) {
+      // Handle Space for toggling todo completion or duplicating task
+      if (e.key === ' ' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId) {
         e.preventDefault();
-        // Don't allow adding tasks to done projects
-        if (project?.doneAt) {
-          setShowActionError(true);
-          setTimeout(() => setShowActionError(false), 400);
+        // For ToDo project: toggle note completion
+        if (project?.isTodo && selectedNoteId) {
+          toggleNoteCompleted(selectedNoteId);
           return;
         }
-        const task = flattenedTasks.find((t) => t.id === selectedTaskId);
-        if (task && currentProjectId) {
-          createTask(currentProjectId, task.description);
+        // For regular projects: duplicate selected task
+        if (effectiveActiveColumn === 'tasks' && selectedTaskId) {
+          // Don't allow adding tasks to done projects
+          if (project?.doneAt) {
+            setShowActionError(true);
+            setTimeout(() => setShowActionError(false), 400);
+            return;
+          }
+          const task = flattenedTasks.find((t) => t.id === selectedTaskId);
+          if (task && currentProjectId) {
+            createTask(currentProjectId, task.description);
+          }
         }
         return;
       }
 
-      // Handle Left/Right arrow keys for column switching
-      if (e.key === 'ArrowLeft' && activeColumn === 'notes') {
+      // Handle Left/Right arrow keys for column switching (skip for ToDo projects)
+      if (e.key === 'ArrowLeft' && effectiveActiveColumn === 'notes' && !project?.isTodo) {
         e.preventDefault();
         setActiveColumn('tasks');
         setSelectedNoteId(null);
@@ -418,7 +430,7 @@ export function ProjectPage() {
         return;
       }
 
-      if (e.key === 'ArrowRight' && activeColumn === 'tasks') {
+      if (e.key === 'ArrowRight' && effectiveActiveColumn === 'tasks' && !project?.isTodo) {
         e.preventDefault();
         setActiveColumn('notes');
         setSelectedTaskId(null);
@@ -438,7 +450,7 @@ export function ProjectPage() {
       // Handle Up/Down arrow keys for navigation within column
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        if (activeColumn === 'tasks' && flattenedTasks.length > 0) {
+        if (effectiveActiveColumn === 'tasks' && flattenedTasks.length > 0) {
           if (!selectedTaskId) {
             setSelectedTaskId(flattenedTasks[0].id);
           } else {
@@ -447,7 +459,7 @@ export function ProjectPage() {
               setSelectedTaskId(flattenedTasks[currentIndex - 1].id);
             }
           }
-        } else if (activeColumn === 'notes' && flattenedNotes.length > 0) {
+        } else if (effectiveActiveColumn === 'notes' && flattenedNotes.length > 0) {
           if (!selectedNoteId) {
             setSelectedNoteId(flattenedNotes[0].id);
           } else {
@@ -462,7 +474,7 @@ export function ProjectPage() {
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        if (activeColumn === 'tasks' && flattenedTasks.length > 0) {
+        if (effectiveActiveColumn === 'tasks' && flattenedTasks.length > 0) {
           if (!selectedTaskId) {
             setSelectedTaskId(flattenedTasks[0].id);
           } else {
@@ -471,7 +483,7 @@ export function ProjectPage() {
               setSelectedTaskId(flattenedTasks[currentIndex + 1].id);
             }
           }
-        } else if (activeColumn === 'notes' && flattenedNotes.length > 0) {
+        } else if (effectiveActiveColumn === 'notes' && flattenedNotes.length > 0) {
           if (!selectedNoteId) {
             setSelectedNoteId(flattenedNotes[0].id);
           } else {
@@ -493,10 +505,12 @@ export function ProjectPage() {
         !isTypingNewTask &&
         !isTypingNewNote &&
         !editingTaskId &&
-        !editingNoteId
+        !editingNoteId &&
+        !isRenamingProject &&
+        !isEditingSubtitle
       ) {
         e.preventDefault();
-        if (activeColumn === 'tasks') {
+        if (effectiveActiveColumn === 'tasks') {
           setIsTypingNewTask(true);
           setNewTaskText(e.key);
           setSelectedTaskId(null);
@@ -523,9 +537,11 @@ export function ProjectPage() {
     editingTaskId,
     editingNoteId,
     isRenamingProject,
+    isEditingSubtitle,
     selectedTaskId,
     selectedNoteId,
     activeColumn,
+    effectiveActiveColumn,
     newTaskText,
     newNoteText,
     editingTaskText,
@@ -541,6 +557,7 @@ export function ProjectPage() {
     updateNote,
     updateProject,
     toggleProjectOnHold,
+    toggleNoteCompleted,
     currentProjectId,
     project,
     tasks,
@@ -737,11 +754,11 @@ export function ProjectPage() {
         ref={newTaskInputRef}
         type="text"
         className={`new-task-input ${isTypingNewTask || isTypingNewNote ? 'typing' : ''} ${showInputError ? 'error-shake' : ''}`}
-        placeholder={activeColumn === 'tasks' ? 'Start typing to create a new task...' : 'Start typing to create a new note...'}
-        value={activeColumn === 'tasks' ? newTaskText : newNoteText}
+        placeholder={effectiveActiveColumn === 'tasks' ? 'Start typing to create a new task...' : (project?.isTodo ? 'Start typing to add a todo item...' : 'Start typing to create a new note...')}
+        value={effectiveActiveColumn === 'tasks' ? newTaskText : newNoteText}
         onChange={(e) => {
           const value = e.target.value;
-          if (activeColumn === 'tasks') {
+          if (effectiveActiveColumn === 'tasks') {
             setNewTaskText(value);
             if (!value) {
               setIsTypingNewTask(false);
@@ -762,7 +779,7 @@ export function ProjectPage() {
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
-            if (activeColumn === 'tasks' && newTaskText.trim()) {
+            if (effectiveActiveColumn === 'tasks' && newTaskText.trim()) {
               // Block task creation for done projects - shake the input
               if (project?.doneAt) {
                 setShowInputError(true);
@@ -774,7 +791,7 @@ export function ProjectPage() {
                 setIsTypingNewTask(false);
                 newTaskInputRef.current?.blur();
               });
-            } else if (activeColumn === 'notes' && newNoteText.trim()) {
+            } else if (effectiveActiveColumn === 'notes' && newNoteText.trim()) {
               createNote(currentProjectId!, newNoteText.trim()).then(() => {
                 setNewNoteText('');
                 setIsTypingNewNote(false);
@@ -784,24 +801,25 @@ export function ProjectPage() {
           }
         }}
         onFocus={() => {
-          if (activeColumn === 'tasks') {
+          if (effectiveActiveColumn === 'tasks') {
             setIsTypingNewTask(true);
           } else {
             setIsTypingNewNote(true);
           }
         }}
         onBlur={() => {
-          if (activeColumn === 'tasks' && !newTaskText.trim()) {
+          if (effectiveActiveColumn === 'tasks' && !newTaskText.trim()) {
             setIsTypingNewTask(false);
-          } else if (activeColumn === 'notes' && !newNoteText.trim()) {
+          } else if (effectiveActiveColumn === 'notes' && !newNoteText.trim()) {
             setIsTypingNewNote(false);
           }
         }}
       />
 
-      <div className="columns-container">
-        {/* Tasks Column */}
-        <div className={`column tasks-column ${activeColumn === 'tasks' ? 'active-column' : ''}`}>
+      <div className={`columns-container ${project?.isTodo ? 'todo-only' : ''}`}>
+        {/* Tasks Column - hidden for ToDo project */}
+        {!project?.isTodo && (
+        <div className={`column tasks-column ${effectiveActiveColumn === 'tasks' ? 'active-column' : ''}`}>
           <div
             className="column-header"
             onClick={() => {
@@ -823,7 +841,7 @@ export function ProjectPage() {
                   <div className="tasks-list">
                     {dayTasks.map((task) => {
                       const isActive = task.id === activeTaskId;
-                      const isSelected = task.id === selectedTaskId && activeColumn === 'tasks';
+                      const isSelected = task.id === selectedTaskId && effectiveActiveColumn === 'tasks';
                       const isEditing = task.id === editingTaskId;
                       const duration = getTaskDuration(task);
 
@@ -898,9 +916,10 @@ export function ProjectPage() {
             )}
           </div>
         </div>
+        )}
 
         {/* Notes Column */}
-        <div className={`column notes-column ${activeColumn === 'notes' ? 'active-column' : ''}`}>
+        <div className={`column notes-column ${effectiveActiveColumn === 'notes' ? 'active-column' : ''}`}>
           <div
             className="column-header"
             onClick={() => {
@@ -908,7 +927,7 @@ export function ProjectPage() {
               setSelectedTaskId(null);
             }}
           >
-            Notes
+            {project?.isTodo ? 'ToDo Items' : 'Notes'}
           </div>
           <div className="notes-section">
             {[...notesByDay.entries()].map(([dateKey, dayNotes]) => {
@@ -921,13 +940,13 @@ export function ProjectPage() {
                   </div>
                   <div className="notes-list">
                     {dayNotes.map((note) => {
-                      const isSelected = note.id === selectedNoteId && activeColumn === 'notes';
+                      const isSelected = note.id === selectedNoteId && effectiveActiveColumn === 'notes';
                       const isEditing = note.id === editingNoteId;
 
                       return (
                         <div
                           key={note.id}
-                          className={`note-item ${isSelected ? 'selected' : ''}`}
+                          className={`note-item ${isSelected ? 'selected' : ''} ${note.completed ? 'completed' : ''}`}
                           onClick={() => {
                             if (!isEditing) {
                               setActiveColumn('notes');
@@ -936,7 +955,20 @@ export function ProjectPage() {
                             }
                           }}
                         >
-                          <span className="note-time">{formatTime(note.createdAt)}</span>
+                          {project?.isTodo && (
+                            <span
+                              className={`todo-checkbox ${note.completed ? 'checked' : ''}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleNoteCompleted(note.id);
+                              }}
+                            >
+                              {note.completed ? '☑' : '☐'}
+                            </span>
+                          )}
+                          {!project?.isTodo && (
+                            <span className="note-time">{formatTime(note.createdAt)}</span>
+                          )}
 
                           {isEditing ? (
                             <textarea
@@ -981,7 +1013,7 @@ export function ProjectPage() {
             {flattenedNotes.length === 0 && (
               <div className="empty-state">
                 <div className="empty-state-text">
-                  No notes yet. Press Ctrl+N to create one.
+                  {project?.isTodo ? 'No todo items yet. Start typing to add one.' : 'No notes yet. Start typing to add one.'}
                 </div>
               </div>
             )}

@@ -34,6 +34,7 @@ export function OverviewPage() {
     createProject,
     deleteProject,
     getOtherProject,
+    getTodoProject,
     getTotalDuration,
     getTodayGlobalDuration,
     getCurrentTaskDuration,
@@ -89,9 +90,11 @@ export function OverviewPage() {
   // Sort projects based on selected sort option
   const sortedProjects = useMemo(() => {
     return [...projects].sort((a, b) => {
-      // "Other" should always be at the end
+      // Special projects should always be at the end (ToDo then Other)
       if (a.isOther) return 1;
       if (b.isOther) return -1;
+      if (a.isTodo) return 1;
+      if (b.isTodo) return -1;
 
       let comparison = 0;
       switch (sortBy) {
@@ -250,6 +253,16 @@ export function OverviewPage() {
         const otherProject = getOtherProject();
         if (otherProject) {
           goToProject(otherProject.id);
+        }
+        return;
+      }
+
+      // Handle "t" for "ToDo" project
+      if (e.key === 't' && !filter && !e.ctrlKey) {
+        e.preventDefault();
+        const todoProject = getTodoProject();
+        if (todoProject) {
+          goToProject(todoProject.id);
         }
         return;
       }
@@ -427,6 +440,7 @@ export function OverviewPage() {
     goToProject,
     createProject,
     getOtherProject,
+    getTodoProject,
     tasks,
     notes,
     projects,
@@ -634,6 +648,7 @@ export function OverviewPage() {
                   {project.name || 'Unnamed Project'}
                 </span>
                 {project.isOther && <span className="project-card-id">Special</span>}
+                {project.isTodo && <span className="project-card-id todo">ToDo</span>}
                 {project.doneAt && <span className="project-card-id done" title={`Done on ${getTooltipDate(project.doneAt)} at ${formatTime(project.doneAt)}`}>Done</span>}
                 {project.onHoldAt && !project.doneAt && <span className="project-card-id on-hold" title={`On hold since ${getTooltipDate(project.onHoldAt)} at ${formatTime(project.onHoldAt)}`}>On Hold</span>}
               </div>

@@ -1198,6 +1198,49 @@ input {
   color: var(--color-text-muted);
 }
 
+/* ToDo Project Styles */
+.columns-container.todo-only {
+  /* Only notes column visible */
+}
+
+.columns-container.todo-only .notes-column {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.todo-checkbox {
+  font-size: 18px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast);
+}
+
+.todo-checkbox:hover {
+  color: var(--color-primary);
+}
+
+.todo-checkbox.checked {
+  color: var(--color-success);
+}
+
+.note-item.completed {
+  opacity: 0.5;
+}
+
+.note-item.completed .note-content {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.project-card-id.todo {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
 /* Overview Title Section */
 .overview-title-section {
   display: flex;

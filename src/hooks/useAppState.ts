@@ -32,6 +32,7 @@ export interface UseAppStateReturn {
   deleteProject: (id: string) => Promise<void>;
   getProjectById: (id: string) => Project | undefined;
   getOtherProject: () => Project | undefined;
+  getTodoProject: () => Project | undefined;
   markProjectDone: (id: string) => Promise<void>;
   reopenProject: (id: string) => Promise<void>;
   toggleProjectOnHold: (id: string) => Promise<void>;
@@ -50,6 +51,7 @@ export interface UseAppStateReturn {
   updateNote: (noteId: string, updates: Partial<Note>) => Promise<void>;
   deleteNote: (noteId: string) => Promise<void>;
   getNotesByProject: (projectId: string) => Note[];
+  toggleNoteCompleted: (noteId: string) => Promise<void>;
 
   // Undo
   undo: () => Promise<void>;
@@ -116,8 +118,9 @@ export function useAppState(): UseAppStateReturn {
 
     async function init() {
       try {
-        // Ensure "Other" project exists
+        // Ensure special projects exist
         await db.ensureOtherProject();
+        await db.ensureTodoProject();
 
         // Load all data
         const [loadedProjects, loadedTasks, loadedNotes, loadedTimers, savedState] = await Promise.all([
@@ -291,9 +294,13 @@ export function useAppState(): UseAppStateReturn {
     return projects.find(p => p.isOther);
   }, [projects]);
 
+  const getTodoProject = useCallback(() => {
+    return projects.find(p => p.isTodo);
+  }, [projects]);
+
   const markProjectDone = useCallback(async (id: string) => {
     const project = projects.find(p => p.id === id);
-    if (project?.isOther) return; // Can't mark "Other" project as done
+    if (project?.isOther || project?.isTodo) return; // Can't mark special projects as done
 
     const updatedProject = { ...project!, doneAt: Date.now() };
     await db.saveProject(updatedProject);
@@ -311,7 +318,7 @@ export function useAppState(): UseAppStateReturn {
 
   const toggleProjectOnHold = useCallback(async (id: string) => {
     const project = projects.find(p => p.id === id);
-    if (!project || project.isOther) return; // Can't toggle "Other" project
+    if (!project || project.isOther || project.isTodo) return; // Can't toggle special projects
 
     let updatedProject: Project;
     if (project.onHoldAt) {
@@ -555,6 +562,15 @@ export function useAppState(): UseAppStateReturn {
     return notes.filter(n => n.projectId === projectId);
   }, [notes]);
 
+  const toggleNoteCompleted = useCallback(async (noteId: string) => {
+    const note = notes.find(n => n.id === noteId);
+    if (!note) return;
+
+    const updatedNote = { ...note, completed: !note.completed };
+    await db.saveNote(updatedNote);
+    setNotes(prev => prev.map(n => n.id === noteId ? updatedNote : n));
+  }, [notes]);
+
   // Undo
   const undo = useCallback(async () => {
     const action = undoStack[undoStack.length - 1];
@@ -691,6 +707,7 @@ export function useAppState(): UseAppStateReturn {
     deleteProject,
     getProjectById,
     getOtherProject,
+    getTodoProject,
     markProjectDone,
     reopenProject,
     toggleProjectOnHold,
@@ -705,6 +722,7 @@ export function useAppState(): UseAppStateReturn {
     updateNote,
     deleteNote,
     getNotesByProject,
+    toggleNoteCompleted,
     undo,
     canUndo: undoStack.length > 0,
     exportFullDb,

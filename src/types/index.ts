@@ -14,6 +14,7 @@ export interface Note {
   projectId: string;
   content: string;
   createdAt: number; // timestamp
+  completed?: boolean; // for todo items
 }
 
 export interface Project {
@@ -23,6 +24,7 @@ export interface Project {
   createdAt: number; // timestamp
   lastUsed: number; // timestamp
   isOther?: boolean; // special "Other" project
+  isTodo?: boolean; // special "ToDo" project
   doneAt?: number; // timestamp when marked as done
   onHoldAt?: number; // timestamp when marked as on hold
   priority?: ProjectPriority; // default is 'normal'
