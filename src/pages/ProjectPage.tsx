@@ -250,27 +250,6 @@ export function ProjectPage() {
         return;
       }
 
-      // Handle Ctrl+I for new item (task or note based on active column)
-      if (e.ctrlKey && e.key === 'i' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject) {
-        e.preventDefault();
-        // Don't allow adding tasks to done projects
-        if (activeColumn === 'tasks' && project?.doneAt) {
-          setShowActionError(true);
-          setTimeout(() => setShowActionError(false), 400);
-          return;
-        }
-        if (activeColumn === 'tasks') {
-          setIsTypingNewTask(true);
-          setNewTaskText('');
-        } else {
-          setIsTypingNewNote(true);
-          setNewNoteText('');
-        }
-        setSelectedTaskId(null);
-        setSelectedNoteId(null);
-        return;
-      }
-
       // Handle Ctrl+D for marking project as done
       if (e.ctrlKey && e.key === 'd' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther && !project.doneAt) {
         e.preventDefault();
