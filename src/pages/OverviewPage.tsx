@@ -45,6 +45,7 @@ export function OverviewPage() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const [showTodayOverview, setShowTodayOverview] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showStartTimeEditor, setShowStartTimeEditor] = useState(false);
@@ -177,14 +178,36 @@ export function OverviewPage() {
         return;
       }
 
-      // Handle arrow keys for navigation
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      // Handle arrow keys for navigation (grid-aware)
+      // Calculate columns in grid
+      const getColumnsCount = () => {
+        if (!gridRef.current || filteredProjects.length === 0) return 1;
+        const gridStyle = window.getComputedStyle(gridRef.current);
+        const columns = gridStyle.getPropertyValue('grid-template-columns').split(' ').length;
+        return columns || 1;
+      };
+
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const cols = getColumnsCount();
+        setSelectedIndex((prev) => Math.max(0, prev - cols));
+        return;
+      }
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const cols = getColumnsCount();
+        setSelectedIndex((prev) => Math.min(filteredProjects.length - 1, prev + cols));
+        return;
+      }
+
+      if (e.key === 'ArrowLeft') {
         e.preventDefault();
         setSelectedIndex((prev) => Math.max(0, prev - 1));
         return;
       }
 
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      if (e.key === 'ArrowRight') {
         e.preventDefault();
         setSelectedIndex((prev) => Math.min(filteredProjects.length - 1, prev + 1));
         return;
@@ -422,7 +445,7 @@ export function OverviewPage() {
         </button>
       </div>
 
-      <div className="projects-grid">
+      <div className="projects-grid" ref={gridRef}>
         {filteredProjects.map((project, index) => {
           const lastTask = getLastTask(project.id);
           const isActive = isProjectActive(project.id);

@@ -6,44 +6,98 @@ interface Shortcut {
   description: string;
 }
 
-const landingShortcuts: Shortcut[] = [
-  { keys: ['Enter'], description: 'Start tracking global time' },
-  { keys: ['Ctrl', 'O'], description: 'Open today overview' },
-  { keys: ['?'], description: 'Show this help' },
+interface ShortcutCategory {
+  title: string;
+  shortcuts: Shortcut[];
+}
+
+const landingShortcuts: ShortcutCategory[] = [
+  {
+    title: 'Actions',
+    shortcuts: [
+      { keys: ['Enter'], description: 'Start tracking' },
+      { keys: ['Ctrl', 'O'], description: 'Today overview' },
+      { keys: ['?'], description: 'Show help' },
+    ],
+  },
 ];
 
-const overviewShortcuts: Shortcut[] = [
-  { keys: ['Esc'], description: 'Go back to landing page (stops all timers)' },
-  { keys: ['1-0'], description: 'Filter projects by number' },
-  { keys: ['Arrow keys'], description: 'Navigate between projects' },
-  { keys: ['Enter'], description: 'Open selected project' },
-  { keys: ['n'], description: 'Create new project' },
-  { keys: ['o'], description: 'Open "Other" project' },
-  { keys: ['Delete'], description: 'Delete selected project' },
-  { keys: ['Ctrl', 'S'], description: 'Export today as TXT' },
-  { keys: ['Ctrl', 'E'], description: 'Export today as CSV' },
-  { keys: ['Ctrl', 'Alt', 'E'], description: 'Export full database' },
-  { keys: ['Ctrl', 'Alt', 'I'], description: 'Import database' },
-  { keys: ['Ctrl', 'Alt', 'C'], description: 'Change global timer start time' },
-  { keys: ['Ctrl', 'O'], description: 'Open today overview' },
-  { keys: ['?'], description: 'Show this help' },
+const overviewShortcuts: ShortcutCategory[] = [
+  {
+    title: 'Navigation',
+    shortcuts: [
+      { keys: ['Esc'], description: 'Back to landing' },
+      { keys: ['↑/↓'], description: 'Navigate rows' },
+      { keys: ['←/→'], description: 'Navigate columns' },
+      { keys: ['Enter'], description: 'Open project' },
+      { keys: ['1-9'], description: 'Filter by number' },
+    ],
+  },
+  {
+    title: 'Projects',
+    shortcuts: [
+      { keys: ['n'], description: 'New project' },
+      { keys: ['o'], description: 'Open "Other"' },
+      { keys: ['Del'], description: 'Delete project' },
+    ],
+  },
+  {
+    title: 'Export',
+    shortcuts: [
+      { keys: ['Ctrl', 'S'], description: 'Today as TXT' },
+      { keys: ['Ctrl', 'E'], description: 'Today as CSV' },
+      { keys: ['Ctrl', 'Alt', 'E'], description: 'Full database' },
+      { keys: ['Ctrl', 'Alt', 'I'], description: 'Import DB' },
+    ],
+  },
+  {
+    title: 'Other',
+    shortcuts: [
+      { keys: ['Ctrl', 'O'], description: 'Today overview' },
+      { keys: ['Ctrl', 'Alt', 'C'], description: 'Edit start time' },
+      { keys: ['?'], description: 'Show help' },
+    ],
+  },
 ];
 
-const projectShortcuts: Shortcut[] = [
-  { keys: ['Esc'], description: 'Go back to overview (or cancel current action)' },
-  { keys: ['Up/Down'], description: 'Navigate within column (tasks or notes)' },
-  { keys: ['Left/Right'], description: 'Switch between tasks and notes columns' },
-  { keys: ['Enter'], description: 'Edit selected task or note' },
-  { keys: ['Delete'], description: 'Delete selected task or note' },
-  { keys: ['Space'], description: 'Start new task with same description (tasks only)' },
-  { keys: ['Ctrl', 'T'], description: 'Create new task' },
-  { keys: ['Ctrl', 'N'], description: 'Create new note' },
-  { keys: ['F2'], description: 'Rename project' },
-  { keys: ['Ctrl', 'S'], description: 'Export project today as TXT' },
-  { keys: ['Ctrl', 'E'], description: 'Export project today as CSV' },
-  { keys: ['Ctrl', 'Alt', 'S'], description: 'Export full project as TXT' },
-  { keys: ['Ctrl', 'Alt', 'E'], description: 'Export full project as CSV' },
-  { keys: ['?'], description: 'Show this help' },
+const projectShortcuts: ShortcutCategory[] = [
+  {
+    title: 'Navigation',
+    shortcuts: [
+      { keys: ['Esc'], description: 'Back / Cancel' },
+      { keys: ['↑/↓'], description: 'Navigate items' },
+      { keys: ['←/→'], description: 'Switch columns' },
+      { keys: ['Enter'], description: 'Edit selected' },
+    ],
+  },
+  {
+    title: 'Tasks & Notes',
+    shortcuts: [
+      { keys: ['Ctrl', 'T'], description: 'New task' },
+      { keys: ['Ctrl', 'N'], description: 'New note' },
+      { keys: ['Space'], description: 'Duplicate task' },
+      { keys: ['Del'], description: 'Delete item' },
+      { keys: ['Ctrl', 'Z'], description: 'Undo delete' },
+    ],
+  },
+  {
+    title: 'Project',
+    shortcuts: [
+      { keys: ['F2'], description: 'Rename project' },
+      { keys: ['Ctrl', 'D'], description: 'Mark as done' },
+      { keys: ['Ctrl', 'H'], description: 'Toggle on hold' },
+    ],
+  },
+  {
+    title: 'Export',
+    shortcuts: [
+      { keys: ['Ctrl', 'S'], description: 'Today as TXT' },
+      { keys: ['Ctrl', 'E'], description: 'Today as CSV' },
+      { keys: ['Ctrl', 'Alt', 'S'], description: 'Full as TXT' },
+      { keys: ['Ctrl', 'Alt', 'E'], description: 'Full as CSV' },
+      { keys: ['?'], description: 'Show help' },
+    ],
+  },
 ];
 
 interface HelpPopupProps {
@@ -53,7 +107,7 @@ interface HelpPopupProps {
 }
 
 export function HelpPopup({ isOpen, onClose, currentPage }: HelpPopupProps) {
-  const shortcuts =
+  const categories =
     currentPage === 'landing'
       ? landingShortcuts
       : currentPage === 'overview'
@@ -62,20 +116,27 @@ export function HelpPopup({ isOpen, onClose, currentPage }: HelpPopupProps) {
 
   const pageTitle =
     currentPage === 'landing'
-      ? 'Landing Page'
+      ? 'Landing'
       : currentPage === 'overview'
-      ? 'Overview Page'
-      : 'Project Page';
+      ? 'Overview'
+      : 'Project';
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Keyboard Shortcuts - ${pageTitle}`}>
-      <div className="shortcuts-list">
-        {shortcuts.map((shortcut, index) => (
-          <div key={index} className="shortcut-item">
-            <span>{shortcut.description}</span>
-            <div className="shortcut-keys">
-              {shortcut.keys.map((key, keyIndex) => (
-                <kbd key={keyIndex}>{key}</kbd>
+    <Modal isOpen={isOpen} onClose={onClose} title={`Shortcuts - ${pageTitle}`}>
+      <div className="shortcuts-grid">
+        {categories.map((category, catIndex) => (
+          <div key={catIndex} className="shortcut-category">
+            <h4 className="shortcut-category-title">{category.title}</h4>
+            <div className="shortcuts-list">
+              {category.shortcuts.map((shortcut, index) => (
+                <div key={index} className="shortcut-item">
+                  <span className="shortcut-desc">{shortcut.description}</span>
+                  <div className="shortcut-keys">
+                    {shortcut.keys.map((key, keyIndex) => (
+                      <kbd key={keyIndex}>{key}</kbd>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
