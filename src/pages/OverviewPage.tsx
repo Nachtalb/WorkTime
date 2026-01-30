@@ -59,6 +59,7 @@ export function OverviewPage() {
   const [sortAsc, setSortAsc] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [hideDone, setHideDone] = useState(false);
+  const [errorShakeProjectId, setErrorShakeProjectId] = useState<string | null>(null);
 
   // Live tick for updating timer displays every second
   useLiveTick(globalTimerActive || activeTaskId !== null);
@@ -130,6 +131,13 @@ export function OverviewPage() {
   const cyclePriority = useCallback((projectId: string, direction: 'up' | 'down') => {
     const project = projects.find(p => p.id === projectId);
     if (!project || project.isOther) return;
+
+    // Don't allow priority change on done projects - show error shake
+    if (project.doneAt) {
+      setErrorShakeProjectId(projectId);
+      setTimeout(() => setErrorShakeProjectId(null), 400);
+      return;
+    }
 
     const priorities: ProjectPriority[] = ['normal', 'medium', 'high'];
     const currentIndex = priorities.indexOf(project.priority || 'normal');
@@ -576,7 +584,7 @@ export function OverviewPage() {
           return (
             <div
               key={project.id}
-              className={`project-card ${isSelected ? 'selected' : ''} ${isActive ? 'active' : ''} ${project.doneAt ? 'done' : ''} ${project.onHoldAt ? 'on-hold' : ''}`}
+              className={`project-card ${isSelected ? 'selected' : ''} ${isActive ? 'active' : ''} ${project.doneAt ? 'done' : ''} ${project.onHoldAt ? 'on-hold' : ''} ${errorShakeProjectId === project.id ? 'error-shake' : ''}`}
               onClick={() => goToProject(project.id)}
             >
               <div className="project-card-header">

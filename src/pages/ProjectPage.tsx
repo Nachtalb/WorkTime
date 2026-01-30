@@ -70,6 +70,7 @@ export function ProjectPage() {
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
   const [showDoneConfirm, setShowDoneConfirm] = useState(false);
   const [showDoneError, setShowDoneError] = useState(false);
+  const [showPriorityError, setShowPriorityError] = useState(false);
 
   // Column selection (tasks or notes)
   const [activeColumn, setActiveColumn] = useState<Column>('tasks');
@@ -141,6 +142,13 @@ export function ProjectPage() {
   // Cycle project priority
   const cyclePriority = useCallback((direction: 'up' | 'down') => {
     if (!project || project.isOther) return;
+
+    // Don't allow priority change on done projects - show error shake
+    if (project.doneAt) {
+      setShowPriorityError(true);
+      setTimeout(() => setShowPriorityError(false), 400);
+      return;
+    }
 
     const priorities: ProjectPriority[] = ['normal', 'medium', 'high'];
     const currentIndex = priorities.indexOf(project.priority || 'normal');
@@ -599,7 +607,7 @@ export function ProjectPage() {
               }}
             />
           ) : (
-            <h1 className="project-title">
+            <h1 className={`project-title ${showPriorityError ? 'error-shake' : ''}`}>
               {project.priority === 'high' && <span className="priority-indicator">‼️</span>}
               {project.priority === 'medium' && <span className="priority-indicator">❗</span>}
               {project.name || 'Unnamed Project'}
