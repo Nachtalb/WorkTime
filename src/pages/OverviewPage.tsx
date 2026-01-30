@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useApp } from '../hooks/AppContext';
 import { useLiveTick } from '../hooks/useLiveTick';
-import type { Task } from '../types';
+import type { Task, Note } from '../types';
 import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
 import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
@@ -27,6 +27,7 @@ export function OverviewPage() {
     globalTimers,
     activeTaskId,
     globalTimerActive,
+    currentProjectId,
     goToLanding,
     goToProject,
     createProject,
@@ -105,6 +106,14 @@ export function OverviewPage() {
       .filter((t) => t.projectId === projectId)
       .sort((a, b) => b.startTime - a.startTime);
     return projectTasks[0];
+  };
+
+  // Get the last note for a project
+  const getLastNote = (projectId: string): Note | undefined => {
+    const projectNotes = notes
+      .filter((n) => n.projectId === projectId)
+      .sort((a, b) => b.createdAt - a.createdAt);
+    return projectNotes[0];
   };
 
   // Check if a project has the active task
@@ -325,6 +334,16 @@ export function OverviewPage() {
     }
   }, [filteredProjects.length, selectedIndex]);
 
+  // Select the previously viewed project when returning from project page
+  useEffect(() => {
+    if (currentProjectId && filteredProjects.length > 0) {
+      const projectIndex = filteredProjects.findIndex(p => p.id === currentProjectId);
+      if (projectIndex !== -1) {
+        setSelectedIndex(projectIndex);
+      }
+    }
+  }, []); // Only run on mount
+
   const handleDeleteConfirm = useCallback(() => {
     if (projectToDelete) {
       deleteProject(projectToDelete);
@@ -448,6 +467,7 @@ export function OverviewPage() {
       <div className="projects-grid" ref={gridRef}>
         {filteredProjects.map((project, index) => {
           const lastTask = getLastTask(project.id);
+          const lastNote = getLastNote(project.id);
           const isActive = isProjectActive(project.id);
           const isSelected = index === selectedIndex;
 
@@ -466,8 +486,17 @@ export function OverviewPage() {
                 {project.onHoldAt && !project.doneAt && <span className="project-card-id on-hold">On Hold</span>}
               </div>
 
-              <div className="project-card-task">
-                {lastTask?.description || 'No tasks yet'}
+              <div className="project-card-activity">
+                <div className="project-card-task">
+                  <span className="activity-icon task-icon">T</span>
+                  <span className="activity-text">{lastTask?.description || 'No tasks yet'}</span>
+                </div>
+                {lastNote && (
+                  <div className="project-card-note">
+                    <span className="activity-icon note-icon">N</span>
+                    <span className="activity-text">{lastNote.content}</span>
+                  </div>
+                )}
               </div>
 
               <div className="project-card-tags">
