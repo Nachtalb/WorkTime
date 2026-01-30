@@ -298,27 +298,8 @@ export function ProjectPage() {
         return;
       }
 
-      // If typing a new task
-      if (isTypingNewTask) {
-        if (e.key === 'Enter' && newTaskText.trim()) {
-          e.preventDefault();
-          createTask(currentProjectId!, newTaskText.trim()).then(() => {
-            setNewTaskText('');
-            setIsTypingNewTask(false);
-          });
-        }
-        return;
-      }
-
-      // If typing a new note
-      if (isTypingNewNote) {
-        if (e.key === 'Enter' && !e.shiftKey && newNoteText.trim()) {
-          e.preventDefault();
-          createNote(currentProjectId!, newNoteText.trim()).then(() => {
-            setNewNoteText('');
-            setIsTypingNewNote(false);
-          });
-        }
+      // If typing a new task or note, let the input's onKeyDown handle Enter
+      if (isTypingNewTask || isTypingNewNote) {
         return;
       }
 
