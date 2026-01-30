@@ -432,6 +432,7 @@ export function OverviewPage() {
         }}
         onCancel={() => setShowExitConfirm(false)}
         message="Are you sure you want to go back to the landing page?"
+        confirmText="Go Back"
       />
     </div>
   );

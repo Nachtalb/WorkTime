@@ -6,6 +6,7 @@ interface ConfirmDialogProps {
   onCancel: () => void;
   message: string;
   itemName?: string;
+  confirmText?: string;
 }
 
 export function ConfirmDialog({
@@ -14,6 +15,7 @@ export function ConfirmDialog({
   onCancel,
   message,
   itemName,
+  confirmText = 'Delete',
 }: ConfirmDialogProps) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -57,7 +59,7 @@ export function ConfirmDialog({
             Cancel
           </button>
           <button className="btn btn-danger" onClick={onConfirm}>
-            Delete
+            {confirmText}
           </button>
         </div>
       </div>
