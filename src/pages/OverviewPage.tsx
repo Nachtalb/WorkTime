@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { useApp } from '../hooks/AppContext';
 import { useLiveTick } from '../hooks/useLiveTick';
 import type { Task, Note } from '../types';
@@ -335,8 +335,9 @@ export function OverviewPage() {
   }, [filteredProjects.length, selectedIndex]);
 
   // Select the previously viewed project when returning from project page
+  // Use useLayoutEffect to update selection before browser paints (prevents flash)
   const hasSelectedInitial = useRef(false);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!hasSelectedInitial.current && currentProjectId && filteredProjects.length > 0) {
       const projectIndex = filteredProjects.findIndex(p => p.id === currentProjectId);
       if (projectIndex !== -1) {
