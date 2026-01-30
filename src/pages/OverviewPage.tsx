@@ -486,18 +486,22 @@ export function OverviewPage() {
                 {project.onHoldAt && !project.doneAt && <span className="project-card-id on-hold">On Hold</span>}
               </div>
 
-              <div className="project-card-activity">
-                <div className="project-card-task">
-                  <span className="activity-icon task-icon">T</span>
-                  <span className="activity-text">{lastTask?.description || 'No tasks yet'}</span>
+              {(lastTask || lastNote) && (
+                <div className="project-card-activity">
+                  {lastTask && (
+                    <div className="project-card-task">
+                      <span className="activity-icon task-icon">T</span>
+                      <span className="activity-text">{lastTask.description}</span>
+                    </div>
+                  )}
+                  {lastNote && (
+                    <div className="project-card-note">
+                      <span className="activity-icon note-icon">N</span>
+                      <span className="activity-text">{lastNote.content}</span>
+                    </div>
+                  )}
                 </div>
-                {lastNote && (
-                  <div className="project-card-note">
-                    <span className="activity-icon note-icon">N</span>
-                    <span className="activity-text">{lastNote.content}</span>
-                  </div>
-                )}
-              </div>
+              )}
 
               <div className="project-card-tags">
                 <span
