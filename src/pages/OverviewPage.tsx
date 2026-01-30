@@ -214,6 +214,23 @@ export function OverviewPage() {
         return;
       }
 
+      // Handle "s" to cycle sort options
+      if (e.key === 's' && !filter && !e.ctrlKey) {
+        e.preventDefault();
+        const sortOptions: Array<'lastUsed' | 'createdAt' | 'doneAt' | 'name'> = ['lastUsed', 'createdAt', 'doneAt', 'name'];
+        const currentIndex = sortOptions.indexOf(sortBy);
+        const nextIndex = (currentIndex + 1) % sortOptions.length;
+        setSortBy(sortOptions[nextIndex]);
+        return;
+      }
+
+      // Handle "a" to toggle sort direction
+      if (e.key === 'a' && !filter && !e.ctrlKey) {
+        e.preventDefault();
+        setSortAsc((prev) => !prev);
+        return;
+      }
+
       // Handle Delete
       if (e.key === 'Delete' && filteredProjects.length > 0) {
         const selectedProject = filteredProjects[selectedIndex];
@@ -372,6 +389,7 @@ export function OverviewPage() {
     sortedProjects,
     cyclePriority,
     getLastTask,
+    sortBy,
   ]);
 
   // Reset selected index when filtered projects change
