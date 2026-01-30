@@ -534,6 +534,11 @@ export function ProjectPage() {
   return (
     <div className="page project-page">
       <div className="project-header">
+        <button className="back-button" onClick={goToOverview} title="Back to Overview (Esc)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </button>
         <div className="project-title-section">
           {isRenamingProject ? (
             <input
@@ -606,7 +611,15 @@ export function ProjectPage() {
       <div className="columns-container">
         {/* Tasks Column */}
         <div className={`column tasks-column ${activeColumn === 'tasks' ? 'active-column' : ''}`}>
-          <div className="column-header">Tasks</div>
+          <div
+            className="column-header"
+            onClick={() => {
+              setActiveColumn('tasks');
+              setSelectedNoteId(null);
+            }}
+          >
+            Tasks
+          </div>
           <div className="tasks-section">
             {[...tasksByDay.entries()].map(([dateKey, dayTasks]) => {
               const isToday = isTimestampToday(dayTasks[0].startTime);
@@ -680,7 +693,15 @@ export function ProjectPage() {
 
         {/* Notes Column */}
         <div className={`column notes-column ${activeColumn === 'notes' ? 'active-column' : ''}`}>
-          <div className="column-header">Notes</div>
+          <div
+            className="column-header"
+            onClick={() => {
+              setActiveColumn('notes');
+              setSelectedTaskId(null);
+            }}
+          >
+            Notes
+          </div>
           <div className="notes-section">
             {[...notesByDay.entries()].map(([dateKey, dayNotes]) => {
               const isToday = isTimestampToday(dayNotes[0].createdAt);

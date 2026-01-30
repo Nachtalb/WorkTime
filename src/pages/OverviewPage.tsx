@@ -289,7 +289,14 @@ export function OverviewPage() {
   return (
     <div className="page overview-page">
       <div className="overview-header">
-        <h1 className="overview-title">Projects</h1>
+        <div className="overview-title-section">
+          <button className="back-button" onClick={goToLanding} title="Back to Landing (Esc)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <h1 className="overview-title">Projects</h1>
+        </div>
         <TimerIndicator
           globalDuration={getTodayGlobalDuration()}
           taskDuration={getCurrentTaskDuration()}

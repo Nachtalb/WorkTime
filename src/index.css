@@ -883,3 +883,162 @@ input {
   font-size: 18px;
   color: var(--color-text-muted);
 }
+
+/* Back Button */
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.back-button:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.back-button:active {
+  background: var(--color-border);
+}
+
+/* Overview Title Section */
+.overview-title-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Clickable Column Headers */
+.column-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.column-header:hover {
+  background: var(--color-bg-hover);
+}
+
+.column-header:active {
+  background: var(--color-border);
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+  }
+
+  /* Landing Page */
+  .landing-time {
+    font-size: 48px;
+  }
+
+  .landing-date {
+    font-size: 18px;
+  }
+
+  .start-button {
+    width: 150px;
+    height: 150px;
+    font-size: 20px;
+  }
+
+  /* Overview Page */
+  .overview-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .timer-indicator {
+    align-items: flex-start;
+  }
+
+  /* Project Page */
+  .project-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .project-title {
+    font-size: 24px;
+  }
+
+  .project-title-input {
+    font-size: 24px;
+  }
+
+  .project-tags {
+    flex-wrap: wrap;
+  }
+
+  /* Two-column layout on mobile */
+  .columns-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .column {
+    min-height: 200px;
+  }
+
+  .column-header {
+    padding: 16px;
+    font-size: 16px;
+    text-align: center;
+  }
+
+  /* Task and Note items */
+  .task-item {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .task-time {
+    order: 1;
+  }
+
+  .task-duration {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .task-description {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  /* Modal */
+  .modal {
+    width: 95%;
+    padding: 16px;
+  }
+
+  .modal-title {
+    font-size: 18px;
+  }
+
+  .shortcut-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .shortcut-keys {
+    align-self: flex-end;
+  }
+}
