@@ -1226,6 +1226,31 @@ input {
   color: var(--color-text);
 }
 
+.hide-done-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.hide-done-btn:hover {
+  border-color: var(--color-border-dark);
+  color: var(--color-text);
+}
+
+.hide-done-btn.active {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
 /* Mobile floating sort controls - hidden on desktop */
 .sort-controls-mobile {
   display: none;

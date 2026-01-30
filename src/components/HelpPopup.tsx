@@ -38,6 +38,7 @@ const overviewShortcuts: ShortcutCategory[] = [
     shortcuts: [
       { keys: ['n'], description: 'New project' },
       { keys: ['o'], description: 'Open "Other"' },
+      { keys: ['h'], description: 'Hide/show done' },
       { keys: ['Del'], description: 'Delete project' },
       { keys: ['Ctrl', '↑/↓'], description: 'Task priority' },
     ],
