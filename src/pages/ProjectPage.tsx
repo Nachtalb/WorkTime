@@ -588,8 +588,24 @@ export function ProjectPage() {
         onChange={(e) => {
           if (activeColumn === 'tasks') {
             setNewTaskText(e.target.value);
+            if (!isTypingNewTask) setIsTypingNewTask(true);
           } else {
             setNewNoteText(e.target.value);
+            if (!isTypingNewNote) setIsTypingNewNote(true);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (activeColumn === 'tasks' && newTaskText.trim()) {
+              createTask(currentProjectId!, newTaskText.trim()).then(() => {
+                setNewTaskText('');
+              });
+            } else if (activeColumn === 'notes' && newNoteText.trim()) {
+              createNote(currentProjectId!, newNoteText.trim()).then(() => {
+                setNewNoteText('');
+              });
+            }
           }
         }}
         onFocus={() => {
@@ -673,6 +689,23 @@ export function ProjectPage() {
                           <span className={`task-duration ${isActive ? 'active' : ''}`}>
                             {formatDuration(duration)}
                           </span>
+
+                          {!isEditing && (
+                            <button
+                              className="edit-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingTaskId(task.id);
+                                setEditingTaskText(task.description);
+                              }}
+                              title="Edit task"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                              </svg>
+                            </button>
+                          )}
                         </div>
                       );
                     })}
@@ -728,7 +761,25 @@ export function ProjectPage() {
                             }
                           }}
                         >
-                          <span className="note-time">{formatTime(note.createdAt)}</span>
+                          <div className="note-header">
+                            <span className="note-time">{formatTime(note.createdAt)}</span>
+                            {!isEditing && (
+                              <button
+                                className="edit-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingNoteId(note.id);
+                                  setEditingNoteText(note.content);
+                                }}
+                                title="Edit note"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                              </button>
+                            )}
+                          </div>
 
                           {isEditing ? (
                             <textarea

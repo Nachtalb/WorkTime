@@ -575,6 +575,41 @@ input {
   font-family: inherit;
 }
 
+.note-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Edit Button */
+.edit-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  opacity: 0;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.edit-button:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.task-item:hover .edit-button,
+.note-item:hover .edit-button {
+  opacity: 1;
+}
+
+.task-item.selected .edit-button,
+.note-item.selected .edit-button {
+  opacity: 1;
+}
+
 /* Popups/Modals */
 .modal-overlay {
   position: fixed;
@@ -950,13 +985,27 @@ input {
 
   /* Overview Page */
   .overview-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .overview-title-section {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .overview-title {
+    font-size: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .search-input {
     width: 100%;
+    order: 10;
   }
 
   .projects-grid {
@@ -964,26 +1013,41 @@ input {
   }
 
   .timer-indicator {
-    align-items: flex-start;
+    flex-shrink: 0;
   }
 
   /* Project Page */
   .project-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .project-title-section {
+    flex: 1;
+    min-width: 0;
+    gap: 4px;
   }
 
   .project-title {
-    font-size: 24px;
+    font-size: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .project-title-input {
-    font-size: 24px;
+    font-size: 18px;
   }
 
   .project-tags {
-    flex-wrap: wrap;
+    display: none;
+  }
+
+  .back-button {
+    width: 36px;
+    height: 36px;
   }
 
   /* Two-column layout on mobile */
@@ -1002,7 +1066,11 @@ input {
     text-align: center;
   }
 
-  /* Task and Note items */
+  /* Task and Note items - always show edit button on mobile */
+  .edit-button {
+    opacity: 1;
+  }
+
   .task-item {
     flex-wrap: wrap;
     gap: 8px;
@@ -1014,11 +1082,14 @@ input {
 
   .task-duration {
     order: 2;
-    margin-left: auto;
+  }
+
+  .edit-button {
+    order: 3;
   }
 
   .task-description {
-    order: 3;
+    order: 4;
     flex-basis: 100%;
   }
 
