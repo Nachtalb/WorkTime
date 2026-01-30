@@ -32,6 +32,8 @@ export interface UseAppStateReturn {
   deleteProject: (id: string) => Promise<void>;
   getProjectById: (id: string) => Project | undefined;
   getOtherProject: () => Project | undefined;
+  markProjectDone: (id: string) => Promise<void>;
+  reopenProject: (id: string) => Promise<void>;
 
   // Tasks
   createTask: (projectId: string, description: string) => Promise<Task>;
@@ -286,6 +288,24 @@ export function useAppState(): UseAppStateReturn {
 
   const getOtherProject = useCallback(() => {
     return projects.find(p => p.isOther);
+  }, [projects]);
+
+  const markProjectDone = useCallback(async (id: string) => {
+    const project = projects.find(p => p.id === id);
+    if (project?.isOther) return; // Can't mark "Other" project as done
+
+    const updatedProject = { ...project!, doneAt: Date.now() };
+    await db.saveProject(updatedProject);
+    setProjects(prev => prev.map(p => p.id === id ? updatedProject : p));
+  }, [projects]);
+
+  const reopenProject = useCallback(async (id: string) => {
+    const project = projects.find(p => p.id === id);
+    if (!project) return;
+
+    const { doneAt, ...projectWithoutDone } = project;
+    await db.saveProject(projectWithoutDone as Project);
+    setProjects(prev => prev.map(p => p.id === id ? projectWithoutDone as Project : p));
   }, [projects]);
 
   // Tasks
@@ -651,6 +671,8 @@ export function useAppState(): UseAppStateReturn {
     deleteProject,
     getProjectById,
     getOtherProject,
+    markProjectDone,
+    reopenProject,
     createTask,
     startTask,
     stopActiveTask,

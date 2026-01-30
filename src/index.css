@@ -937,6 +937,65 @@ input {
   background: var(--color-border);
 }
 
+/* Done/Reopen Button */
+.done-button,
+.reopen-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.done-button {
+  color: var(--color-success);
+  border: 2px solid var(--color-success);
+}
+
+.done-button:hover {
+  background: var(--color-success);
+  color: white;
+}
+
+.reopen-button {
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+
+.reopen-button:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* Done tag */
+.tag.done {
+  background: var(--color-text-muted);
+  color: white;
+}
+
+/* Done project styling */
+.project-page.done {
+  opacity: 0.7;
+}
+
+.project-card.done {
+  opacity: 0.6;
+  background: var(--color-bg);
+}
+
+.project-card.done .project-card-title {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.project-card-id.done {
+  background: var(--color-text-muted);
+}
+
 /* Overview Title Section */
 .overview-title-section {
   display: flex;

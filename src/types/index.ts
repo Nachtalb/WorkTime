@@ -20,6 +20,7 @@ export interface Project {
   createdAt: number; // timestamp
   lastUsed: number; // timestamp
   isOther?: boolean; // special "Other" project
+  doneAt?: number; // timestamp when marked as done
 }
 
 export interface GlobalTimer {

@@ -41,6 +41,8 @@ export function ProjectPage() {
     updateProject,
     deleteTask,
     deleteNote,
+    markProjectDone,
+    reopenProject,
     getTodayDuration,
     getTotalDuration,
     getTodayGlobalDuration,
@@ -65,6 +67,7 @@ export function ProjectPage() {
   const [isTypingNewNote, setIsTypingNewNote] = useState(false);
   const [newNoteText, setNewNoteText] = useState('');
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
+  const [showDoneConfirm, setShowDoneConfirm] = useState(false);
 
   // Column selection (tasks or notes)
   const [activeColumn, setActiveColumn] = useState<Column>('tasks');
@@ -175,7 +178,7 @@ export function ProjectPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle if modals are open
-      if (showHelp || taskToDelete || noteToDelete) return;
+      if (showHelp || taskToDelete || noteToDelete || showDoneConfirm) return;
 
       // Handle Escape
       if (e.key === 'Escape') {
@@ -237,6 +240,13 @@ export function ProjectPage() {
         setNewNoteText('');
         setSelectedTaskId(null);
         setSelectedNoteId(null);
+        return;
+      }
+
+      // Handle Ctrl+D for marking project as done
+      if (e.ctrlKey && e.key === 'd' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther && !project.doneAt) {
+        e.preventDefault();
+        setShowDoneConfirm(true);
         return;
       }
 
@@ -452,6 +462,7 @@ export function ProjectPage() {
     showHelp,
     taskToDelete,
     noteToDelete,
+    showDoneConfirm,
     isTypingNewTask,
     isTypingNewNote,
     editingTaskId,
@@ -495,6 +506,14 @@ export function ProjectPage() {
       setSelectedNoteId(null);
     }
   }, [noteToDelete, deleteNote]);
+
+  const handleMarkDoneConfirm = useCallback(() => {
+    if (currentProjectId) {
+      markProjectDone(currentProjectId);
+      setShowDoneConfirm(false);
+      goToOverview();
+    }
+  }, [currentProjectId, markProjectDone, goToOverview]);
 
   const taskToDeleteDescription = taskToDelete
     ? flattenedTasks.find((t) => t.id === taskToDelete)?.description || ''
@@ -557,8 +576,42 @@ export function ProjectPage() {
             </span>
             <span className="tag primary">Today: {formatDuration(getTodayDuration(currentProjectId!))}</span>
             <span className="tag success">Total: {formatDuration(getTotalDuration(currentProjectId!))}</span>
+            {project.doneAt && (
+              <span className="tag done" data-tooltip={getTooltipDate(project.doneAt)}>
+                Done: {formatDateFull(project.doneAt)}
+              </span>
+            )}
           </div>
         </div>
+
+        {!project.isOther && !project.doneAt && (
+          <button
+            className="done-button"
+            onClick={() => setShowDoneConfirm(true)}
+            title="Mark project as done (Ctrl+D)"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>Done</span>
+          </button>
+        )}
+
+        {project.doneAt && (
+          <button
+            className="reopen-button"
+            onClick={() => reopenProject(currentProjectId!)}
+            title="Reopen project"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+              <path d="M21 3v5h-5"/>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+              <path d="M3 21v-5h5"/>
+            </svg>
+            <span>Reopen</span>
+          </button>
+        )}
 
         <TimerIndicator
           globalDuration={getTodayGlobalDuration()}
@@ -834,6 +887,14 @@ export function ProjectPage() {
         onCancel={() => setNoteToDelete(null)}
         message="Are you sure you want to delete note"
         itemName={noteToDeleteContent}
+      />
+
+      <ConfirmDialog
+        isOpen={showDoneConfirm}
+        onConfirm={handleMarkDoneConfirm}
+        onCancel={() => setShowDoneConfirm(false)}
+        message="Are you sure you want to mark this project as done?"
+        confirmText="Mark Done"
       />
     </div>
   );
