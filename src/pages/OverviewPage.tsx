@@ -103,20 +103,20 @@ export function OverviewPage() {
   }, [sortedProjects, filter]);
 
   // Get the last task for a project
-  const getLastTask = (projectId: string): Task | undefined => {
+  const getLastTask = useCallback((projectId: string): Task | undefined => {
     const projectTasks = tasks
       .filter((t) => t.projectId === projectId)
       .sort((a, b) => b.startTime - a.startTime);
     return projectTasks[0];
-  };
+  }, [tasks]);
 
   // Get the last note for a project
-  const getLastNote = (projectId: string): Note | undefined => {
+  const getLastNote = useCallback((projectId: string): Note | undefined => {
     const projectNotes = notes
       .filter((n) => n.projectId === projectId)
       .sort((a, b) => b.createdAt - a.createdAt);
     return projectNotes[0];
-  };
+  }, [notes]);
 
   // Cycle task priority
   const cyclePriority = useCallback((taskId: string, direction: 'up' | 'down') => {
@@ -359,6 +359,7 @@ export function OverviewPage() {
     isCreatingNew,
     sortedProjects,
     cyclePriority,
+    getLastTask,
   ]);
 
   // Reset selected index when filtered projects change
