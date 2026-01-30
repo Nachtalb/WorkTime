@@ -70,6 +70,7 @@ export function ProjectPage() {
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
   const [showDoneConfirm, setShowDoneConfirm] = useState(false);
   const [showActionError, setShowActionError] = useState(false);
+  const [showInputError, setShowInputError] = useState(false);
 
   // Column selection (tasks or notes)
   const [activeColumn, setActiveColumn] = useState<Column>('tasks');
@@ -249,29 +250,22 @@ export function ProjectPage() {
         return;
       }
 
-      // Handle 't' for new task
-      if (e.key === 't' && !e.ctrlKey && !e.altKey && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject) {
+      // Handle Ctrl+I for new item (task or note based on active column)
+      if (e.ctrlKey && e.key === 'i' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject) {
         e.preventDefault();
         // Don't allow adding tasks to done projects
-        if (project?.doneAt) {
+        if (activeColumn === 'tasks' && project?.doneAt) {
           setShowActionError(true);
           setTimeout(() => setShowActionError(false), 400);
           return;
         }
-        setActiveColumn('tasks');
-        setIsTypingNewTask(true);
-        setNewTaskText('');
-        setSelectedTaskId(null);
-        setSelectedNoteId(null);
-        return;
-      }
-
-      // Handle 'n' for new note
-      if (e.key === 'n' && !e.ctrlKey && !e.altKey && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject) {
-        e.preventDefault();
-        setActiveColumn('notes');
-        setIsTypingNewNote(true);
-        setNewNoteText('');
+        if (activeColumn === 'tasks') {
+          setIsTypingNewTask(true);
+          setNewTaskText('');
+        } else {
+          setIsTypingNewNote(true);
+          setNewNoteText('');
+        }
         setSelectedTaskId(null);
         setSelectedNoteId(null);
         return;
@@ -716,7 +710,7 @@ export function ProjectPage() {
       <input
         ref={newTaskInputRef}
         type="text"
-        className={`new-task-input ${isTypingNewTask || isTypingNewNote ? 'typing' : ''}`}
+        className={`new-task-input ${isTypingNewTask || isTypingNewNote ? 'typing' : ''} ${showInputError ? 'error-shake' : ''}`}
         placeholder={activeColumn === 'tasks' ? 'Start typing to create a new task...' : 'Start typing to create a new note...'}
         value={activeColumn === 'tasks' ? newTaskText : newNoteText}
         onChange={(e) => {
@@ -743,10 +737,10 @@ export function ProjectPage() {
           if (e.key === 'Enter') {
             e.preventDefault();
             if (activeColumn === 'tasks' && newTaskText.trim()) {
-              // Block task creation for done projects
+              // Block task creation for done projects - shake the input
               if (project?.doneAt) {
-                setShowActionError(true);
-                setTimeout(() => setShowActionError(false), 400);
+                setShowInputError(true);
+                setTimeout(() => setShowInputError(false), 400);
                 return;
               }
               createTask(currentProjectId!, newTaskText.trim()).then(() => {

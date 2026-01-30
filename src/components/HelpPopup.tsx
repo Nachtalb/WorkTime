@@ -77,8 +77,7 @@ const projectShortcuts: ShortcutCategory[] = [
   {
     title: 'Tasks & Notes',
     shortcuts: [
-      { keys: ['t'], description: 'New task' },
-      { keys: ['n'], description: 'New note' },
+      { keys: ['Ctrl', 'I'], description: 'New item' },
       { keys: ['Space'], description: 'Duplicate task' },
       { keys: ['Del'], description: 'Delete item' },
       { keys: ['Ctrl', 'Z'], description: 'Undo delete' },
