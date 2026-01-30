@@ -51,21 +51,42 @@ export function OverviewPage() {
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [sortBy, setSortBy] = useState<'lastUsed' | 'createdAt' | 'doneAt' | 'name'>('lastUsed');
+  const [sortAsc, setSortAsc] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   // Live tick for updating timer displays every second
   useLiveTick(globalTimerActive || activeTaskId !== null);
 
-  // Sort projects by lastUsed (most recent first), with "Other" always available
+  // Sort projects based on selected sort option
   const sortedProjects = useMemo(() => {
     return [...projects].sort((a, b) => {
-      // "Other" should be at the end if no filter
-      if (!filter) {
-        if (a.isOther) return 1;
-        if (b.isOther) return -1;
+      // "Other" should always be at the end
+      if (a.isOther) return 1;
+      if (b.isOther) return -1;
+
+      let comparison = 0;
+      switch (sortBy) {
+        case 'lastUsed':
+          comparison = b.lastUsed - a.lastUsed;
+          break;
+        case 'createdAt':
+          comparison = b.createdAt - a.createdAt;
+          break;
+        case 'doneAt':
+          // Projects without doneAt go to the end when sorting by doneAt
+          if (!a.doneAt && !b.doneAt) comparison = b.lastUsed - a.lastUsed;
+          else if (!a.doneAt) comparison = 1;
+          else if (!b.doneAt) comparison = -1;
+          else comparison = b.doneAt - a.doneAt;
+          break;
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
       }
-      return b.lastUsed - a.lastUsed;
+      return sortAsc ? -comparison : comparison;
     });
-  }, [projects, filter]);
+  }, [projects, sortBy, sortAsc]);
 
   // Filter projects based on input (matches project name as numeric ID)
   const filteredProjects = useMemo(() => {
@@ -311,33 +332,94 @@ export function OverviewPage() {
         />
       </div>
 
-      <div className="search-filter">
-        <input
-          ref={searchInputRef}
-          type="text"
-          className="search-input"
-          placeholder="Type to filter or create project..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && filter.trim()) {
-              e.preventDefault();
-              createProject(filter.trim()).then((newProject) => {
+      <div className="search-sort-row">
+        <div className="search-filter">
+          <input
+            ref={searchInputRef}
+            type="text"
+            className="search-input"
+            placeholder="Type to filter or create project..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && filter.trim()) {
+                e.preventDefault();
+                createProject(filter.trim()).then((newProject) => {
+                  setFilter('');
+                  setIsCreatingNew(false);
+                  goToProject(newProject.id);
+                });
+              } else if (e.key === 'Escape') {
                 setFilter('');
-                setIsCreatingNew(false);
-                goToProject(newProject.id);
-              });
-            } else if (e.key === 'Escape') {
-              setFilter('');
-              searchInputRef.current?.blur();
-            }
-          }}
-        />
-        {filter && (
-          <p style={{ marginTop: 8, color: 'var(--color-primary)', fontSize: 14 }}>
-            Press Enter to create project "{filter}"
-          </p>
-        )}
+                searchInputRef.current?.blur();
+              }
+            }}
+          />
+          {filter && (
+            <p style={{ marginTop: 8, color: 'var(--color-primary)', fontSize: 14 }}>
+              Press Enter to create project "{filter}"
+            </p>
+          )}
+        </div>
+
+        <div className={`sort-controls ${isSearchFocused || filter ? 'hidden' : ''}`}>
+          <select
+            className="sort-dropdown"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+          >
+            <option value="lastUsed">Last Used</option>
+            <option value="createdAt">Created</option>
+            <option value="doneAt">Done Date</option>
+            <option value="name">Name</option>
+          </select>
+          <button
+            className="sort-direction-btn"
+            onClick={() => setSortAsc(!sortAsc)}
+            title={sortAsc ? 'Ascending' : 'Descending'}
+          >
+            {sortAsc ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 19V5M5 12l7-7 7 7"/>
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14M5 12l7 7 7-7"/>
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile floating sort controls */}
+      <div className={`sort-controls-mobile ${isSearchFocused || filter ? 'hidden' : ''}`}>
+        <select
+          className="sort-dropdown"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+        >
+          <option value="lastUsed">Last Used</option>
+          <option value="createdAt">Created</option>
+          <option value="doneAt">Done Date</option>
+          <option value="name">Name</option>
+        </select>
+        <button
+          className="sort-direction-btn"
+          onClick={() => setSortAsc(!sortAsc)}
+          title={sortAsc ? 'Ascending' : 'Descending'}
+        >
+          {sortAsc ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 19V5M5 12l7-7 7 7"/>
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12l7 7 7-7"/>
+            </svg>
+          )}
+        </button>
       </div>
 
       <div className="projects-grid">
