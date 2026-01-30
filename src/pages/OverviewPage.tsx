@@ -50,6 +50,7 @@ export function OverviewPage() {
   const [showStartTimeEditor, setShowStartTimeEditor] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // Live tick for updating timer displays every second
   useLiveTick(globalTimerActive || activeTaskId !== null);
@@ -95,16 +96,16 @@ export function OverviewPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle if modals are open
-      if (showHelp || showTodayOverview || showImport || showStartTimeEditor || projectToDelete) return;
+      if (showHelp || showTodayOverview || showImport || showStartTimeEditor || projectToDelete || showExitConfirm) return;
 
-      // Handle Escape
+      // Handle Escape - show exit confirmation
       if (e.key === 'Escape') {
         if (filter) {
           setFilter('');
           setIsCreatingNew(false);
         } else {
           e.preventDefault();
-          goToLanding();
+          setShowExitConfirm(true);
         }
         return;
       }
@@ -259,6 +260,7 @@ export function OverviewPage() {
     showImport,
     showStartTimeEditor,
     projectToDelete,
+    showExitConfirm,
     goToLanding,
     goToProject,
     createProject,
@@ -294,7 +296,7 @@ export function OverviewPage() {
     <div className="page overview-page">
       <div className="overview-header">
         <div className="overview-title-section">
-          <button className="back-button" onClick={goToLanding} title="Back to Landing (Esc)">
+          <button className="back-button" onClick={() => setShowExitConfirm(true)} title="Back to Landing (Esc)">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
@@ -420,6 +422,16 @@ export function OverviewPage() {
         onCancel={() => setProjectToDelete(null)}
         message="Are you sure you want to delete project"
         itemName={projectToDeleteName}
+      />
+
+      <ConfirmDialog
+        isOpen={showExitConfirm}
+        onConfirm={() => {
+          setShowExitConfirm(false);
+          goToLanding();
+        }}
+        onCancel={() => setShowExitConfirm(false)}
+        message="Are you sure you want to go back to the landing page?"
       />
     </div>
   );

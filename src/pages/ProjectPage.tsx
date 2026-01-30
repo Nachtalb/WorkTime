@@ -434,6 +434,8 @@ export function ProjectPage() {
           setNewNoteText(e.key);
           setSelectedNoteId(null);
         }
+        // Immediately focus the input so subsequent keystrokes go directly to it
+        newTaskInputRef.current?.focus();
         return;
       }
     };
@@ -581,10 +583,14 @@ export function ProjectPage() {
             if (activeColumn === 'tasks' && newTaskText.trim()) {
               createTask(currentProjectId!, newTaskText.trim()).then(() => {
                 setNewTaskText('');
+                setIsTypingNewTask(false);
+                newTaskInputRef.current?.blur();
               });
             } else if (activeColumn === 'notes' && newNoteText.trim()) {
               createNote(currentProjectId!, newNoteText.trim()).then(() => {
                 setNewNoteText('');
+                setIsTypingNewNote(false);
+                newTaskInputRef.current?.blur();
               });
             }
           }
