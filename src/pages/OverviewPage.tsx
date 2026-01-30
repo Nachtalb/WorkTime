@@ -117,7 +117,7 @@ export function OverviewPage() {
 
     // Filter by name if filter is set
     if (filter) {
-      result = result.filter((p) => p.name.toLowerCase().startsWith(filter.toLowerCase()));
+      result = result.filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()));
     }
 
     // Hide done projects if enabled
@@ -369,7 +369,7 @@ export function OverviewPage() {
         // Check if we should switch to "creating new" mode
         const newFilter = filter + e.key;
         const matches = sortedProjects.filter((p) =>
-          p.name.toLowerCase().startsWith(newFilter.toLowerCase())
+          p.name.toLowerCase().includes(newFilter.toLowerCase())
         );
         if (matches.length === 0) {
           setIsCreatingNew(true);
