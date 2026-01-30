@@ -600,47 +600,49 @@ export function ProjectPage() {
           </div>
         </div>
 
-        {!project.isOther && !project.doneAt && (
-          <button
-            className="done-button"
-            onClick={() => setShowDoneConfirm(true)}
-            title="Mark project as done (Ctrl+D)"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>Done</span>
-          </button>
-        )}
-
-        {project.doneAt && (
-          <button
-            className="reopen-button"
-            onClick={() => reopenProject(currentProjectId!)}
-            title="Reopen project"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-              <path d="M21 3v5h-5"/>
-              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-              <path d="M3 21v-5h5"/>
-            </svg>
-            <span>Reopen</span>
-          </button>
-        )}
-
         {!project.isOther && (
-          <button
-            className={`hold-button ${project.onHoldAt ? 'active' : ''}`}
-            onClick={() => toggleProjectOnHold(currentProjectId!)}
-            title={project.onHoldAt ? 'Resume project (Ctrl+H)' : 'Put on hold (Ctrl+H)'}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="6" y="4" width="4" height="16"/>
-              <rect x="14" y="4" width="4" height="16"/>
-            </svg>
-            <span>{project.onHoldAt ? 'Resume' : 'Hold'}</span>
-          </button>
+          <div className="project-actions">
+            {!project.doneAt && (
+              <button
+                className="done-button"
+                onClick={() => setShowDoneConfirm(true)}
+                title="Mark project as done (Ctrl+D)"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span className="action-label">Done</span>
+              </button>
+            )}
+
+            {project.doneAt && (
+              <button
+                className="reopen-button"
+                onClick={() => reopenProject(currentProjectId!)}
+                title="Reopen project"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                  <path d="M21 3v5h-5"/>
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                  <path d="M3 21v-5h5"/>
+                </svg>
+                <span className="action-label">Reopen</span>
+              </button>
+            )}
+
+            <button
+              className={`hold-button ${project.onHoldAt ? 'active' : ''}`}
+              onClick={() => toggleProjectOnHold(currentProjectId!)}
+              title={project.onHoldAt ? 'Resume project (Ctrl+H)' : 'Put on hold (Ctrl+H)'}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="6" y="4" width="4" height="16"/>
+                <rect x="14" y="4" width="4" height="16"/>
+              </svg>
+              <span className="action-label">{project.onHoldAt ? 'Resume' : 'Hold'}</span>
+            </button>
+          </div>
         )}
 
         <TimerIndicator

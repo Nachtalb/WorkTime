@@ -1032,6 +1032,14 @@ input {
   color: white;
 }
 
+/* Project Actions Container */
+.project-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 /* Done tag */
 .tag.done {
   background: var(--color-text-muted);
@@ -1352,7 +1360,7 @@ input {
 
   .sort-controls-mobile {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -1368,14 +1376,14 @@ input {
   }
 
   .sort-controls-mobile .sort-dropdown {
-    padding: 12px 16px;
-    font-size: 14px;
+    padding: 10px 12px;
+    font-size: 13px;
     box-shadow: var(--shadow-lg);
   }
 
   .sort-controls-mobile .sort-direction-btn {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     box-shadow: var(--shadow-lg);
   }
 
@@ -1386,5 +1394,30 @@ input {
 
   .search-sort-row .search-filter {
     width: 100%;
+  }
+
+  /* Project Actions - floating on mobile */
+  .project-actions {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    flex-direction: row;
+    gap: 8px;
+    z-index: 100;
+  }
+
+  .project-actions .done-button,
+  .project-actions .reopen-button,
+  .project-actions .hold-button {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 50%;
+    justify-content: center;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .project-actions .action-label {
+    display: none;
   }
 }
