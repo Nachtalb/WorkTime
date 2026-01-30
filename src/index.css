@@ -531,14 +531,13 @@ input {
 
 .note-item {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 12px;
   padding: 12px 16px;
   background: var(--color-bg-secondary);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
-  min-height: 60px;
 }
 
 .note-item:hover {
@@ -551,12 +550,15 @@ input {
 }
 
 .note-time {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-text-muted);
+  min-width: 50px;
+  flex-shrink: 0;
 }
 
 .note-content {
-  font-size: 14px;
+  flex: 1;
+  font-size: 15px;
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
@@ -573,12 +575,6 @@ input {
   resize: vertical;
   min-height: 60px;
   font-family: inherit;
-}
-
-.note-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
 /* Edit Button */
