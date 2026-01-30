@@ -569,12 +569,23 @@ export function ProjectPage() {
         placeholder={activeColumn === 'tasks' ? 'Start typing to create a new task...' : 'Start typing to create a new note...'}
         value={activeColumn === 'tasks' ? newTaskText : newNoteText}
         onChange={(e) => {
+          const value = e.target.value;
           if (activeColumn === 'tasks') {
-            setNewTaskText(e.target.value);
-            if (!isTypingNewTask) setIsTypingNewTask(true);
+            setNewTaskText(value);
+            if (!value) {
+              setIsTypingNewTask(false);
+              newTaskInputRef.current?.blur();
+            } else if (!isTypingNewTask) {
+              setIsTypingNewTask(true);
+            }
           } else {
-            setNewNoteText(e.target.value);
-            if (!isTypingNewNote) setIsTypingNewNote(true);
+            setNewNoteText(value);
+            if (!value) {
+              setIsTypingNewNote(false);
+              newTaskInputRef.current?.blur();
+            } else if (!isTypingNewNote) {
+              setIsTypingNewNote(true);
+            }
           }
         }}
         onKeyDown={(e) => {
