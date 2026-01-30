@@ -104,6 +104,8 @@ input {
   flex-direction: column;
   padding: 24px;
   overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
 }
 
 /* Landing Page */
@@ -247,6 +249,9 @@ input {
 }
 
 .project-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   background: var(--color-bg-secondary);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -338,6 +343,8 @@ input {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
 }
 
 .tag {
@@ -473,6 +480,15 @@ input {
 
 .task-item.active.selected, .project-card.active.selected {
   background: linear-gradient(to right, var(--color-active-bg), var(--color-primary-light));
+}
+
+.project-card.done.selected {
+  background: linear-gradient(to right, var(--color-bg), var(--color-primary-light));
+  opacity: 0.8;
+}
+
+.project-card.on-hold.selected {
+  background: linear-gradient(to right, var(--color-warning-light), var(--color-primary-light));
 }
 
 .task-time {
@@ -1251,6 +1267,12 @@ input {
 
   .projects-grid {
     grid-template-columns: 1fr;
+    max-width: 100%;
+  }
+
+  .project-card {
+    max-width: 100%;
+    word-break: break-word;
   }
 
   .timer-indicator {
