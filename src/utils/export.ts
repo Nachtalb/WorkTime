@@ -48,48 +48,54 @@ export function exportTodayAsTxt(
   // Build project map for lookups
   const projectMap = new Map(projects.map(p => [p.id, p]));
 
-  // Combine tasks and notes into a single chronological list
-  type TimelineItem =
-    | { type: 'task'; time: number; task: Task }
-    | { type: 'note'; time: number; note: Note };
-
-  const timeline: TimelineItem[] = [
-    ...todayTasks.map(task => ({ type: 'task' as const, time: task.startTime, task })),
-    ...todayNotes.map(note => ({ type: 'note' as const, time: note.createdAt, note })),
-  ];
-
-  // Sort chronologically
-  timeline.sort((a, b) => a.time - b.time);
-
-  // Find max project name length (min 7 chars)
-  const maxProjectLen = Math.max(7, ...timeline.map(item => {
-    const projectId = item.type === 'task' ? item.task.projectId : item.note.projectId;
-    const project = projectMap.get(projectId);
-    return (project?.name || projectId).length;
+  // Find max project name length (min 7 chars) for tasks
+  const maxProjectLen = Math.max(7, ...todayTasks.map(task => {
+    const project = projectMap.get(task.projectId);
+    return (project?.name || task.projectId).length;
   }));
 
-  output += 'ACTIVITY:\n';
+  // Tasks in chronological order
+  const sortedTasks = [...todayTasks].sort((a, b) => a.startTime - b.startTime);
+
+  output += 'TASKS:\n';
   output += '-'.repeat(30) + '\n';
 
-  for (const item of timeline) {
-    if (item.type === 'task') {
-      const project = projectMap.get(item.task.projectId);
-      const projectName = (project?.name || item.task.projectId).padEnd(maxProjectLen);
-      const duration = item.task.duration || (item.task.endTime ? item.task.endTime - item.task.startTime : Date.now() - item.task.startTime);
-      output += `  [${formatTime(item.task.startTime)}] - ${projectName} - ${item.task.description} (${formatDuration(duration)})\n`;
-    } else {
-      const project = projectMap.get(item.note.projectId);
-      const projectName = (project?.name || item.note.projectId).padEnd(maxProjectLen);
-      // Handle multi-line notes
-      const noteLines = item.note.content.split('\n');
-      output += `  [${formatTime(item.note.createdAt)}] - ${projectName} - Note: ${noteLines[0]}`;
-      if (noteLines.length > 1) {
-        const indent = ' '.repeat(14 + maxProjectLen + 10); // align with first line content
-        for (let i = 1; i < noteLines.length; i++) {
-          output += `\n${indent}${noteLines[i]}`;
+  for (const task of sortedTasks) {
+    const project = projectMap.get(task.projectId);
+    const projectName = (project?.name || task.projectId).padEnd(maxProjectLen);
+    const duration = task.duration || (task.endTime ? task.endTime - task.startTime : Date.now() - task.startTime);
+    output += `  [${formatTime(task.startTime)}] - ${projectName} - ${task.description} (${formatDuration(duration)})\n`;
+  }
+
+  // Notes grouped by project
+  if (todayNotes.length > 0) {
+    const notesByProject = new Map<string, Note[]>();
+    for (const note of todayNotes) {
+      const existing = notesByProject.get(note.projectId) || [];
+      existing.push(note);
+      notesByProject.set(note.projectId, existing);
+    }
+
+    output += '\n\nNOTES BY PROJECT:\n';
+    output += '-'.repeat(30) + '\n';
+
+    for (const [projectId, projectNotes] of notesByProject) {
+      const project = projectMap.get(projectId);
+      const projectName = project?.name || projectId;
+      output += `\n[${projectName}]\n`;
+
+      const sortedNotes = [...projectNotes].sort((a, b) => a.createdAt - b.createdAt);
+      for (const note of sortedNotes) {
+        const noteLines = note.content.split('\n');
+        output += `  [${formatTime(note.createdAt)}] ${noteLines[0]}`;
+        if (noteLines.length > 1) {
+          const indent = ' '.repeat(10); // align with first line content
+          for (let i = 1; i < noteLines.length; i++) {
+            output += `\n${indent}${noteLines[i]}`;
+          }
         }
+        output += '\n';
       }
-      output += '\n';
     }
   }
 

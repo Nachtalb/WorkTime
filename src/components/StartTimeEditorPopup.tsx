@@ -21,8 +21,10 @@ export function StartTimeEditorPopup({
     .filter((t) => t.date === today)
     .sort((a, b) => a.startTime - b.startTime);
 
-  // Get the first (earliest) timer of today - this is the "work start" time
-  const currentTimer = todayTimers[0];
+  // Get the last (most recent/current) timer of today
+  const currentTimer = todayTimers[todayTimers.length - 1];
+  // Get the previous timer (the one before current) for overlap validation
+  const previousTimer = todayTimers.length > 1 ? todayTimers[todayTimers.length - 2] : null;
 
   const [timeValue, setTimeValue] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -69,13 +71,11 @@ export function StartTimeEditorPopup({
       return;
     }
 
-    // Check for overlaps with other timers on the same day
-    const otherTimers = todayTimers.filter(t => t.id !== currentTimer.id);
-    for (const timer of otherTimers) {
-      const timerEnd = timer.endTime || Date.now();
-      // Check if new start time would be during another timer's session
-      if (newStartTime >= timer.startTime && newStartTime < timerEnd) {
-        setError('Start time would overlap with another work session');
+    // Check for overlap with previous session
+    if (previousTimer) {
+      const previousEnd = previousTimer.endTime || previousTimer.startTime;
+      if (newStartTime < previousEnd) {
+        setError(`Start time cannot be before previous session ended (${formatTime(previousEnd)})`);
         return;
       }
     }
@@ -83,7 +83,7 @@ export function StartTimeEditorPopup({
     setError(null);
     await onUpdateTimer(currentTimer.id, newStartTime);
     onClose();
-  }, [currentTimer, timeValue, onUpdateTimer, onClose, todayTimers]);
+  }, [currentTimer, timeValue, onUpdateTimer, onClose, previousTimer]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -109,7 +109,7 @@ export function StartTimeEditorPopup({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Change Work Start Time">
+    <Modal isOpen={isOpen} onClose={onClose} title="Change Current Session Start Time">
       <div style={{ marginBottom: '16px' }}>
         <p style={{ marginBottom: '12px', color: 'var(--color-text-secondary)' }}>
           Current start time: <strong>{formatTime(currentTimer.startTime)}</strong>
