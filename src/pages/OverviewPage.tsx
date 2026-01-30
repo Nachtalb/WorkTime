@@ -431,7 +431,7 @@ export function OverviewPage() {
           return (
             <div
               key={project.id}
-              className={`project-card ${isSelected ? 'selected' : ''} ${isActive ? 'active' : ''} ${project.doneAt ? 'done' : ''}`}
+              className={`project-card ${isSelected ? 'selected' : ''} ${isActive ? 'active' : ''} ${project.doneAt ? 'done' : ''} ${project.onHoldAt ? 'on-hold' : ''}`}
               onClick={() => goToProject(project.id)}
             >
               <div className="project-card-header">
@@ -440,6 +440,7 @@ export function OverviewPage() {
                 </span>
                 {project.isOther && <span className="project-card-id">Special</span>}
                 {project.doneAt && <span className="project-card-id done">Done</span>}
+                {project.onHoldAt && !project.doneAt && <span className="project-card-id on-hold">On Hold</span>}
               </div>
 
               <div className="project-card-task">

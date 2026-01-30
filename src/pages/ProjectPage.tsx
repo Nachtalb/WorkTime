@@ -43,6 +43,7 @@ export function ProjectPage() {
     deleteNote,
     markProjectDone,
     reopenProject,
+    toggleProjectOnHold,
     getTodayDuration,
     getTotalDuration,
     getTodayGlobalDuration,
@@ -68,6 +69,7 @@ export function ProjectPage() {
   const [newNoteText, setNewNoteText] = useState('');
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
   const [showDoneConfirm, setShowDoneConfirm] = useState(false);
+  const [showDoneError, setShowDoneError] = useState(false);
 
   // Column selection (tasks or notes)
   const [activeColumn, setActiveColumn] = useState<Column>('tasks');
@@ -178,7 +180,7 @@ export function ProjectPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle if modals are open
-      if (showHelp || taskToDelete || noteToDelete || showDoneConfirm) return;
+      if (showHelp || taskToDelete || noteToDelete || showDoneConfirm || showDoneError) return;
 
       // Handle Escape
       if (e.key === 'Escape') {
@@ -247,6 +249,13 @@ export function ProjectPage() {
       if (e.ctrlKey && e.key === 'd' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther && !project.doneAt) {
         e.preventDefault();
         setShowDoneConfirm(true);
+        return;
+      }
+
+      // Handle Ctrl+H for toggling on hold status
+      if (e.ctrlKey && e.key === 'h' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther) {
+        e.preventDefault();
+        toggleProjectOnHold(currentProjectId!);
         return;
       }
 
@@ -463,6 +472,7 @@ export function ProjectPage() {
     taskToDelete,
     noteToDelete,
     showDoneConfirm,
+    showDoneError,
     isTypingNewTask,
     isTypingNewNote,
     editingTaskId,
@@ -485,6 +495,7 @@ export function ProjectPage() {
     updateTask,
     updateNote,
     updateProject,
+    toggleProjectOnHold,
     currentProjectId,
     project,
     tasks,
@@ -581,6 +592,11 @@ export function ProjectPage() {
                 Done: {formatDateFull(project.doneAt)}
               </span>
             )}
+            {project.onHoldAt && (
+              <span className="tag on-hold" data-tooltip={getTooltipDate(project.onHoldAt)}>
+                On Hold: {formatDateFull(project.onHoldAt)}
+              </span>
+            )}
           </div>
         </div>
 
@@ -610,6 +626,20 @@ export function ProjectPage() {
               <path d="M3 21v-5h5"/>
             </svg>
             <span>Reopen</span>
+          </button>
+        )}
+
+        {!project.isOther && (
+          <button
+            className={`hold-button ${project.onHoldAt ? 'active' : ''}`}
+            onClick={() => toggleProjectOnHold(currentProjectId!)}
+            title={project.onHoldAt ? 'Resume project (Ctrl+H)' : 'Put on hold (Ctrl+H)'}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="6" y="4" width="4" height="16"/>
+              <rect x="14" y="4" width="4" height="16"/>
+            </svg>
+            <span>{project.onHoldAt ? 'Resume' : 'Hold'}</span>
           </button>
         )}
 
@@ -651,6 +681,11 @@ export function ProjectPage() {
           if (e.key === 'Enter') {
             e.preventDefault();
             if (activeColumn === 'tasks' && newTaskText.trim()) {
+              // Block task creation for done projects
+              if (project?.doneAt) {
+                setShowDoneError(true);
+                return;
+              }
               createTask(currentProjectId!, newTaskText.trim()).then(() => {
                 setNewTaskText('');
                 setIsTypingNewTask(false);
@@ -895,6 +930,14 @@ export function ProjectPage() {
         onCancel={() => setShowDoneConfirm(false)}
         message="Are you sure you want to mark this project as done?"
         confirmText="Mark Done"
+      />
+
+      <ConfirmDialog
+        isOpen={showDoneError}
+        onConfirm={() => setShowDoneError(false)}
+        onCancel={() => setShowDoneError(false)}
+        message="This project is marked as done. Reopen it first to add new tasks."
+        confirmText="OK"
       />
     </div>
   );

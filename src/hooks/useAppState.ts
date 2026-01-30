@@ -34,6 +34,7 @@ export interface UseAppStateReturn {
   getOtherProject: () => Project | undefined;
   markProjectDone: (id: string) => Promise<void>;
   reopenProject: (id: string) => Promise<void>;
+  toggleProjectOnHold: (id: string) => Promise<void>;
 
   // Tasks
   createTask: (projectId: string, description: string) => Promise<Task>;
@@ -306,6 +307,23 @@ export function useAppState(): UseAppStateReturn {
     const { doneAt, ...projectWithoutDone } = project;
     await db.saveProject(projectWithoutDone as Project);
     setProjects(prev => prev.map(p => p.id === id ? projectWithoutDone as Project : p));
+  }, [projects]);
+
+  const toggleProjectOnHold = useCallback(async (id: string) => {
+    const project = projects.find(p => p.id === id);
+    if (!project || project.isOther) return; // Can't toggle "Other" project
+
+    let updatedProject: Project;
+    if (project.onHoldAt) {
+      // Remove on hold status
+      const { onHoldAt, ...projectWithoutOnHold } = project;
+      updatedProject = projectWithoutOnHold as Project;
+    } else {
+      // Set on hold
+      updatedProject = { ...project, onHoldAt: Date.now() };
+    }
+    await db.saveProject(updatedProject);
+    setProjects(prev => prev.map(p => p.id === id ? updatedProject : p));
   }, [projects]);
 
   // Tasks
@@ -673,6 +691,7 @@ export function useAppState(): UseAppStateReturn {
     getOtherProject,
     markProjectDone,
     reopenProject,
+    toggleProjectOnHold,
     createTask,
     startTask,
     stopActiveTask,

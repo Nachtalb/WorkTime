@@ -21,6 +21,7 @@ export interface Project {
   lastUsed: number; // timestamp
   isOther?: boolean; // special "Other" project
   doneAt?: number; // timestamp when marked as done
+  onHoldAt?: number; // timestamp when marked as on hold
 }
 
 export interface GlobalTimer {

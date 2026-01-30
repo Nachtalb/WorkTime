@@ -997,6 +997,53 @@ input {
   color: white;
 }
 
+/* On Hold tag */
+.tag.on-hold {
+  background: var(--color-warning);
+  color: white;
+}
+
+/* On Hold project styling */
+.project-card.on-hold {
+  border-color: var(--color-warning);
+  background: var(--color-warning-light);
+}
+
+.project-card-id.on-hold {
+  background: var(--color-warning);
+  color: white;
+}
+
+/* Hold Button */
+.hold-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  color: var(--color-warning);
+  border: 2px solid var(--color-warning);
+}
+
+.hold-button:hover {
+  background: var(--color-warning);
+  color: white;
+}
+
+.hold-button.active {
+  background: var(--color-warning);
+  color: white;
+}
+
+.hold-button.active:hover {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
 /* Overview Title Section */
 .overview-title-section {
   display: flex;
