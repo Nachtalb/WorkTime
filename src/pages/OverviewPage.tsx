@@ -10,6 +10,7 @@ import { StartTimeEditorPopup } from '../components/StartTimeEditorPopup';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import {
   formatDuration,
+  formatTime,
   getRelativeDate,
   getTooltipDate,
 } from '../utils/time';
@@ -230,7 +231,7 @@ export function OverviewPage() {
       }
 
       // Handle Ctrl+S for export TXT
-      if (e.ctrlKey && e.key === 's' && !e.shiftKey) {
+      if (e.ctrlKey && e.key === 's' && !e.shiftKey && !e.altKey) {
         e.preventDefault();
         const txt = exportTodayAsTxt(tasks, projects, globalTimers, notes);
         downloadFile(txt, `worktime-today-${new Date().toISOString().split('T')[0]}.txt`, 'text/plain');
@@ -238,7 +239,7 @@ export function OverviewPage() {
       }
 
       // Handle Ctrl+E for export CSV
-      if (e.ctrlKey && e.key === 'e' && !e.shiftKey) {
+      if (e.ctrlKey && e.key === 'e' && !e.shiftKey && !e.altKey) {
         e.preventDefault();
         const csv = exportTodayAsCsv(tasks, notes);
         downloadFile(csv, `worktime-today-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
@@ -267,7 +268,7 @@ export function OverviewPage() {
       }
 
       // Handle Ctrl+O for today overview
-      if (e.ctrlKey && e.key === 'o') {
+      if (e.ctrlKey && e.key === 'o' && !e.altKey) {
         e.preventDefault();
         setShowTodayOverview(true);
         return;
@@ -485,8 +486,8 @@ export function OverviewPage() {
                   {project.name || 'Unnamed Project'}
                 </span>
                 {project.isOther && <span className="project-card-id">Special</span>}
-                {project.doneAt && <span className="project-card-id done">Done</span>}
-                {project.onHoldAt && !project.doneAt && <span className="project-card-id on-hold">On Hold</span>}
+                {project.doneAt && <span className="project-card-id done" title={`Done on ${getTooltipDate(project.doneAt)} at ${formatTime(project.doneAt)}`}>Done</span>}
+                {project.onHoldAt && !project.doneAt && <span className="project-card-id on-hold" title={`On hold since ${getTooltipDate(project.onHoldAt)} at ${formatTime(project.onHoldAt)}`}>On Hold</span>}
               </div>
 
               {(lastTask || lastNote) && (
