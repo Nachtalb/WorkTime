@@ -142,19 +142,25 @@ export function ProjectPage() {
 
   useEffect(() => {
     if (editingTaskId && editTaskInputRef.current) {
-      editTaskInputRef.current.focus();
+      const input = editTaskInputRef.current;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
     }
   }, [editingTaskId]);
 
   useEffect(() => {
     if (editingNoteId && editNoteInputRef.current) {
-      editNoteInputRef.current.focus();
+      const textarea = editNoteInputRef.current;
+      textarea.focus();
+      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     }
   }, [editingNoteId]);
 
   useEffect(() => {
     if (isRenamingProject && projectNameInputRef.current) {
-      projectNameInputRef.current.focus();
+      const input = projectNameInputRef.current;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
     }
   }, [isRenamingProject]);
 

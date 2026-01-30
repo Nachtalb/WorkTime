@@ -205,17 +205,8 @@ export function useAppState(): UseAppStateReturn {
   const goToProject = useCallback(async (projectId: string) => {
     setCurrentPage('project');
     setCurrentProjectId(projectId);
-
-    // Update project's lastUsed
-    const project = projects.find(p => p.id === projectId);
-    if (project) {
-      const updatedProject = { ...project, lastUsed: Date.now() };
-      await db.saveProject(updatedProject);
-      setProjects(prev => prev.map(p => p.id === projectId ? updatedProject : p));
-    }
-
     await saveState({ currentPage: 'project', currentProjectId: projectId });
-  }, [projects, saveState]);
+  }, [saveState]);
 
   // Global timer
   const startGlobalTimer = useCallback(async () => {
@@ -408,8 +399,16 @@ export function useAppState(): UseAppStateReturn {
       const updatedTask = { ...task, ...updates };
       await db.saveTask(updatedTask);
       setTasks(prev => prev.map(t => t.id === taskId ? updatedTask : t));
+
+      // Update project lastUsed
+      const project = projects.find(p => p.id === task.projectId);
+      if (project) {
+        const updatedProject = { ...project, lastUsed: Date.now() };
+        await db.saveProject(updatedProject);
+        setProjects(prev => prev.map(p => p.id === task.projectId ? updatedProject : p));
+      }
     }
-  }, [tasks]);
+  }, [tasks, projects]);
 
   const deleteTask = useCallback(async (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
@@ -486,8 +485,16 @@ export function useAppState(): UseAppStateReturn {
       const updatedNote = { ...note, ...updates };
       await db.saveNote(updatedNote);
       setNotes(prev => prev.map(n => n.id === noteId ? updatedNote : n));
+
+      // Update project lastUsed
+      const project = projects.find(p => p.id === note.projectId);
+      if (project) {
+        const updatedProject = { ...project, lastUsed: Date.now() };
+        await db.saveProject(updatedProject);
+        setProjects(prev => prev.map(p => p.id === note.projectId ? updatedProject : p));
+      }
     }
-  }, [notes]);
+  }, [notes, projects]);
 
   const deleteNote = useCallback(async (noteId: string) => {
     const note = notes.find(n => n.id === noteId);
