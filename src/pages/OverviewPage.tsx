@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useApp } from '../hooks/AppContext';
 import { useLiveTick } from '../hooks/useLiveTick';
 import type { Task } from '../types';
@@ -44,6 +44,7 @@ export function OverviewPage() {
   const [filter, setFilter] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [showTodayOverview, setShowTodayOverview] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showStartTimeEditor, setShowStartTimeEditor] = useState(false);
@@ -108,8 +109,11 @@ export function OverviewPage() {
         return;
       }
 
-      // Handle Enter
+      // Handle Enter (skip if input is focused - input's onKeyDown handles it)
       if (e.key === 'Enter') {
+        if (document.activeElement === searchInputRef.current) {
+          return;
+        }
         e.preventDefault();
         if (isCreatingNew && filter) {
           // Create new project with the filter as name
@@ -307,13 +311,27 @@ export function OverviewPage() {
 
       <div className="search-filter">
         <input
+          ref={searchInputRef}
           type="text"
           className="search-input"
-          placeholder={isCreatingNew ? 'New project name...' : 'Type numbers to filter or create...'}
+          placeholder="Type to filter or create project..."
           value={filter}
-          readOnly
+          onChange={(e) => setFilter(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && filter.trim()) {
+              e.preventDefault();
+              createProject(filter.trim()).then((newProject) => {
+                setFilter('');
+                setIsCreatingNew(false);
+                goToProject(newProject.id);
+              });
+            } else if (e.key === 'Escape') {
+              setFilter('');
+              searchInputRef.current?.blur();
+            }
+          }}
         />
-        {isCreatingNew && filter && (
+        {filter && (
           <p style={{ marginTop: 8, color: 'var(--color-primary)', fontSize: 14 }}>
             Press Enter to create project "{filter}"
           </p>
