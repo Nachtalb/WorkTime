@@ -335,14 +335,16 @@ export function OverviewPage() {
   }, [filteredProjects.length, selectedIndex]);
 
   // Select the previously viewed project when returning from project page
+  const hasSelectedInitial = useRef(false);
   useEffect(() => {
-    if (currentProjectId && filteredProjects.length > 0) {
+    if (!hasSelectedInitial.current && currentProjectId && filteredProjects.length > 0) {
       const projectIndex = filteredProjects.findIndex(p => p.id === currentProjectId);
       if (projectIndex !== -1) {
         setSelectedIndex(projectIndex);
+        hasSelectedInitial.current = true;
       }
     }
-  }, []); // Only run on mount
+  }, [currentProjectId, filteredProjects]);
 
   const handleDeleteConfirm = useCallback(() => {
     if (projectToDelete) {

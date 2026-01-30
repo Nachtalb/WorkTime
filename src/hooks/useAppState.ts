@@ -200,9 +200,9 @@ export function useAppState(): UseAppStateReturn {
   }, [globalTimers, activeTaskId, tasks, saveState]);
 
   const goToOverview = useCallback(async () => {
+    // Keep currentProjectId so overview can select the last viewed project
     setCurrentPage('overview');
-    setCurrentProjectId(null);
-    await saveState({ currentPage: 'overview', currentProjectId: null });
+    await saveState({ currentPage: 'overview' });
   }, [saveState]);
 
   const goToProject = useCallback(async (projectId: string) => {
