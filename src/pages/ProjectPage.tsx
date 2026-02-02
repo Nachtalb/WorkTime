@@ -536,8 +536,8 @@ export function ProjectPage() {
         return;
       }
 
-      // Handle "t" for global todo popup (when not editing)
-      if (e.key === 't' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle) {
+      // Handle Ctrl+T for global todo popup
+      if ((e.ctrlKey || e.metaKey) && e.key === 't') {
         e.preventDefault();
         setShowGlobalTodo(true);
         return;

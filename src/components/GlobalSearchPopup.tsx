@@ -245,10 +245,10 @@ export function GlobalSearchPopup({
           )}
         </div>
 
-        <div className="global-search-footer">
-          <span><kbd>↑↓</kbd> navigate</span>
-          <span><kbd>↵</kbd> select</span>
-          <span><kbd>esc</kbd> close</span>
+        <div className="modal-hint">
+          <kbd>↑↓</kbd> navigate
+          <kbd>Enter</kbd> select
+          <kbd>Esc</kbd> close
         </div>
       </div>
     </div>

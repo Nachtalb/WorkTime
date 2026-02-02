@@ -56,6 +56,13 @@ export function GlobalTodoPopup({
     }
   }, [editingId]);
 
+  // Focus list when selectedIndex changes from -1 to a valid index
+  useEffect(() => {
+    if (selectedIndex >= 0) {
+      listRef.current?.focus();
+    }
+  }, [selectedIndex]);
+
   // Scroll selected item into view
   useEffect(() => {
     if (selectedIndex >= 0 && listRef.current) {
@@ -120,7 +127,6 @@ export function GlobalTodoPopup({
       e.preventDefault();
       if (sortedTodos.length > 0) {
         setSelectedIndex(0);
-        inputRef.current?.blur();
       }
     }
   }, [handleAddTodo, sortedTodos.length]);
@@ -177,10 +183,9 @@ export function GlobalTodoPopup({
   const completedTodos = sortedTodos.filter(t => t.completed);
 
   return (
-    <div className="global-todo-overlay" onClick={onClose}>
-      <div className="global-todo-popup" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal global-todo-modal" onClick={(e) => e.stopPropagation()}>
         <div className="global-todo-header">
-          <span className="global-todo-icon">☑</span>
           <input
             ref={inputRef}
             type="text"
@@ -191,9 +196,6 @@ export function GlobalTodoPopup({
             onKeyDown={handleInputKeyDown}
             onFocus={() => setSelectedIndex(-1)}
           />
-          {newTodoText && (
-            <span className="global-todo-hint">Enter to add</span>
-          )}
         </div>
 
         <div
@@ -220,12 +222,12 @@ export function GlobalTodoPopup({
                         className={`global-todo-item ${isSelected ? 'selected' : ''}`}
                         onClick={() => {
                           setSelectedIndex(idx);
-                          inputRef.current?.blur();
+                          listRef.current?.focus();
                         }}
                         onDoubleClick={() => handleStartEdit(todo)}
                       >
                         <span
-                          className="global-todo-checkbox"
+                          className="todo-checkbox"
                           onClick={(e) => {
                             e.stopPropagation();
                             onToggleTodo(todo.id);
@@ -268,12 +270,12 @@ export function GlobalTodoPopup({
                         className={`global-todo-item completed ${isSelected ? 'selected' : ''}`}
                         onClick={() => {
                           setSelectedIndex(actualIndex);
-                          inputRef.current?.blur();
+                          listRef.current?.focus();
                         }}
                         onDoubleClick={() => handleStartEdit(todo)}
                       >
                         <span
-                          className="global-todo-checkbox checked"
+                          className="todo-checkbox checked"
                           onClick={(e) => {
                             e.stopPropagation();
                             onToggleTodo(todo.id);
@@ -303,11 +305,12 @@ export function GlobalTodoPopup({
           )}
         </div>
 
-        <div className="global-todo-footer">
-          <span><kbd>Enter</kbd> add/save</span>
-          <span><kbd>Space</kbd> toggle</span>
-          <span><kbd>Del</kbd> delete</span>
-          <span><kbd>Esc</kbd> close</span>
+        <div className="modal-hint">
+          <kbd>↑↓</kbd> navigate
+          <kbd>Space</kbd> toggle
+          <kbd>Enter</kbd> edit
+          <kbd>Del</kbd> delete
+          <kbd>Esc</kbd> close
         </div>
       </div>
     </div>

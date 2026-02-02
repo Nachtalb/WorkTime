@@ -405,8 +405,8 @@ export function OverviewPage() {
         return;
       }
 
-      // Handle "t" for global todo popup
-      if (e.key === 't' && !filter && !e.ctrlKey) {
+      // Handle Ctrl+T for global todo popup
+      if ((e.ctrlKey || e.metaKey) && e.key === 't') {
         e.preventDefault();
         setShowGlobalTodo(true);
         return;

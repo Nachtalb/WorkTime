@@ -56,8 +56,8 @@ export function LandingPage() {
         return;
       }
 
-      // Handle "t" for global todo popup
-      if (e.key === 't') {
+      // Handle Ctrl+T for global todo popup
+      if ((e.ctrlKey || e.metaKey) && e.key === 't') {
         e.preventDefault();
         setShowGlobalTodo(true);
         return;
