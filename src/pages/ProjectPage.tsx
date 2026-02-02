@@ -554,8 +554,8 @@ export function ProjectPage() {
         return;
       }
 
-      // Handle Left/Right arrow keys for column switching (skip for ToDo projects)
-      if (e.key === 'ArrowLeft' && effectiveActiveColumn === 'notes' && !project?.isTodo) {
+      // Handle Left/Right arrow keys for column switching (skip for ToDo projects and when editing subtitle)
+      if (e.key === 'ArrowLeft' && effectiveActiveColumn === 'notes' && !project?.isTodo && !isEditingSubtitle) {
         e.preventDefault();
         setActiveColumn('tasks');
         setSelectedNoteId(null);
@@ -565,7 +565,7 @@ export function ProjectPage() {
         return;
       }
 
-      if (e.key === 'ArrowRight' && effectiveActiveColumn === 'tasks' && !project?.isTodo) {
+      if (e.key === 'ArrowRight' && effectiveActiveColumn === 'tasks' && !project?.isTodo && !isEditingSubtitle) {
         e.preventDefault();
         setActiveColumn('notes');
         setSelectedTaskId(null);
@@ -792,11 +792,19 @@ export function ProjectPage() {
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
+                  e.preventDefault();
                   updateProject(currentProjectId!, { subtitle: subtitleEdit || undefined });
                   setIsEditingSubtitle(false);
                 }
                 if (e.key === 'Escape') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSubtitleEdit(project.subtitle || '');
                   setIsEditingSubtitle(false);
+                }
+                // Allow normal input behavior for arrow keys
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                  e.stopPropagation();
                 }
               }}
             />
