@@ -11,6 +11,61 @@ interface GlobalSearchPopupProps {
   currentProjectId?: string | null;
 }
 
+/** Render text with matched characters highlighted */
+function HighlightedText({ text, matchedIndices }: { text: string; matchedIndices: number[] }) {
+  if (matchedIndices.length === 0) {
+    return <>{text}</>;
+  }
+
+  const matchSet = new Set(matchedIndices);
+  const result: React.ReactNode[] = [];
+  let currentRun = '';
+  let currentIsHighlight = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const isHighlight = matchSet.has(i);
+
+    if (i === 0) {
+      currentIsHighlight = isHighlight;
+      currentRun = text[i];
+    } else if (isHighlight === currentIsHighlight) {
+      currentRun += text[i];
+    } else {
+      // Flush current run
+      if (currentIsHighlight) {
+        result.push(<mark key={result.length}>{currentRun}</mark>);
+      } else {
+        result.push(currentRun);
+      }
+      currentRun = text[i];
+      currentIsHighlight = isHighlight;
+    }
+  }
+
+  // Flush final run
+  if (currentRun) {
+    if (currentIsHighlight) {
+      result.push(<mark key={result.length}>{currentRun}</mark>);
+    } else {
+      result.push(currentRun);
+    }
+  }
+
+  return <>{result}</>;
+}
+
+/** Get label for match field */
+function getFieldLabel(field: 'name' | 'subtitle' | 'notes'): string {
+  switch (field) {
+    case 'name':
+      return 'Name';
+    case 'subtitle':
+      return 'Subtitle';
+    case 'notes':
+      return 'Note';
+  }
+}
+
 export function GlobalSearchPopup({
   isOpen,
   onClose,
@@ -25,13 +80,13 @@ export function GlobalSearchPopup({
   const listRef = useRef<HTMLDivElement>(null);
 
   // Filter and sort projects using shared search utility
-  const filteredProjects = useMemo(() => {
-    const searchResults = searchProjects(projects, notes, searchText, {
+  const searchResults = useMemo(() => {
+    const results = searchProjects(projects, notes, searchText, {
       excludeSpecial: true,
       currentProjectId,
     });
 
-    return filterAndSortProjects(searchResults, {
+    return filterAndSortProjects(results, {
       currentProjectId,
       sortDoneLast: true,
       sortOnHoldAfterActive: true,
@@ -50,20 +105,20 @@ export function GlobalSearchPopup({
 
   // Keep selected index in bounds
   useEffect(() => {
-    if (selectedIndex >= filteredProjects.length) {
-      setSelectedIndex(Math.max(0, filteredProjects.length - 1));
+    if (selectedIndex >= searchResults.length) {
+      setSelectedIndex(Math.max(0, searchResults.length - 1));
     }
-  }, [filteredProjects.length, selectedIndex]);
+  }, [searchResults.length, selectedIndex]);
 
   // Scroll selected item into view
   useEffect(() => {
-    if (listRef.current && filteredProjects.length > 0) {
+    if (listRef.current && searchResults.length > 0) {
       const selectedElement = listRef.current.children[selectedIndex] as HTMLElement;
       if (selectedElement) {
         selectedElement.scrollIntoView({ block: 'nearest' });
       }
     }
-  }, [selectedIndex, filteredProjects.length]);
+  }, [selectedIndex, searchResults.length]);
 
   // Handle Escape at document level to ensure it always works
   useEffect(() => {
@@ -85,19 +140,19 @@ export function GlobalSearchPopup({
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex((prev) => Math.min(prev + 1, filteredProjects.length - 1));
+      setSelectedIndex((prev) => Math.min(prev + 1, searchResults.length - 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedIndex((prev) => Math.max(prev - 1, 0));
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (filteredProjects.length > 0) {
-        onSelectProject(filteredProjects[selectedIndex].id);
+      if (searchResults.length > 0) {
+        onSelectProject(searchResults[selectedIndex].project.id);
         onClose();
       }
     }
     // Escape is handled at document level
-  }, [filteredProjects, selectedIndex, onSelectProject, onClose]);
+  }, [searchResults, selectedIndex, onSelectProject, onClose]);
 
   const handleSelect = useCallback((projectId: string) => {
     onSelectProject(projectId);
@@ -130,33 +185,67 @@ export function GlobalSearchPopup({
         </div>
 
         <div className="global-search-results" ref={listRef}>
-          {filteredProjects.length === 0 ? (
+          {searchResults.length === 0 ? (
             <div className="global-search-empty">
               {searchText ? 'No projects found' : 'Type to search projects'}
             </div>
           ) : (
-            filteredProjects.map((project, index) => (
-              <div
-                key={project.id}
-                className={`global-search-item ${index === selectedIndex ? 'selected' : ''} ${project.doneAt ? 'done' : ''} ${project.onHoldAt ? 'on-hold' : ''} ${project.id === currentProjectId ? 'current' : ''}`}
-                onClick={() => handleSelect(project.id)}
-                onMouseEnter={() => setSelectedIndex(index)}
-              >
-                <span className="global-search-item-name">{project.name}</span>
-                {project.subtitle && (
-                  <span className="global-search-item-subtitle">{project.subtitle}</span>
-                )}
-                {project.id === currentProjectId && (
-                  <span className="global-search-item-badge current">current</span>
-                )}
-                {project.doneAt && (
-                  <span className="global-search-item-badge done">done</span>
-                )}
-                {project.onHoldAt && (
-                  <span className="global-search-item-badge on-hold">on hold</span>
-                )}
-              </div>
-            ))
+            searchResults.map((result, index) => {
+              const { project, matchDetails } = result;
+              const showMatchLine = searchText && matchDetails && matchDetails.field !== 'name';
+
+              return (
+                <div
+                  key={project.id}
+                  className={`global-search-item ${index === selectedIndex ? 'selected' : ''} ${project.doneAt ? 'done' : ''} ${project.onHoldAt ? 'on-hold' : ''} ${project.id === currentProjectId ? 'current' : ''}`}
+                  onClick={() => handleSelect(project.id)}
+                  onMouseEnter={() => setSelectedIndex(index)}
+                >
+                  <div className="global-search-item-content">
+                    <div className="global-search-item-row">
+                      <span className="global-search-item-name">
+                        {searchText && matchDetails?.field === 'name' ? (
+                          <HighlightedText text={project.name} matchedIndices={matchDetails.matchedIndices} />
+                        ) : (
+                          project.name
+                        )}
+                      </span>
+                      {project.subtitle && !showMatchLine && (
+                        <span className="global-search-item-subtitle">
+                          {searchText && matchDetails?.field === 'subtitle' ? (
+                            <HighlightedText text={project.subtitle} matchedIndices={matchDetails.matchedIndices} />
+                          ) : (
+                            project.subtitle
+                          )}
+                        </span>
+                      )}
+                    </div>
+                    {showMatchLine && matchDetails && (
+                      <div className="global-search-item-match">
+                        <span className="global-search-match-label">{getFieldLabel(matchDetails.field)}:</span>
+                        <span className="global-search-match-text">
+                          <HighlightedText
+                            text={matchDetails.text.length > 80 ? matchDetails.text.substring(0, 80) + '...' : matchDetails.text}
+                            matchedIndices={matchDetails.matchedIndices.filter(i => i < 80)}
+                          />
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="global-search-item-badges">
+                    {project.id === currentProjectId && (
+                      <span className="global-search-item-badge current">current</span>
+                    )}
+                    {project.doneAt && (
+                      <span className="global-search-item-badge done">done</span>
+                    )}
+                    {project.onHoldAt && (
+                      <span className="global-search-item-badge on-hold">on hold</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
 

@@ -1,79 +1,168 @@
 import type { Project, Note } from '../types';
 
 /**
- * Simple fuzzy match - checks if all characters in the pattern appear in order in the target
+ * Fuzzy match within a single word - characters must appear in order
+ * Returns the indices of matched characters, or null if no match
  */
-export function fuzzyMatch(target: string, pattern: string): boolean {
-  if (!pattern) return true;
-  if (!target) return false;
+function fuzzyMatchWord(target: string, pattern: string): number[] | null {
+  if (!pattern) return [];
+  if (!target) return null;
 
   const targetLower = target.toLowerCase();
   const patternLower = pattern.toLowerCase();
 
-  // First try exact substring match (higher priority)
-  if (targetLower.includes(patternLower)) {
-    return true;
-  }
-
-  // Then try fuzzy match - all characters must appear in order
+  const matchedIndices: number[] = [];
   let patternIdx = 0;
+
   for (let i = 0; i < targetLower.length && patternIdx < patternLower.length; i++) {
     if (targetLower[i] === patternLower[patternIdx]) {
+      matchedIndices.push(i);
       patternIdx++;
     }
   }
 
-  return patternIdx === patternLower.length;
+  if (patternIdx === patternLower.length) {
+    return matchedIndices;
+  }
+
+  return null;
+}
+
+/**
+ * Word-based fuzzy match
+ * - Each search word must fuzzy-match a target word
+ * - Search words are matched in order against target words
+ *
+ * Examples:
+ * - "Switzer Land" + "swi land" -> matches (swi->Switzer, land->Land)
+ * - "Switzer Land" + "swiland" -> no match (swiland is one word, can't match two target words)
+ * - "Switzerland" + "swiland" -> matches (fuzzy match within single word)
+ * - "Switzerland" + "swi land" -> no match (two search words can't match one target word)
+ */
+export function fuzzyMatch(target: string, pattern: string): boolean {
+  const result = fuzzyMatchWithIndices(target, pattern);
+  return result !== null;
+}
+
+export interface FuzzyMatchResult {
+  /** The original target string */
+  target: string;
+  /** Indices of matched characters in the target */
+  matchedIndices: number[];
+}
+
+/**
+ * Word-based fuzzy match that returns match indices for highlighting
+ */
+export function fuzzyMatchWithIndices(target: string, pattern: string): FuzzyMatchResult | null {
+  if (!pattern.trim()) return { target, matchedIndices: [] };
+  if (!target) return null;
+
+  const targetWords = target.split(/\s+/);
+  const patternWords = pattern.trim().split(/\s+/);
+
+  // Quick check: if more pattern words than target words, no match possible
+  if (patternWords.length > targetWords.length) {
+    return null;
+  }
+
+  // Try to match each pattern word to a target word in order
+  let targetWordIdx = 0;
+  const allMatchedIndices: number[] = [];
+
+  // Calculate offsets for each target word
+  const wordOffsets: number[] = [];
+  let offset = 0;
+  for (let i = 0; i < targetWords.length; i++) {
+    // Find actual position in original string (accounting for multiple spaces)
+    const wordStart = target.indexOf(targetWords[i], offset);
+    wordOffsets.push(wordStart);
+    offset = wordStart + targetWords[i].length;
+  }
+
+  for (const patternWord of patternWords) {
+    let matched = false;
+
+    // Try to find a matching target word starting from current position
+    while (targetWordIdx < targetWords.length) {
+      const targetWord = targetWords[targetWordIdx];
+      const wordOffset = wordOffsets[targetWordIdx];
+      const matchIndices = fuzzyMatchWord(targetWord, patternWord);
+
+      if (matchIndices !== null) {
+        // Found a match - add indices with offset
+        for (const idx of matchIndices) {
+          allMatchedIndices.push(wordOffset + idx);
+        }
+        targetWordIdx++;
+        matched = true;
+        break;
+      }
+
+      targetWordIdx++;
+    }
+
+    if (!matched) {
+      return null;
+    }
+  }
+
+  return { target, matchedIndices: allMatchedIndices };
 }
 
 /**
  * Calculate a match score - lower is better
  * Returns -1 if no match
  */
-function getMatchScore(target: string, pattern: string): number {
-  if (!pattern) return 0;
-  if (!target) return -1;
+function getMatchScore(target: string, pattern: string): { score: number; matchResult: FuzzyMatchResult | null } {
+  if (!pattern.trim()) return { score: 0, matchResult: { target, matchedIndices: [] } };
+  if (!target) return { score: -1, matchResult: null };
 
   const targetLower = target.toLowerCase();
-  const patternLower = pattern.toLowerCase();
+  const patternLower = pattern.toLowerCase().trim();
 
   // Exact match at start - best score
   if (targetLower.startsWith(patternLower)) {
-    return 0;
+    const matchedIndices: number[] = [];
+    for (let i = 0; i < patternLower.length; i++) {
+      matchedIndices.push(i);
+    }
+    return { score: 0, matchResult: { target, matchedIndices } };
   }
 
   // Exact substring match - good score
   const substringIndex = targetLower.indexOf(patternLower);
   if (substringIndex !== -1) {
-    return 1 + substringIndex;
-  }
-
-  // Fuzzy match - calculate based on character gaps
-  let patternIdx = 0;
-  let gaps = 0;
-  let lastMatchIdx = -1;
-
-  for (let i = 0; i < targetLower.length && patternIdx < patternLower.length; i++) {
-    if (targetLower[i] === patternLower[patternIdx]) {
-      if (lastMatchIdx !== -1 && i - lastMatchIdx > 1) {
-        gaps += i - lastMatchIdx - 1;
-      }
-      lastMatchIdx = i;
-      patternIdx++;
+    const matchedIndices: number[] = [];
+    for (let i = 0; i < patternLower.length; i++) {
+      matchedIndices.push(substringIndex + i);
     }
+    return { score: 1 + substringIndex, matchResult: { target, matchedIndices } };
   }
 
-  if (patternIdx === patternLower.length) {
-    return 100 + gaps; // Fuzzy matches score higher (worse) than exact matches
+  // Word-based fuzzy match
+  const fuzzyResult = fuzzyMatchWithIndices(target, pattern);
+  if (fuzzyResult) {
+    // Score based on how spread out the matches are
+    const gaps = fuzzyResult.matchedIndices.length > 1
+      ? fuzzyResult.matchedIndices[fuzzyResult.matchedIndices.length - 1] - fuzzyResult.matchedIndices[0] - fuzzyResult.matchedIndices.length + 1
+      : 0;
+    return { score: 100 + gaps, matchResult: fuzzyResult };
   }
 
-  return -1; // No match
+  return { score: -1, matchResult: null };
 }
 
 export interface ProjectSearchResult {
   project: Project;
   score: number;
   matchedIn: ('name' | 'subtitle' | 'notes')[];
+  /** Match details for highlighting */
+  matchDetails?: {
+    field: 'name' | 'subtitle' | 'notes';
+    text: string;
+    matchedIndices: number[];
+  };
 }
 
 export interface SearchProjectsOptions {
@@ -84,7 +173,7 @@ export interface SearchProjectsOptions {
 }
 
 /**
- * Search projects by name, subtitle, and notes content using fuzzy matching
+ * Search projects by name, subtitle, and notes content using word-based fuzzy matching
  */
 export function searchProjects(
   projects: Project[],
@@ -111,21 +200,37 @@ export function searchProjects(
 
     const matchedIn: ('name' | 'subtitle' | 'notes')[] = [];
     let bestScore = -1;
+    let matchDetails: ProjectSearchResult['matchDetails'] = undefined;
 
     // Check project name
-    const nameScore = getMatchScore(project.name, searchText);
-    if (nameScore !== -1) {
+    const nameResult = getMatchScore(project.name, searchText);
+    if (nameResult.score !== -1) {
       matchedIn.push('name');
-      bestScore = nameScore;
+      bestScore = nameResult.score;
+      if (nameResult.matchResult) {
+        matchDetails = {
+          field: 'name',
+          text: project.name,
+          matchedIndices: nameResult.matchResult.matchedIndices,
+        };
+      }
     }
 
     // Check subtitle
     if (project.subtitle) {
-      const subtitleScore = getMatchScore(project.subtitle, searchText);
-      if (subtitleScore !== -1) {
+      const subtitleResult = getMatchScore(project.subtitle, searchText);
+      if (subtitleResult.score !== -1) {
         matchedIn.push('subtitle');
-        if (bestScore === -1 || subtitleScore < bestScore) {
-          bestScore = subtitleScore + 10; // Slight penalty for subtitle match vs name match
+        const adjustedScore = subtitleResult.score + 10; // Slight penalty for subtitle match
+        if (bestScore === -1 || adjustedScore < bestScore) {
+          bestScore = adjustedScore;
+          if (subtitleResult.matchResult) {
+            matchDetails = {
+              field: 'subtitle',
+              text: project.subtitle,
+              matchedIndices: subtitleResult.matchResult.matchedIndices,
+            };
+          }
         }
       }
     }
@@ -133,19 +238,27 @@ export function searchProjects(
     // Check notes content
     const projectNotes = notes.filter((n) => n.projectId === project.id);
     for (const note of projectNotes) {
-      const noteScore = getMatchScore(note.content, searchText);
-      if (noteScore !== -1) {
+      const noteResult = getMatchScore(note.content, searchText);
+      if (noteResult.score !== -1) {
         if (!matchedIn.includes('notes')) {
           matchedIn.push('notes');
         }
-        if (bestScore === -1 || noteScore + 20 < bestScore) {
-          bestScore = noteScore + 20; // Penalty for notes match vs name/subtitle match
+        const adjustedScore = noteResult.score + 20; // Penalty for notes match
+        if (bestScore === -1 || adjustedScore < bestScore) {
+          bestScore = adjustedScore;
+          if (noteResult.matchResult) {
+            matchDetails = {
+              field: 'notes',
+              text: note.content,
+              matchedIndices: noteResult.matchResult.matchedIndices,
+            };
+          }
         }
       }
     }
 
     if (matchedIn.length > 0) {
-      results.push({ project, score: bestScore, matchedIn });
+      results.push({ project, score: bestScore, matchedIn, matchDetails });
     }
   }
 
@@ -174,7 +287,7 @@ export function filterAndSortProjects(
     sortDoneLast?: boolean;
     sortOnHoldAfterActive?: boolean;
   } = {}
-): Project[] {
+): ProjectSearchResult[] {
   const { currentProjectId, sortDoneLast = true, sortOnHoldAfterActive = true } = options;
 
   const sorted = [...searchResults];
@@ -207,5 +320,5 @@ export function filterAndSortProjects(
     return b.project.lastUsed - a.project.lastUsed;
   });
 
-  return sorted.map((r) => r.project);
+  return sorted;
 }
