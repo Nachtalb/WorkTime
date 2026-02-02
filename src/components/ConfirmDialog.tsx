@@ -19,15 +19,12 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        onConfirm();
-      } else if (e.key === 'Escape') {
+      if (e.key === 'Escape') {
         e.preventDefault();
         onCancel();
       }
     },
-    [onConfirm, onCancel]
+    [onCancel]
   );
 
   useEffect(() => {
@@ -51,7 +48,7 @@ export function ConfirmDialog({
             {itemName && <strong> "{itemName}"</strong>}?
           </p>
           <p className="confirm-hint">
-            Press <kbd>Enter</kbd> or <kbd>Space</kbd> to confirm, <kbd>Esc</kbd> to cancel
+            <kbd>Tab</kbd> to navigate, <kbd>Enter</kbd> to select, <kbd>Esc</kbd> to cancel
           </p>
         </div>
         <div className="modal-actions">

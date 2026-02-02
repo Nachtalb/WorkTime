@@ -81,6 +81,23 @@ export function GlobalSearchPopup({
     }
   }, [selectedIndex, filteredProjects.length]);
 
+  // Handle Escape at document level to ensure it always works
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleDocumentKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }
+    };
+
+    // Use capture phase to handle before other listeners
+    document.addEventListener('keydown', handleDocumentKeyDown, true);
+    return () => document.removeEventListener('keydown', handleDocumentKeyDown, true);
+  }, [isOpen, onClose]);
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -94,10 +111,8 @@ export function GlobalSearchPopup({
         onSelectProject(filteredProjects[selectedIndex].id);
         onClose();
       }
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      onClose();
     }
+    // Escape is handled at document level
   }, [filteredProjects, selectedIndex, onSelectProject, onClose]);
 
   const handleSelect = useCallback((projectId: string) => {
