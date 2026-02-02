@@ -25,6 +25,7 @@ export interface UseAppStateReturn {
   startGlobalTimer: () => Promise<void>;
   stopGlobalTimer: () => Promise<void>;
   updateGlobalTimerStartTime: (timerId: string, newStartTime: number) => Promise<void>;
+  updateGlobalTimerTimes: (timerId: string, newStartTime: number, newEndTime: number) => Promise<void>;
 
   // Projects
   createProject: (name: string) => Promise<Project>;
@@ -320,6 +321,70 @@ export function useAppState(): UseAppStateReturn {
       setGlobalTimers(prev => prev.map(t => t.id === timerId ? updatedTimer : t));
     }
   }, [globalTimers]);
+
+  const updateGlobalTimerTimes = useCallback(async (timerId: string, newStartTime: number, newEndTime: number) => {
+    const timer = globalTimers.find(t => t.id === timerId);
+    if (!timer || !timer.endTime) return; // Only allow editing completed sessions
+
+    // Update the timer
+    const updatedTimer = { ...timer, startTime: newStartTime, endTime: newEndTime };
+    await db.saveGlobalTimer(updatedTimer);
+    setGlobalTimers(prev => prev.map(t => t.id === timerId ? updatedTimer : t));
+
+    // Find tasks that overlap with the original timer period and adjust them
+    const originalStart = timer.startTime;
+    const originalEnd = timer.endTime;
+
+    // Get tasks that were active during the original timer period
+    const overlappingTasks = tasks.filter(task => {
+      const taskStart = task.startTime;
+      const taskEnd = task.endTime || Date.now();
+      // Task overlaps if it started before original end and ended after original start
+      return taskStart < originalEnd && taskEnd > originalStart;
+    });
+
+    // Adjust tasks to fit within new timer boundaries
+    const updatedTasks: Task[] = [];
+    for (const task of overlappingTasks) {
+      let needsUpdate = false;
+      const taskUpdates: Partial<Task> = {};
+
+      // If task starts before new start time, adjust it
+      if (task.startTime < newStartTime) {
+        taskUpdates.startTime = newStartTime;
+        needsUpdate = true;
+      }
+
+      // If task ends after new end time, adjust it
+      const taskEnd = task.endTime;
+      if (taskEnd && taskEnd > newEndTime) {
+        taskUpdates.endTime = newEndTime;
+        needsUpdate = true;
+      }
+
+      if (needsUpdate) {
+        const newTaskStart = taskUpdates.startTime ?? task.startTime;
+        const newTaskEnd = taskUpdates.endTime ?? task.endTime;
+
+        // Recalculate duration if task has ended
+        if (newTaskEnd) {
+          taskUpdates.duration = newTaskEnd - newTaskStart;
+        }
+
+        const updatedTask = { ...task, ...taskUpdates };
+        await db.saveTask(updatedTask);
+        updatedTasks.push(updatedTask);
+      }
+    }
+
+    // Update tasks state
+    if (updatedTasks.length > 0) {
+      setTasks(prev => prev.map(t => {
+        const updated = updatedTasks.find(ut => ut.id === t.id);
+        return updated || t;
+      }));
+    }
+  }, [globalTimers, tasks]);
 
   // Projects
   const createProject = useCallback(async (name: string): Promise<Project> => {
@@ -774,6 +839,7 @@ export function useAppState(): UseAppStateReturn {
     startGlobalTimer,
     stopGlobalTimer,
     updateGlobalTimerStartTime,
+    updateGlobalTimerTimes,
     createProject,
     updateProject,
     deleteProject,

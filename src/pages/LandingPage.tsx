@@ -5,7 +5,7 @@ import { HelpPopup } from '../components/HelpPopup';
 import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
 
 export function LandingPage() {
-  const { startGlobalTimer, goToOverview, globalTimers, tasks, projects } = useApp();
+  const { startGlobalTimer, goToOverview, globalTimers, tasks, projects, updateGlobalTimerTimes } = useApp();
   const [time, setTime] = useState(getCurrentTime());
   const [date, setDate] = useState(getCurrentDate());
   const [showHelp, setShowHelp] = useState(false);
@@ -74,6 +74,7 @@ export function LandingPage() {
         globalTimers={globalTimers}
         tasks={tasks}
         projects={projects}
+        onUpdateTimerTimes={updateGlobalTimerTimes}
       />
     </div>
   );

@@ -942,6 +942,102 @@ input {
   border-bottom: 1px solid var(--color-border);
 }
 
+.session-item.editable {
+  cursor: pointer;
+  padding: 8px 4px;
+  margin: 0 -4px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.session-item.editable:hover {
+  background: var(--color-bg-hover);
+}
+
+.session-item.editing {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 12px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  margin: 4px 0;
+}
+
+.session-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-time-input {
+  padding: 8px 12px;
+  font-size: 16px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  width: 110px;
+}
+
+.session-time-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.session-time-separator {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.session-edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.session-edit-btn.save {
+  background: var(--color-success);
+  color: white;
+}
+
+.session-edit-btn.save:hover {
+  opacity: 0.9;
+}
+
+.session-edit-btn.cancel {
+  background: var(--color-bg-hover);
+  color: var(--color-text-secondary);
+}
+
+.session-edit-btn.cancel:hover {
+  background: var(--color-danger);
+  color: white;
+}
+
+.session-edit-error {
+  color: var(--color-danger);
+  font-size: 13px;
+  padding: 4px 0;
+}
+
+.session-edit-icon {
+  margin-left: auto;
+  color: var(--color-text-tertiary);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.session-item.editable:hover .session-edit-icon {
+  opacity: 1;
+}
+
 .session-time {
   font-weight: 500;
 }
