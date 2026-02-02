@@ -900,6 +900,10 @@ input {
   box-shadow: var(--shadow-lg);
 }
 
+.modal-wide {
+  max-width: 900px;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -1186,6 +1190,28 @@ input {
   font-size: 14px;
 }
 
+/* Overview Two Columns */
+.overview-two-columns {
+  display: flex;
+  gap: 32px;
+  margin-top: 24px;
+}
+
+.overview-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.overview-column .work-sessions,
+.overview-column .project-breakdown,
+.overview-column .tasks-today {
+  margin-top: 0;
+}
+
+.overview-column .project-breakdown {
+  margin-top: 24px;
+}
+
 /* Tasks Today Section */
 .tasks-today {
   margin-top: 24px;
@@ -1209,6 +1235,71 @@ input {
   border-left: 3px solid var(--color-active);
   padding-left: 9px;
   background: var(--color-active-bg);
+}
+
+/* Task item in overview with description */
+.task-item-overview {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.task-item-overview.active {
+  border-left: 3px solid var(--color-active);
+  padding-left: 10px;
+  margin-left: -10px;
+  background: var(--color-active-bg);
+}
+
+.task-item-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.task-item-description {
+  font-size: 14px;
+  color: var(--color-text);
+  padding-left: 0;
+  word-break: break-word;
+}
+
+.task-edit-time-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--transition-fast);
+  margin-left: auto;
+}
+
+.task-item-overview:hover .task-edit-time-btn {
+  opacity: 1;
+}
+
+.task-edit-time-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-secondary);
+}
+
+/* Clickable project/breakdown labels */
+.breakdown-label.clickable,
+.task-project-name.clickable {
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.breakdown-label.clickable:hover,
+.task-project-name.clickable:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
 }
 
 .project-breakdown {

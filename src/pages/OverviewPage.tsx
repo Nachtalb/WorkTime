@@ -792,6 +792,7 @@ export function OverviewPage() {
         activeTaskId={activeTaskId}
         onUpdateTimerTimes={updateGlobalTimerTimes}
         onUpdateTaskTimes={updateTaskTimes}
+        onProjectClick={goToProject}
       />
 
       <ImportPopup

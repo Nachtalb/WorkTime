@@ -1470,6 +1470,7 @@ export function ProjectPage() {
         activeTaskId={activeTaskId}
         onUpdateTimerTimes={updateGlobalTimerTimes}
         onUpdateTaskTimes={updateTaskTimes}
+        onProjectClick={goToProject}
       />
     </div>
   );

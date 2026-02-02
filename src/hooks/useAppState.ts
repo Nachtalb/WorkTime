@@ -22,6 +22,7 @@ export interface UseAppStateReturn {
   goToOverview: () => void;
   goToOverviewBrowse: () => void;
   goToProject: (projectId: string) => void;
+  goToProjectBrowse: (projectId: string) => void;
   exitBrowseMode: () => Promise<void>;
 
   // Global timer
@@ -95,6 +96,7 @@ export function useAppState(): UseAppStateReturn {
   const currentProjectIdRef = useRef<string | null>(null);
   const activeTaskIdRef = useRef<string | null>(null);
   const globalTimerActiveRef = useRef(false);
+  const browseModeRef = useRef(false);
 
   // Wrapper setters that update both state and ref synchronously
   const setCurrentPage = useCallback((page: Page) => {
@@ -186,6 +188,8 @@ export function useAppState(): UseAppStateReturn {
           if (savedState) {
             setActiveTaskId(savedState.activeTaskId);
             setGlobalTimerActive(savedState.globalTimerActive);
+            setBrowseMode(savedState.browseMode ?? false);
+            browseModeRef.current = savedState.browseMode ?? false;
           }
           // Replace URL to set proper state
           replaceUrl(urlState.page, urlState.projectId);
@@ -195,6 +199,8 @@ export function useAppState(): UseAppStateReturn {
           setCurrentProjectId(savedState.currentProjectId);
           setActiveTaskId(savedState.activeTaskId);
           setGlobalTimerActive(savedState.globalTimerActive);
+          setBrowseMode(savedState.browseMode ?? false);
+          browseModeRef.current = savedState.browseMode ?? false;
           // Update URL to match saved state
           replaceUrl(savedState.currentPage, savedState.currentProjectId);
         }
@@ -235,6 +241,7 @@ export function useAppState(): UseAppStateReturn {
       currentProjectId: state.currentProjectId ?? currentProjectIdRef.current,
       activeTaskId: state.activeTaskId ?? activeTaskIdRef.current,
       globalTimerActive: state.globalTimerActive ?? globalTimerActiveRef.current,
+      browseMode: state.browseMode ?? browseModeRef.current,
     };
     await db.saveAppState(fullState);
   }, []);
@@ -296,13 +303,24 @@ export function useAppState(): UseAppStateReturn {
   // Browse mode - explore without starting timer
   const goToOverviewBrowse = useCallback(async () => {
     setBrowseMode(true);
+    browseModeRef.current = true;
     setCurrentPage('overview');
     updateUrl('overview', null);
-    await saveState({ currentPage: 'overview' });
+    await saveState({ currentPage: 'overview', browseMode: true });
+  }, [saveState, updateUrl]);
+
+  const goToProjectBrowse = useCallback(async (projectId: string) => {
+    setBrowseMode(true);
+    browseModeRef.current = true;
+    setCurrentPage('project');
+    setCurrentProjectId(projectId);
+    updateUrl('project', projectId);
+    await saveState({ currentPage: 'project', currentProjectId: projectId, browseMode: true });
   }, [saveState, updateUrl]);
 
   const exitBrowseMode = useCallback(async () => {
     setBrowseMode(false);
+    browseModeRef.current = false;
     // Start the global timer when exiting browse mode
     const today = getTodayDateString();
     const newTimer: GlobalTimer = {
@@ -313,7 +331,7 @@ export function useAppState(): UseAppStateReturn {
     await db.saveGlobalTimer(newTimer);
     setGlobalTimers(prev => [...prev, newTimer]);
     setGlobalTimerActive(true);
-    await saveState({ globalTimerActive: true });
+    await saveState({ globalTimerActive: true, browseMode: false });
   }, [saveState]);
 
   // Global timer
@@ -886,6 +904,7 @@ export function useAppState(): UseAppStateReturn {
     goToOverview,
     goToOverviewBrowse,
     goToProject,
+    goToProjectBrowse,
     exitBrowseMode,
     startGlobalTimer,
     stopGlobalTimer,

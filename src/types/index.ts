@@ -42,6 +42,7 @@ export interface AppState {
   currentProjectId: string | null;
   activeTaskId: string | null;
   globalTimerActive: boolean;
+  browseMode?: boolean;
 }
 
 export interface UndoAction {
