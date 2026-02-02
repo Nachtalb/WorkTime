@@ -5,7 +5,7 @@ import { HelpPopup } from '../components/HelpPopup';
 import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
 
 export function LandingPage() {
-  const { startGlobalTimer, goToOverview, globalTimers, tasks, projects, updateGlobalTimerTimes } = useApp();
+  const { startGlobalTimer, goToOverview, goToOverviewBrowse, globalTimers, tasks, projects, updateGlobalTimerTimes } = useApp();
   const [time, setTime] = useState(getCurrentTime());
   const [date, setDate] = useState(getCurrentDate());
   const [showHelp, setShowHelp] = useState(false);
@@ -41,6 +41,9 @@ export function LandingPage() {
       if (e.key === 'Enter') {
         e.preventDefault();
         handleStart();
+      } else if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        goToOverviewBrowse();
       } else if (e.key === '?') {
         e.preventDefault();
         setShowHelp(true);
@@ -49,7 +52,7 @@ export function LandingPage() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleStart, showHelp, showTodayOverview]);
+  }, [handleStart, goToOverviewBrowse, showHelp, showTodayOverview]);
 
   return (
     <div className="page landing-page">
@@ -62,8 +65,12 @@ export function LandingPage() {
         START
       </button>
 
+      <button className="browse-link" onClick={goToOverviewBrowse}>
+        or just browse
+      </button>
+
       <p className="landing-hint">
-        Press <kbd>Enter</kbd> to start tracking &middot; Press <kbd>?</kbd> for help
+        Press <kbd>Enter</kbd> to start &middot; <kbd>B</kbd> to browse &middot; <kbd>?</kbd> for help
       </p>
 
       <HelpPopup isOpen={showHelp} onClose={() => setShowHelp(false)} currentPage="landing" />

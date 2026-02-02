@@ -29,9 +29,11 @@ export function OverviewPage() {
     globalTimers,
     activeTaskId,
     globalTimerActive,
+    browseMode,
     currentProjectId,
     goToLanding,
     goToProject,
+    exitBrowseMode,
     createProject,
     deleteProject,
     getOtherProject,
@@ -537,6 +539,14 @@ export function OverviewPage() {
 
   return (
     <div className="page overview-page">
+      {browseMode && (
+        <div className="browse-mode-banner">
+          <span>Browse Mode - Tasks disabled</span>
+          <button className="start-work-btn" onClick={exitBrowseMode}>
+            Start Working
+          </button>
+        </div>
+      )}
       <div className="overview-header">
         <div className="overview-title-section">
           <button className="back-button" onClick={() => setShowExitConfirm(true)} title="Back to Landing (Esc)">

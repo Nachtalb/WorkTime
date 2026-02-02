@@ -32,8 +32,10 @@ export function ProjectPage() {
     notes,
     activeTaskId,
     globalTimerActive,
+    browseMode,
     goToOverview,
     goToProject,
+    exitBrowseMode,
     getProjectById,
     getTasksByProject,
     getNotesByProject,
@@ -554,8 +556,8 @@ export function ProjectPage() {
         }
         // For regular projects: duplicate selected task
         if (effectiveActiveColumn === 'tasks' && selectedTaskId) {
-          // Don't allow adding tasks to done projects
-          if (project?.doneAt) {
+          // Don't allow adding tasks to done projects or in browse mode
+          if (project?.doneAt || browseMode) {
             setShowActionError(true);
             setTimeout(() => setShowActionError(false), 400);
             return;
@@ -764,6 +766,14 @@ export function ProjectPage() {
 
   return (
     <div className="page project-page">
+      {browseMode && (
+        <div className="browse-mode-banner">
+          <span>Browse Mode - Tasks disabled</span>
+          <button className="start-work-btn" onClick={exitBrowseMode}>
+            Start Working
+          </button>
+        </div>
+      )}
       <div className="project-header">
         <button className="back-button" onClick={goToOverview} title="Back to Overview (Esc)">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -965,8 +975,8 @@ export function ProjectPage() {
             if (e.key === 'Enter') {
               e.preventDefault();
               if (effectiveActiveColumn === 'tasks' && newTaskText.trim()) {
-                // Block task creation for done projects - shake the input
-                if (project?.doneAt) {
+                // Block task creation for done projects or browse mode - shake the input
+                if (project?.doneAt || browseMode) {
                   setShowInputError(true);
                   setTimeout(() => setShowInputError(false), 400);
                   return;

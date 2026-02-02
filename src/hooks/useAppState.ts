@@ -14,12 +14,15 @@ export interface UseAppStateReturn {
   currentProjectId: string | null;
   activeTaskId: string | null;
   globalTimerActive: boolean;
+  browseMode: boolean;
   isLoading: boolean;
 
   // Navigation
   goToLanding: () => void;
   goToOverview: () => void;
+  goToOverviewBrowse: () => void;
   goToProject: (projectId: string) => void;
+  exitBrowseMode: () => Promise<void>;
 
   // Global timer
   startGlobalTimer: () => Promise<void>;
@@ -80,6 +83,7 @@ export function useAppState(): UseAppStateReturn {
   const [currentProjectId, setCurrentProjectIdState] = useState<string | null>(null);
   const [activeTaskId, setActiveTaskIdState] = useState<string | null>(null);
   const [globalTimerActive, setGlobalTimerActiveState] = useState(false);
+  const [browseMode, setBrowseMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [undoStack, setUndoStack] = useState<UndoAction[]>([]);
 
@@ -264,6 +268,7 @@ export function useAppState(): UseAppStateReturn {
     setCurrentProjectId(null);
     setActiveTaskId(null);
     setGlobalTimerActive(false);
+    setBrowseMode(false);
     updateUrl('landing', null);
     await saveState({
       currentPage: 'landing',
@@ -286,6 +291,29 @@ export function useAppState(): UseAppStateReturn {
     updateUrl('project', projectId);
     await saveState({ currentPage: 'project', currentProjectId: projectId });
   }, [saveState, updateUrl]);
+
+  // Browse mode - explore without starting timer
+  const goToOverviewBrowse = useCallback(async () => {
+    setBrowseMode(true);
+    setCurrentPage('overview');
+    updateUrl('overview', null);
+    await saveState({ currentPage: 'overview' });
+  }, [saveState, updateUrl]);
+
+  const exitBrowseMode = useCallback(async () => {
+    setBrowseMode(false);
+    // Start the global timer when exiting browse mode
+    const today = getTodayDateString();
+    const newTimer: GlobalTimer = {
+      id: uuidv4(),
+      date: today,
+      startTime: Date.now(),
+    };
+    await db.saveGlobalTimer(newTimer);
+    setGlobalTimers(prev => [...prev, newTimer]);
+    setGlobalTimerActive(true);
+    await saveState({ globalTimerActive: true });
+  }, [saveState]);
 
   // Global timer
   const startGlobalTimer = useCallback(async () => {
@@ -833,9 +861,12 @@ export function useAppState(): UseAppStateReturn {
     activeTaskId,
     globalTimerActive,
     isLoading,
+    browseMode,
     goToLanding,
     goToOverview,
+    goToOverviewBrowse,
     goToProject,
+    exitBrowseMode,
     startGlobalTimer,
     stopGlobalTimer,
     updateGlobalTimerStartTime,
