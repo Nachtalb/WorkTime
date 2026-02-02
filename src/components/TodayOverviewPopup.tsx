@@ -9,7 +9,9 @@ interface TodayOverviewPopupProps {
   globalTimers: GlobalTimer[];
   tasks: Task[];
   projects: Project[];
+  activeTaskId?: string | null;
   onUpdateTimerTimes?: (timerId: string, newStartTime: number, newEndTime: number) => Promise<void>;
+  onUpdateTaskTimes?: (taskId: string, newStartTime: number, newEndTime?: number) => Promise<void>;
 }
 
 export function TodayOverviewPopup({
@@ -18,16 +20,24 @@ export function TodayOverviewPopup({
   globalTimers,
   tasks,
   projects,
+  activeTaskId,
   onUpdateTimerTimes,
+  onUpdateTaskTimes,
 }: TodayOverviewPopupProps) {
   const today = getTodayDateString();
   const todayTimers = globalTimers.filter((t) => t.date === today).sort((a, b) => a.startTime - b.startTime);
 
-  // Editing state
+  // Session editing state
   const [editingTimerId, setEditingTimerId] = useState<string | null>(null);
   const [editStartTime, setEditStartTime] = useState('');
   const [editEndTime, setEditEndTime] = useState('');
   const [editError, setEditError] = useState<string | null>(null);
+
+  // Task editing state
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [taskEditStartTime, setTaskEditStartTime] = useState('');
+  const [taskEditEndTime, setTaskEditEndTime] = useState('');
+  const [taskEditError, setTaskEditError] = useState<string | null>(null);
 
   const startEditing = useCallback((timer: GlobalTimer) => {
     if (!timer.endTime) return; // Can't edit ongoing sessions
@@ -39,19 +49,34 @@ export function TodayOverviewPopup({
     setEditError(null);
   }, []);
 
+  const startTaskEditing = useCallback((task: Task) => {
+    const startDate = new Date(task.startTime);
+    setTaskEditStartTime(`${startDate.getHours().toString().padStart(2, '0')}:${startDate.getMinutes().toString().padStart(2, '0')}`);
+    if (task.endTime) {
+      const endDate = new Date(task.endTime);
+      setTaskEditEndTime(`${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`);
+    } else {
+      setTaskEditEndTime('');
+    }
+    setEditingTaskId(task.id);
+    setTaskEditError(null);
+  }, []);
+
   const cancelEditing = useCallback(() => {
     setEditingTimerId(null);
     setEditError(null);
+    setEditingTaskId(null);
+    setTaskEditError(null);
   }, []);
 
   // Handle close - first cancel editing if active, then close popup
   const handleClose = useCallback(() => {
-    if (editingTimerId) {
+    if (editingTimerId || editingTaskId) {
       cancelEditing();
     } else {
       onClose();
     }
-  }, [editingTimerId, cancelEditing, onClose]);
+  }, [editingTimerId, editingTaskId, cancelEditing, onClose]);
 
   // Handle ESC key - cancel editing first, then close
   useEffect(() => {
@@ -61,7 +86,7 @@ export function TodayOverviewPopup({
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        if (editingTimerId) {
+        if (editingTimerId || editingTaskId) {
           cancelEditing();
         } else {
           onClose();
@@ -72,7 +97,7 @@ export function TodayOverviewPopup({
     // Use capture phase to intercept before Modal's handler
     document.addEventListener('keydown', handleKeyDown, true);
     return () => document.removeEventListener('keydown', handleKeyDown, true);
-  }, [isOpen, editingTimerId, cancelEditing, onClose]);
+  }, [isOpen, editingTimerId, editingTaskId, cancelEditing, onClose]);
 
   const saveEditing = useCallback(async () => {
     if (!editingTimerId || !onUpdateTimerTimes) return;
@@ -129,7 +154,62 @@ export function TodayOverviewPopup({
     setEditingTimerId(null);
     setEditError(null);
   }, [editingTimerId, editStartTime, editEndTime, todayTimers, onUpdateTimerTimes]);
-  const todayTasks = tasks.filter((t) => isTimestampToday(t.startTime));
+
+  const todayTasks = tasks.filter((t) => isTimestampToday(t.startTime)).sort((a, b) => a.startTime - b.startTime);
+
+  const saveTaskEditing = useCallback(async () => {
+    if (!editingTaskId || !onUpdateTaskTimes) return;
+
+    const task = todayTasks.find(t => t.id === editingTaskId);
+    if (!task) return;
+
+    const [startHours, startMinutes] = taskEditStartTime.split(':').map(Number);
+
+    if (isNaN(startHours) || isNaN(startMinutes)) {
+      setTaskEditError('Invalid start time format');
+      return;
+    }
+
+    const newStartDate = new Date(task.startTime);
+    newStartDate.setHours(startHours, startMinutes, 0, 0);
+    const newStartTime = newStartDate.getTime();
+
+    let newEndTime: number | undefined;
+    if (taskEditEndTime) {
+      const [endHours, endMinutes] = taskEditEndTime.split(':').map(Number);
+
+      if (isNaN(endHours) || isNaN(endMinutes)) {
+        setTaskEditError('Invalid end time format');
+        return;
+      }
+
+      const newEndDate = new Date(task.startTime);
+      newEndDate.setHours(endHours, endMinutes, 0, 0);
+      newEndTime = newEndDate.getTime();
+
+      // Validate: end must be after start
+      if (newEndTime <= newStartTime) {
+        setTaskEditError('End time must be after start time');
+        return;
+      }
+
+      // Validate: end time cannot be in the future
+      if (newEndTime > Date.now()) {
+        setTaskEditError('End time cannot be in the future');
+        return;
+      }
+    }
+
+    // Validate: start time cannot be in the future
+    if (newStartTime > Date.now()) {
+      setTaskEditError('Start time cannot be in the future');
+      return;
+    }
+
+    await onUpdateTaskTimes(editingTaskId, newStartTime, newEndTime);
+    setEditingTaskId(null);
+    setTaskEditError(null);
+  }, [editingTaskId, taskEditStartTime, taskEditEndTime, todayTasks, onUpdateTaskTimes]);
 
   // Calculate total work time
   const totalWorkTime = todayTimers.reduce((total, timer) => {
@@ -230,6 +310,81 @@ export function TodayOverviewPopup({
                 <span className="session-time">
                   {formatTime(timer.startTime)} - {timer.endTime ? formatTime(timer.endTime) : 'ongoing'}
                 </span>
+                <span className="session-duration">({formatDuration(duration)})</span>
+                {canEdit && (
+                  <span className="session-edit-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </span>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <div className="tasks-today">
+        <h4>Tasks Today</h4>
+        {todayTasks.length === 0 ? (
+          <p className="empty-state-text">No tasks today</p>
+        ) : (
+          todayTasks.map((task) => {
+            const project = projects.find((p) => p.id === task.projectId);
+            const projectName = project?.name || 'Unknown';
+            const endTime = task.endTime || Date.now();
+            const duration = task.duration || (endTime - task.startTime);
+            const isEditing = editingTaskId === task.id;
+            const isActive = task.id === activeTaskId;
+            const canEdit = onUpdateTaskTimes !== undefined;
+
+            if (isEditing) {
+              return (
+                <div key={task.id} className="session-item editing">
+                  <div className="session-edit-row">
+                    <input
+                      type="time"
+                      value={taskEditStartTime}
+                      onChange={(e) => { setTaskEditError(null); setTaskEditStartTime(e.target.value); }}
+                      className="session-time-input"
+                    />
+                    <span className="session-time-separator">-</span>
+                    <input
+                      type="time"
+                      value={taskEditEndTime}
+                      onChange={(e) => { setTaskEditError(null); setTaskEditEndTime(e.target.value); }}
+                      className="session-time-input"
+                      placeholder={isActive ? 'ongoing' : undefined}
+                      disabled={isActive}
+                    />
+                    <button className="session-edit-btn save" onClick={saveTaskEditing} title="Save">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    </button>
+                    <button className="session-edit-btn cancel" onClick={cancelEditing} title="Cancel">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                  {taskEditError && <div className="session-edit-error">{taskEditError}</div>}
+                </div>
+              );
+            }
+
+            return (
+              <div
+                key={task.id}
+                className={`session-item ${canEdit ? 'editable' : ''} ${isActive ? 'active' : ''}`}
+                onClick={() => canEdit && startTaskEditing(task)}
+                title={canEdit ? 'Click to edit times' : undefined}
+              >
+                <span className="session-time">
+                  {formatTime(task.startTime)} - {task.endTime ? formatTime(task.endTime) : 'ongoing'}
+                </span>
+                <span className="task-project-name">{projectName}</span>
                 <span className="session-duration">({formatDuration(duration)})</span>
                 {canEdit && (
                   <span className="session-edit-icon">

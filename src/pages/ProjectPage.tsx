@@ -4,6 +4,7 @@ import { useLiveTick } from '../hooks/useLiveTick';
 import type { Task, Note, ProjectPriority } from '../types';
 import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
+import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ProjectMentionPopup } from '../components/ProjectMentionPopup';
 import { TextWithProjectRefs, detectNoteTagType, NOTE_TAG_PATTERNS, type NoteTagType } from '../components/TextWithProjectRefs';
@@ -56,6 +57,9 @@ export function ProjectPage() {
     getTodayGlobalDuration,
     getCurrentTaskDuration,
     getActiveTaskInfo,
+    globalTimers,
+    updateGlobalTimerTimes,
+    updateTaskTimes,
   } = useApp();
 
   const [newTaskText, setNewTaskText] = useState('');
@@ -70,6 +74,12 @@ export function ProjectPage() {
   const [showHelp, setShowHelp] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
 
+  // Task time editing state
+  const [editingTaskTimeId, setEditingTaskTimeId] = useState<string | null>(null);
+  const [taskTimeEditStart, setTaskTimeEditStart] = useState('');
+  const [taskTimeEditEnd, setTaskTimeEditEnd] = useState('');
+  const [taskTimeEditError, setTaskTimeEditError] = useState<string | null>(null);
+
   // Notes state
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -80,6 +90,7 @@ export function ProjectPage() {
   const [showDoneConfirm, setShowDoneConfirm] = useState(false);
   const [showActionError, setShowActionError] = useState(false);
   const [showInputError, setShowInputError] = useState(false);
+  const [showTodayOverview, setShowTodayOverview] = useState(false);
 
   // Mention popup state
   const [mentionPopupOpen, setMentionPopupOpen] = useState(false);
@@ -199,6 +210,76 @@ export function ProjectPage() {
       updateProject(currentProjectId!, { priority: priorities[newIndex] });
     }
   }, [project, currentProjectId, updateProject]);
+
+  // Task time editing handlers
+  const startTaskTimeEditing = useCallback((task: Task) => {
+    const startDate = new Date(task.startTime);
+    setTaskTimeEditStart(`${startDate.getHours().toString().padStart(2, '0')}:${startDate.getMinutes().toString().padStart(2, '0')}`);
+    if (task.endTime) {
+      const endDate = new Date(task.endTime);
+      setTaskTimeEditEnd(`${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`);
+    } else {
+      setTaskTimeEditEnd('');
+    }
+    setEditingTaskTimeId(task.id);
+    setTaskTimeEditError(null);
+  }, []);
+
+  const cancelTaskTimeEditing = useCallback(() => {
+    setEditingTaskTimeId(null);
+    setTaskTimeEditError(null);
+  }, []);
+
+  const saveTaskTimeEditing = useCallback(async () => {
+    if (!editingTaskTimeId) return;
+
+    const task = flattenedTasks.find(t => t.id === editingTaskTimeId);
+    if (!task) return;
+
+    const [startHours, startMinutes] = taskTimeEditStart.split(':').map(Number);
+
+    if (isNaN(startHours) || isNaN(startMinutes)) {
+      setTaskTimeEditError('Invalid start time');
+      return;
+    }
+
+    const newStartDate = new Date(task.startTime);
+    newStartDate.setHours(startHours, startMinutes, 0, 0);
+    const newStartTime = newStartDate.getTime();
+
+    let newEndTime: number | undefined;
+    if (taskTimeEditEnd) {
+      const [endHours, endMinutes] = taskTimeEditEnd.split(':').map(Number);
+
+      if (isNaN(endHours) || isNaN(endMinutes)) {
+        setTaskTimeEditError('Invalid end time');
+        return;
+      }
+
+      const newEndDate = new Date(task.startTime);
+      newEndDate.setHours(endHours, endMinutes, 0, 0);
+      newEndTime = newEndDate.getTime();
+
+      if (newEndTime <= newStartTime) {
+        setTaskTimeEditError('End must be after start');
+        return;
+      }
+
+      if (newEndTime > Date.now()) {
+        setTaskTimeEditError('End cannot be in future');
+        return;
+      }
+    }
+
+    if (newStartTime > Date.now()) {
+      setTaskTimeEditError('Start cannot be in future');
+      return;
+    }
+
+    await updateTaskTimes(editingTaskTimeId, newStartTime, newEndTime);
+    setEditingTaskTimeId(null);
+    setTaskTimeEditError(null);
+  }, [editingTaskTimeId, taskTimeEditStart, taskTimeEditEnd, flattenedTasks, updateTaskTimes]);
 
   // Get filtered projects for mention popup
   const filteredMentionProjects = useMemo(() => {
@@ -373,7 +454,14 @@ export function ProjectPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle if modals are open
-      if (showHelp || taskToDelete || noteToDelete || showDoneConfirm) return;
+      if (showHelp || taskToDelete || noteToDelete || showDoneConfirm || showTodayOverview) return;
+
+      // Handle Ctrl+O for today overview
+      if (e.ctrlKey && e.key === 'o') {
+        e.preventDefault();
+        setShowTodayOverview(true);
+        return;
+      }
 
       // Handle Escape
       if (e.key === 'Escape') {
@@ -387,6 +475,8 @@ export function ProjectPage() {
         } else if (editingTaskId) {
           setEditingTaskId(null);
           setEditingTaskText('');
+        } else if (editingTaskTimeId) {
+          cancelTaskTimeEditing();
         } else if (editingNoteId) {
           setEditingNoteId(null);
           setEditingNoteText('');
@@ -683,9 +773,11 @@ export function ProjectPage() {
     taskToDelete,
     noteToDelete,
     showDoneConfirm,
+    showTodayOverview,
     isTypingNewTask,
     isTypingNewNote,
     editingTaskId,
+    editingTaskTimeId,
     editingNoteId,
     isRenamingProject,
     isEditingSubtitle,
@@ -714,6 +806,7 @@ export function ProjectPage() {
     tasks,
     notes,
     cyclePriority,
+    cancelTaskTimeEditing,
   ]);
 
   const handleDeleteConfirm = useCallback(() => {
@@ -1056,22 +1149,69 @@ export function ProjectPage() {
                       const isEditing = task.id === editingTaskId;
                       const duration = getTaskDuration(task);
 
+                      const isEditingTime = task.id === editingTaskTimeId;
+
                       return (
                         <div
                           key={task.id}
-                          className={`task-item ${isSelected ? 'selected' : ''} ${isActive ? 'active' : ''}`}
+                          className={`task-item ${isSelected ? 'selected' : ''} ${isActive ? 'active' : ''} ${isEditingTime ? 'editing-time' : ''}`}
                           onClick={() => {
-                            if (!isEditing) {
+                            if (!isEditing && !isEditingTime) {
                               setActiveColumn('tasks');
                               setSelectedTaskId(task.id);
                               setSelectedNoteId(null);
                             }
                           }}
                           onDoubleClick={() => {
-                            startTask(task.id);
+                            if (!isEditingTime) {
+                              startTask(task.id);
+                            }
                           }}
                         >
-                          <span className="task-time">{formatTime(task.startTime)}</span>
+                          {isEditingTime ? (
+                            <div className="task-time-edit">
+                              <div className="task-time-edit-row">
+                                <input
+                                  type="time"
+                                  value={taskTimeEditStart}
+                                  onChange={(e) => { setTaskTimeEditError(null); setTaskTimeEditStart(e.target.value); }}
+                                  className="task-time-input"
+                                  autoFocus
+                                />
+                                <span className="task-time-separator">-</span>
+                                <input
+                                  type="time"
+                                  value={taskTimeEditEnd}
+                                  onChange={(e) => { setTaskTimeEditError(null); setTaskTimeEditEnd(e.target.value); }}
+                                  className="task-time-input"
+                                  placeholder={isActive ? 'ongoing' : undefined}
+                                  disabled={isActive}
+                                />
+                                <button className="task-time-btn save" onClick={saveTaskTimeEditing} title="Save">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                  </svg>
+                                </button>
+                                <button className="task-time-btn cancel" onClick={cancelTaskTimeEditing} title="Cancel">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                  </svg>
+                                </button>
+                              </div>
+                              {taskTimeEditError && <div className="task-time-error">{taskTimeEditError}</div>}
+                            </div>
+                          ) : (
+                            <span
+                              className="task-time editable"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startTaskTimeEditing(task);
+                              }}
+                              title="Click to edit times"
+                            >
+                              {formatTime(task.startTime)}{task.endTime ? ` - ${formatTime(task.endTime)}` : ''}
+                            </span>
+                          )}
 
                           {isEditing ? (
                             <div className="edit-input-with-mention">
@@ -1321,6 +1461,16 @@ export function ProjectPage() {
         confirmText="Mark Done"
       />
 
-          </div>
+      <TodayOverviewPopup
+        isOpen={showTodayOverview}
+        onClose={() => setShowTodayOverview(false)}
+        globalTimers={globalTimers}
+        tasks={tasks}
+        projects={projects}
+        activeTaskId={activeTaskId}
+        onUpdateTimerTimes={updateGlobalTimerTimes}
+        onUpdateTaskTimes={updateTaskTimes}
+      />
+    </div>
   );
 }

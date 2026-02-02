@@ -654,6 +654,94 @@ input {
   color: var(--color-active);
 }
 
+/* Task time editing */
+.task-time.editable {
+  cursor: pointer;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.task-time.editable:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-secondary);
+}
+
+.task-item.editing-time {
+  flex-wrap: wrap;
+}
+
+.task-time-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.task-time-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-time-input {
+  padding: 6px 8px;
+  font-size: 14px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  width: 100px;
+}
+
+.task-time-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.task-time-separator {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.task-time-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.task-time-btn.save {
+  background: var(--color-success);
+  color: white;
+}
+
+.task-time-btn.save:hover {
+  opacity: 0.9;
+}
+
+.task-time-btn.cancel {
+  background: var(--color-bg-hover);
+  color: var(--color-text-secondary);
+}
+
+.task-time-btn.cancel:hover {
+  background: var(--color-danger);
+  color: white;
+}
+
+.task-time-error {
+  color: var(--color-danger);
+  font-size: 12px;
+}
+
 /* Two-column layout */
 .columns-container {
   display: flex;
@@ -1096,6 +1184,31 @@ input {
 .session-duration {
   color: var(--color-text-secondary);
   font-size: 14px;
+}
+
+/* Tasks Today Section */
+.tasks-today {
+  margin-top: 24px;
+}
+
+.tasks-today h4 {
+  margin-bottom: 12px;
+}
+
+.task-project-name {
+  font-size: 13px;
+  color: var(--color-primary);
+  font-weight: 500;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-item.active {
+  border-left: 3px solid var(--color-active);
+  padding-left: 9px;
+  background: var(--color-active-bg);
 }
 
 .project-breakdown {

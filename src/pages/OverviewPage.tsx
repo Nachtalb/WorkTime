@@ -46,6 +46,7 @@ export function OverviewPage() {
     importFullDb,
     updateGlobalTimerStartTime,
     updateGlobalTimerTimes,
+    updateTaskTimes,
     updateProject,
   } = useApp();
 
@@ -788,7 +789,9 @@ export function OverviewPage() {
         globalTimers={globalTimers}
         tasks={tasks}
         projects={projects}
+        activeTaskId={activeTaskId}
         onUpdateTimerTimes={updateGlobalTimerTimes}
+        onUpdateTaskTimes={updateTaskTimes}
       />
 
       <ImportPopup

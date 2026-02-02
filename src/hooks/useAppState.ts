@@ -46,6 +46,7 @@ export interface UseAppStateReturn {
   startTask: (taskId: string) => Promise<void>;
   stopActiveTask: () => Promise<void>;
   updateTask: (taskId: string, updates: Partial<Task>, skipLastUsed?: boolean) => Promise<void>;
+  updateTaskTimes: (taskId: string, newStartTime: number, newEndTime?: number) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
   getTasksByProject: (projectId: string) => Task[];
   getActiveTask: () => Task | undefined;
@@ -639,6 +640,25 @@ export function useAppState(): UseAppStateReturn {
     }
   }, [tasks, projects]);
 
+  const updateTaskTimes = useCallback(async (taskId: string, newStartTime: number, newEndTime?: number) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const updates: Partial<Task> = { startTime: newStartTime };
+
+    if (newEndTime !== undefined) {
+      updates.endTime = newEndTime;
+      updates.duration = newEndTime - newStartTime;
+    } else if (task.endTime) {
+      // Adjust duration if task has an end time but we're only updating start
+      updates.duration = task.endTime - newStartTime;
+    }
+
+    const updatedTask = { ...task, ...updates };
+    await db.saveTask(updatedTask);
+    setTasks(prev => prev.map(t => t.id === taskId ? updatedTask : t));
+  }, [tasks]);
+
   const deleteTask = useCallback(async (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
@@ -884,6 +904,7 @@ export function useAppState(): UseAppStateReturn {
     startTask,
     stopActiveTask,
     updateTask,
+    updateTaskTimes,
     deleteTask,
     getTasksByProject,
     getActiveTask,
