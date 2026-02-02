@@ -179,17 +179,19 @@ export function OverviewPage() {
     return projectNotes[0];
   }, [notes]);
 
-  // Get unique note tag types for a project
-  const getProjectNoteTags = useCallback((projectId: string): Exclude<NoteTagType, null>[] => {
+  // Get note tags with their content for a project
+  const getProjectNoteTags = useCallback((projectId: string): Array<{ type: Exclude<NoteTagType, null>; content: string }> => {
     const projectNotes = notes.filter((n) => n.projectId === projectId);
-    const tagTypes = new Set<Exclude<NoteTagType, null>>();
+    const tags: Array<{ type: Exclude<NoteTagType, null>; content: string }> = [];
+    const seenContent = new Set<string>();
     for (const note of projectNotes) {
       const tagType = detectNoteTagType(note.content);
-      if (tagType) {
-        tagTypes.add(tagType);
+      if (tagType && !seenContent.has(note.content.trim())) {
+        seenContent.add(note.content.trim());
+        tags.push({ type: tagType, content: note.content.trim() });
       }
     }
-    return Array.from(tagTypes);
+    return tags;
   }, [notes]);
 
   // Cycle project priority
@@ -748,9 +750,9 @@ export function OverviewPage() {
                 <span className="tag primary">
                   {formatDuration(getTotalDuration(project.id))}
                 </span>
-                {noteTags.map((tagType) => (
-                  <span key={tagType} className={`tag tag-${tagType}`}>
-                    {NOTE_TAG_PATTERNS[tagType].label}
+                {noteTags.map((tag) => (
+                  <span key={tag.content} className={`tag tag-${tag.type}`} title={NOTE_TAG_PATTERNS[tag.type].label}>
+                    {tag.content}
                   </span>
                 ))}
               </div>

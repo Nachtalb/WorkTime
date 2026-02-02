@@ -6,7 +6,7 @@ import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ProjectMentionPopup } from '../components/ProjectMentionPopup';
-import { TextWithProjectRefs, detectNoteTagType } from '../components/TextWithProjectRefs';
+import { TextWithProjectRefs, detectNoteTagType, NOTE_TAG_PATTERNS, type NoteTagType } from '../components/TextWithProjectRefs';
 import {
   formatTime,
   formatDuration,
@@ -157,6 +157,20 @@ export function ProjectPage() {
     }
     return result;
   }, [notesByDay]);
+
+  // Get note tags with their content for the current project
+  const projectNoteTags = useMemo((): Array<{ type: Exclude<NoteTagType, null>; content: string }> => {
+    const tags: Array<{ type: Exclude<NoteTagType, null>; content: string }> = [];
+    const seenContent = new Set<string>();
+    for (const note of projectNotes) {
+      const tagType = detectNoteTagType(note.content);
+      if (tagType && !seenContent.has(note.content.trim())) {
+        seenContent.add(note.content.trim());
+        tags.push({ type: tagType, content: note.content.trim() });
+      }
+    }
+    return tags;
+  }, [projectNotes]);
 
   // Cycle project priority
   const cyclePriority = useCallback((direction: 'up' | 'down') => {
@@ -842,6 +856,11 @@ export function ProjectPage() {
                 On Hold: {formatDateFull(project.onHoldAt)}
               </span>
             )}
+            {projectNoteTags.map((tag) => (
+              <span key={tag.content} className={`tag tag-${tag.type}`} title={NOTE_TAG_PATTERNS[tag.type].label}>
+                {tag.content}
+              </span>
+            ))}
           </div>
         </div>
 
