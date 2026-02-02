@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Modal } from './Modal';
 import type { Task, Project, GlobalTimer } from '../types';
 import { formatTime, formatDuration, isTimestampToday, getTodayDateString } from '../utils/time';
@@ -43,6 +43,36 @@ export function TodayOverviewPopup({
     setEditingTimerId(null);
     setEditError(null);
   }, []);
+
+  // Handle close - first cancel editing if active, then close popup
+  const handleClose = useCallback(() => {
+    if (editingTimerId) {
+      cancelEditing();
+    } else {
+      onClose();
+    }
+  }, [editingTimerId, cancelEditing, onClose]);
+
+  // Handle ESC key - cancel editing first, then close
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (editingTimerId) {
+          cancelEditing();
+        } else {
+          onClose();
+        }
+      }
+    };
+
+    // Use capture phase to intercept before Modal's handler
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [isOpen, editingTimerId, cancelEditing, onClose]);
 
   const saveEditing = useCallback(async () => {
     if (!editingTimerId || !onUpdateTimerTimes) return;
@@ -126,7 +156,7 @@ export function TodayOverviewPopup({
   const maxDuration = sortedProjects.length > 0 ? sortedProjects[0][1] : 0;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Today's Overview">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Today's Overview">
       <div className="overview-stats">
         <div className="stat-card">
           <div className="stat-value">{formatDuration(totalWorkTime)}</div>
