@@ -424,6 +424,20 @@ input {
   font-size: 14px;
   color: var(--color-text-muted);
   margin-top: -8px;
+  cursor: pointer;
+  padding: 2px 4px;
+  margin-left: -4px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.project-subtitle:hover {
+  background: var(--color-bg-hover);
+}
+
+.project-subtitle.empty {
+  font-style: italic;
+  opacity: 0.6;
 }
 
 .project-subtitle-input {

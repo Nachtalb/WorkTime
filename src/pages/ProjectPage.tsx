@@ -531,7 +531,7 @@ export function ProjectPage() {
       }
 
       // Handle Space for toggling todo completion or duplicating task
-      if (e.key === ' ' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId) {
+      if (e.key === ' ' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle) {
         e.preventDefault();
         // For ToDo project: toggle note completion
         if (project?.isTodo && selectedNoteId) {
@@ -795,11 +795,23 @@ export function ProjectPage() {
                   updateProject(currentProjectId!, { subtitle: subtitleEdit || undefined });
                   setIsEditingSubtitle(false);
                 }
+                if (e.key === 'Escape') {
+                  setIsEditingSubtitle(false);
+                }
               }}
             />
           ) : (
-            project.subtitle && (
-              <div className="project-subtitle">{project.subtitle}</div>
+            !project.isOther && (
+              <div
+                className={`project-subtitle ${!project.subtitle ? 'empty' : ''}`}
+                onClick={() => {
+                  setSubtitleEdit(project.subtitle || '');
+                  setIsEditingSubtitle(true);
+                }}
+                title="Click to edit subtitle (F3)"
+              >
+                {project.subtitle || 'Add subtitle...'}
+              </div>
             )
           )}
 
