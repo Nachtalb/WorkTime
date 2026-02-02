@@ -605,6 +605,8 @@ export function OverviewPage() {
                   });
                 }
               } else if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
                 setFilter('');
                 setIsCreatingNew(false);
                 searchInputRef.current?.blur();
