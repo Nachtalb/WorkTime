@@ -4,14 +4,16 @@ import { getCurrentTime, getCurrentDate } from '../utils/time';
 import { HelpPopup } from '../components/HelpPopup';
 import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
 import { GlobalSearchPopup } from '../components/GlobalSearchPopup';
+import { GlobalTodoPopup } from '../components/GlobalTodoPopup';
 
 export function LandingPage() {
-  const { startGlobalTimer, goToOverview, goToOverviewBrowse, goToProjectBrowse, globalTimers, tasks, notes, projects, activeTaskId, updateGlobalTimerTimes, updateTaskTimes, deleteTask } = useApp();
+  const { startGlobalTimer, goToOverview, goToOverviewBrowse, goToProjectBrowse, globalTimers, tasks, notes, projects, activeTaskId, updateGlobalTimerTimes, updateTaskTimes, deleteTask, getTodoProject, createNote, toggleNoteCompleted, updateNote, deleteNote } = useApp();
   const [time, setTime] = useState(getCurrentTime());
   const [date, setDate] = useState(getCurrentDate());
   const [showHelp, setShowHelp] = useState(false);
   const [showTodayOverview, setShowTodayOverview] = useState(false);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [showGlobalTodo, setShowGlobalTodo] = useState(false);
 
   // Update time every second
   useEffect(() => {
@@ -31,7 +33,7 @@ export function LandingPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle if a modal is open
-      if (showHelp || showTodayOverview || showGlobalSearch) return;
+      if (showHelp || showTodayOverview || showGlobalSearch || showGlobalTodo) return;
 
       // Handle Ctrl+K for global search
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -54,6 +56,13 @@ export function LandingPage() {
         return;
       }
 
+      // Handle "t" for global todo popup
+      if (e.key === 't') {
+        e.preventDefault();
+        setShowGlobalTodo(true);
+        return;
+      }
+
       if (e.key === 'Enter') {
         e.preventDefault();
         handleStart();
@@ -68,7 +77,7 @@ export function LandingPage() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleStart, goToOverviewBrowse, showHelp, showTodayOverview, showGlobalSearch]);
+  }, [handleStart, goToOverviewBrowse, showHelp, showTodayOverview, showGlobalSearch, showGlobalTodo]);
 
   return (
     <div className="page landing-page">
@@ -110,6 +119,20 @@ export function LandingPage() {
         projects={projects}
         notes={notes}
         onSelectProject={goToProjectBrowse}
+      />
+
+      <GlobalTodoPopup
+        isOpen={showGlobalTodo}
+        onClose={() => setShowGlobalTodo(false)}
+        todos={notes.filter(n => n.projectId === getTodoProject()?.id)}
+        onCreateTodo={(content) => {
+          const todoProject = getTodoProject();
+          if (!todoProject) return Promise.reject('No todo project');
+          return createNote(todoProject.id, content);
+        }}
+        onToggleTodo={toggleNoteCompleted}
+        onUpdateTodo={updateNote}
+        onDeleteTodo={deleteNote}
       />
     </div>
   );

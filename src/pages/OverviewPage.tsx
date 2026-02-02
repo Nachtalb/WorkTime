@@ -6,6 +6,7 @@ import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
 import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
 import { GlobalSearchPopup } from '../components/GlobalSearchPopup';
+import { GlobalTodoPopup } from '../components/GlobalTodoPopup';
 import { ImportPopup } from '../components/ImportPopup';
 import { StartTimeEditorPopup } from '../components/StartTimeEditorPopup';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -51,6 +52,10 @@ export function OverviewPage() {
     updateTaskTimes,
     deleteTask,
     updateProject,
+    createNote,
+    toggleNoteCompleted,
+    updateNote,
+    deleteNote,
   } = useApp();
 
   const [filter, setFilter] = useState('');
@@ -65,6 +70,7 @@ export function OverviewPage() {
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [showGlobalTodo, setShowGlobalTodo] = useState(false);
   const [sortBy, setSortBy] = useState<'lastUsed' | 'createdAt' | 'doneAt' | 'name' | 'priority'>(() => {
     const saved = localStorage.getItem('worktime-sortBy');
     return (saved as 'lastUsed' | 'createdAt' | 'doneAt' | 'name' | 'priority') || 'lastUsed';
@@ -239,7 +245,7 @@ export function OverviewPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle if modals are open
-      if (showHelp || showTodayOverview || showImport || showStartTimeEditor || projectToDelete || showExitConfirm || showGlobalSearch) return;
+      if (showHelp || showTodayOverview || showImport || showStartTimeEditor || projectToDelete || showExitConfirm || showGlobalSearch || showGlobalTodo) return;
 
       // Handle Ctrl+K for global search
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -399,6 +405,13 @@ export function OverviewPage() {
         return;
       }
 
+      // Handle "t" for global todo popup
+      if (e.key === 't' && !filter && !e.ctrlKey) {
+        e.preventDefault();
+        setShowGlobalTodo(true);
+        return;
+      }
+
       // Handle Delete
       if (e.key === 'Delete' && filteredProjects.length > 0) {
         const selectedProject = filteredProjects[selectedIndex];
@@ -502,6 +515,7 @@ export function OverviewPage() {
     projectToDelete,
     showExitConfirm,
     showGlobalSearch,
+    showGlobalTodo,
     goToLanding,
     goToProject,
     createProject,
@@ -852,6 +866,20 @@ export function OverviewPage() {
           goToProject(projectId);
         }}
         currentProjectId={currentProjectId}
+      />
+
+      <GlobalTodoPopup
+        isOpen={showGlobalTodo}
+        onClose={() => setShowGlobalTodo(false)}
+        todos={notes.filter(n => n.projectId === getTodoProject()?.id)}
+        onCreateTodo={(content) => {
+          const todoProject = getTodoProject();
+          if (!todoProject) return Promise.reject('No todo project');
+          return createNote(todoProject.id, content);
+        }}
+        onToggleTodo={toggleNoteCompleted}
+        onUpdateTodo={updateNote}
+        onDeleteTodo={deleteNote}
       />
     </div>
   );

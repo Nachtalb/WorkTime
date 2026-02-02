@@ -6,6 +6,7 @@ import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
 import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
 import { GlobalSearchPopup } from '../components/GlobalSearchPopup';
+import { GlobalTodoPopup } from '../components/GlobalTodoPopup';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ProjectMentionPopup } from '../components/ProjectMentionPopup';
 import { TextWithProjectRefs, detectNoteTagType, NOTE_TAG_PATTERNS, type NoteTagType } from '../components/TextWithProjectRefs';
@@ -61,6 +62,7 @@ export function ProjectPage() {
     globalTimers,
     updateGlobalTimerTimes,
     updateTaskTimes,
+    getTodoProject,
   } = useApp();
 
   const [newTaskText, setNewTaskText] = useState('');
@@ -93,6 +95,7 @@ export function ProjectPage() {
   const [showInputError, setShowInputError] = useState(false);
   const [showTodayOverview, setShowTodayOverview] = useState(false);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [showGlobalTodo, setShowGlobalTodo] = useState(false);
 
   // Mention popup state
   const [mentionPopupOpen, setMentionPopupOpen] = useState(false);
@@ -456,7 +459,7 @@ export function ProjectPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle if modals are open
-      if (showHelp || taskToDelete || noteToDelete || showDoneConfirm || showTodayOverview || showGlobalSearch) return;
+      if (showHelp || taskToDelete || noteToDelete || showDoneConfirm || showTodayOverview || showGlobalSearch || showGlobalTodo) return;
 
       // Handle Ctrl+K for global search
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -530,6 +533,13 @@ export function ProjectPage() {
       if (e.key === '?' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject) {
         e.preventDefault();
         setShowHelp(true);
+        return;
+      }
+
+      // Handle "t" for global todo popup (when not editing)
+      if (e.key === 't' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle) {
+        e.preventDefault();
+        setShowGlobalTodo(true);
         return;
       }
 
@@ -791,6 +801,7 @@ export function ProjectPage() {
     showDoneConfirm,
     showTodayOverview,
     showGlobalSearch,
+    showGlobalTodo,
     isTypingNewTask,
     isTypingNewNote,
     editingTaskId,
@@ -1501,6 +1512,20 @@ export function ProjectPage() {
           goToProject(projectId);
         }}
         currentProjectId={currentProjectId}
+      />
+
+      <GlobalTodoPopup
+        isOpen={showGlobalTodo}
+        onClose={() => setShowGlobalTodo(false)}
+        todos={notes.filter(n => n.projectId === getTodoProject()?.id)}
+        onCreateTodo={(content) => {
+          const todoProject = getTodoProject();
+          if (!todoProject) return Promise.reject('No todo project');
+          return createNote(todoProject.id, content);
+        }}
+        onToggleTodo={toggleNoteCompleted}
+        onUpdateTodo={updateNote}
+        onDeleteTodo={deleteNote}
       />
     </div>
   );
