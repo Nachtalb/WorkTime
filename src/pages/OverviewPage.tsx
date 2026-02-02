@@ -549,20 +549,28 @@ export function OverviewPage() {
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setIsSearchFocused(false)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && filter.trim()) {
+              if (e.key === 'Enter') {
                 e.preventDefault();
-                createProject(filter.trim()).then((newProject) => {
+                // If there are filtered projects, open the selected one
+                if (filteredProjects.length > 0 && !isCreatingNew) {
                   setFilter('');
-                  setIsCreatingNew(false);
-                  goToProject(newProject.id);
-                });
+                  goToProject(filteredProjects[selectedIndex].id);
+                } else if (filter.trim()) {
+                  // No matches or explicitly creating - create new project
+                  createProject(filter.trim()).then((newProject) => {
+                    setFilter('');
+                    setIsCreatingNew(false);
+                    goToProject(newProject.id);
+                  });
+                }
               } else if (e.key === 'Escape') {
                 setFilter('');
+                setIsCreatingNew(false);
                 searchInputRef.current?.blur();
               }
             }}
           />
-          {filter && (
+          {filter && filteredProjects.length === 0 && (
             <p style={{ marginTop: 8, color: 'var(--color-primary)', fontSize: 14 }}>
               Press Enter to create project "{filter}"
             </p>
