@@ -136,13 +136,22 @@ export function OverviewPage() {
     });
   }, [projects, sortBy, sortAsc]);
 
-  // Filter projects based on input (matches project name as numeric ID) and hide done
+  // Filter projects based on input (matches project name, subtitle, or notes content) and hide done
   const filteredProjects = useMemo(() => {
     let result = sortedProjects;
 
-    // Filter by name if filter is set
+    // Filter by name, subtitle, or notes content if filter is set
     if (filter) {
-      result = result.filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()));
+      const lowerFilter = filter.toLowerCase();
+      result = result.filter((p) => {
+        // Check project name
+        if (p.name.toLowerCase().includes(lowerFilter)) return true;
+        // Check project subtitle
+        if (p.subtitle?.toLowerCase().includes(lowerFilter)) return true;
+        // Check notes content
+        const projectNotes = notes.filter((n) => n.projectId === p.id);
+        return projectNotes.some((n) => n.content.toLowerCase().includes(lowerFilter));
+      });
     }
 
     // Hide done projects if enabled
@@ -151,7 +160,7 @@ export function OverviewPage() {
     }
 
     return result;
-  }, [sortedProjects, filter, hideDone]);
+  }, [sortedProjects, filter, hideDone, notes]);
 
   // Get the last task for a project
   const getLastTask = useCallback((projectId: string): Task | undefined => {
