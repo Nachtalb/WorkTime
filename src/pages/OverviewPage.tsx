@@ -751,7 +751,7 @@ export function OverviewPage() {
                   {formatDuration(getTotalDuration(project.id))}
                 </span>
                 {noteTags.map((tag) => (
-                  <span key={tag.content} className={`tag tag-${tag.type}`} title={NOTE_TAG_PATTERNS[tag.type].label}>
+                  <span key={tag.content} className={`tag tag-${tag.type}`} data-tooltip={NOTE_TAG_PATTERNS[tag.type].label}>
                     {tag.content}
                   </span>
                 ))}
