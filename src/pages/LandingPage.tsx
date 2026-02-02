@@ -3,6 +3,7 @@ import { useApp } from '../hooks/AppContext';
 import { getCurrentTime, getCurrentDate } from '../utils/time';
 import { HelpPopup } from '../components/HelpPopup';
 import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
+import { GlobalSearchPopup } from '../components/GlobalSearchPopup';
 
 export function LandingPage() {
   const { startGlobalTimer, goToOverview, goToOverviewBrowse, goToProjectBrowse, globalTimers, tasks, projects, activeTaskId, updateGlobalTimerTimes, updateTaskTimes, deleteTask } = useApp();
@@ -10,6 +11,7 @@ export function LandingPage() {
   const [date, setDate] = useState(getCurrentDate());
   const [showHelp, setShowHelp] = useState(false);
   const [showTodayOverview, setShowTodayOverview] = useState(false);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
   // Update time every second
   useEffect(() => {
@@ -29,7 +31,21 @@ export function LandingPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle if a modal is open
-      if (showHelp || showTodayOverview) return;
+      if (showHelp || showTodayOverview || showGlobalSearch) return;
+
+      // Handle Ctrl+K for global search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+        return;
+      }
+
+      // Handle / for global search (when not in an input)
+      if (e.key === '/' && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+        return;
+      }
 
       // Handle Ctrl+O for today overview
       if (e.ctrlKey && e.key === 'o') {
@@ -52,7 +68,7 @@ export function LandingPage() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleStart, goToOverviewBrowse, showHelp, showTodayOverview]);
+  }, [handleStart, goToOverviewBrowse, showHelp, showTodayOverview, showGlobalSearch]);
 
   return (
     <div className="page landing-page">
@@ -70,7 +86,7 @@ export function LandingPage() {
       </button>
 
       <p className="landing-hint">
-        Press <kbd>Enter</kbd> to start &middot; <kbd>B</kbd> to browse &middot; <kbd>?</kbd> for help
+        Press <kbd>Enter</kbd> to start &middot; <kbd>B</kbd> to browse &middot; <kbd>/</kbd> search &middot; <kbd>?</kbd> help
       </p>
 
       <HelpPopup isOpen={showHelp} onClose={() => setShowHelp(false)} currentPage="landing" />
@@ -86,6 +102,13 @@ export function LandingPage() {
         onUpdateTaskTimes={updateTaskTimes}
         onDeleteTask={deleteTask}
         onProjectClick={goToProjectBrowse}
+      />
+
+      <GlobalSearchPopup
+        isOpen={showGlobalSearch}
+        onClose={() => setShowGlobalSearch(false)}
+        projects={projects}
+        onSelectProject={goToProjectBrowse}
       />
     </div>
   );

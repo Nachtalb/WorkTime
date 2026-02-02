@@ -5,6 +5,7 @@ import type { Task, Note, ProjectPriority } from '../types';
 import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
 import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
+import { GlobalSearchPopup } from '../components/GlobalSearchPopup';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ProjectMentionPopup } from '../components/ProjectMentionPopup';
 import { TextWithProjectRefs, detectNoteTagType, NOTE_TAG_PATTERNS, type NoteTagType } from '../components/TextWithProjectRefs';
@@ -91,6 +92,7 @@ export function ProjectPage() {
   const [showActionError, setShowActionError] = useState(false);
   const [showInputError, setShowInputError] = useState(false);
   const [showTodayOverview, setShowTodayOverview] = useState(false);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
   // Mention popup state
   const [mentionPopupOpen, setMentionPopupOpen] = useState(false);
@@ -454,7 +456,21 @@ export function ProjectPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle if modals are open
-      if (showHelp || taskToDelete || noteToDelete || showDoneConfirm || showTodayOverview) return;
+      if (showHelp || taskToDelete || noteToDelete || showDoneConfirm || showTodayOverview || showGlobalSearch) return;
+
+      // Handle Ctrl+K for global search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+        return;
+      }
+
+      // Handle / for global search (when not in an input)
+      if (e.key === '/' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle) {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+        return;
+      }
 
       // Handle Ctrl+O for today overview
       if (e.ctrlKey && e.key === 'o') {
@@ -774,6 +790,7 @@ export function ProjectPage() {
     noteToDelete,
     showDoneConfirm,
     showTodayOverview,
+    showGlobalSearch,
     isTypingNewTask,
     isTypingNewNote,
     editingTaskId,
@@ -1472,6 +1489,17 @@ export function ProjectPage() {
         onUpdateTaskTimes={updateTaskTimes}
         onDeleteTask={deleteTask}
         onProjectClick={goToProject}
+      />
+
+      <GlobalSearchPopup
+        isOpen={showGlobalSearch}
+        onClose={() => setShowGlobalSearch(false)}
+        projects={projects}
+        onSelectProject={(projectId) => {
+          setShowGlobalSearch(false);
+          goToProject(projectId);
+        }}
+        currentProjectId={currentProjectId}
       />
     </div>
   );

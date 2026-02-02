@@ -5,6 +5,7 @@ import type { Task, Note, ProjectPriority } from '../types';
 import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
 import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
+import { GlobalSearchPopup } from '../components/GlobalSearchPopup';
 import { ImportPopup } from '../components/ImportPopup';
 import { StartTimeEditorPopup } from '../components/StartTimeEditorPopup';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -62,6 +63,7 @@ export function OverviewPage() {
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [sortBy, setSortBy] = useState<'lastUsed' | 'createdAt' | 'doneAt' | 'name' | 'priority'>(() => {
     const saved = localStorage.getItem('worktime-sortBy');
     return (saved as 'lastUsed' | 'createdAt' | 'doneAt' | 'name' | 'priority') || 'lastUsed';
@@ -237,7 +239,14 @@ export function OverviewPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle if modals are open
-      if (showHelp || showTodayOverview || showImport || showStartTimeEditor || projectToDelete || showExitConfirm) return;
+      if (showHelp || showTodayOverview || showImport || showStartTimeEditor || projectToDelete || showExitConfirm || showGlobalSearch) return;
+
+      // Handle Ctrl+K for global search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+        return;
+      }
 
       // Check if search input is focused
       const isSearchFocused = document.activeElement === searchInputRef.current;
@@ -491,6 +500,7 @@ export function OverviewPage() {
     showStartTimeEditor,
     projectToDelete,
     showExitConfirm,
+    showGlobalSearch,
     goToLanding,
     goToProject,
     createProject,
@@ -827,6 +837,17 @@ export function OverviewPage() {
         onCancel={() => setShowExitConfirm(false)}
         message="Are you sure you want to go back to the landing page?"
         confirmText="Go Back"
+      />
+
+      <GlobalSearchPopup
+        isOpen={showGlobalSearch}
+        onClose={() => setShowGlobalSearch(false)}
+        projects={projects}
+        onSelectProject={(projectId) => {
+          setShowGlobalSearch(false);
+          goToProject(projectId);
+        }}
+        currentProjectId={currentProjectId}
       />
     </div>
   );
