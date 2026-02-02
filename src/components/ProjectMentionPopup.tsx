@@ -23,9 +23,10 @@ export function ProjectMentionPopup({
   const popupRef = useRef<HTMLDivElement>(null);
   const selectedRef = useRef<HTMLDivElement>(null);
 
-  // Filter projects based on search text
+  // Filter projects based on search text (search both name and subtitle)
   const filteredProjects = projects.filter((p) =>
-    p.name.toLowerCase().includes(searchText.toLowerCase())
+    p.name.toLowerCase().includes(searchText.toLowerCase()) ||
+    p.subtitle?.toLowerCase().includes(searchText.toLowerCase())
   );
 
   // Scroll selected item into view
