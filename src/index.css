@@ -977,7 +977,7 @@ input {
   border-radius: var(--radius-md);
   background: var(--color-bg);
   color: var(--color-text);
-  width: 110px;
+  width: 145px;
 }
 
 .session-time-input:focus {
