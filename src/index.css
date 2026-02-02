@@ -1376,47 +1376,68 @@ input {
   background: var(--color-primary-light);
 }
 
-/* Special Tags in Notes */
-.tag-vorgang,
-.tag-elfall,
-.tag-difovia {
-  font-weight: 500;
-  padding: 1px 4px;
-  border-radius: 3px;
-  font-family: var(--font-mono);
-  font-size: 0.9em;
-}
-
-.tag-vorgang {
+/* Special Tags for Note Types (used in project card tags) */
+.tag.tag-vorgang {
   color: #b45309;
   background: #fef3c7;
 }
 
-.tag-elfall {
+.tag.tag-elfall {
   color: #7c3aed;
   background: #ede9fe;
 }
 
-.tag-difovia {
+.tag.tag-difovia {
   color: #0891b2;
   background: #cffafe;
 }
 
+/* Note item backgrounds for tagged notes */
+.note-item.note-tag-vorgang {
+  background: #fef3c7;
+  border-left: 3px solid #f59e0b;
+}
+
+.note-item.note-tag-elfall {
+  background: #ede9fe;
+  border-left: 3px solid #8b5cf6;
+}
+
+.note-item.note-tag-difovia {
+  background: #cffafe;
+  border-left: 3px solid #06b6d4;
+}
+
 /* Dark mode tag colors */
 @media (prefers-color-scheme: dark) {
-  .tag-vorgang {
+  .tag.tag-vorgang {
     color: #fbbf24;
     background: rgba(251, 191, 36, 0.15);
   }
 
-  .tag-elfall {
+  .tag.tag-elfall {
     color: #a78bfa;
     background: rgba(167, 139, 250, 0.15);
   }
 
-  .tag-difovia {
+  .tag.tag-difovia {
     color: #22d3ee;
     background: rgba(34, 211, 238, 0.15);
+  }
+
+  .note-item.note-tag-vorgang {
+    background: rgba(251, 191, 36, 0.1);
+    border-left: 3px solid #f59e0b;
+  }
+
+  .note-item.note-tag-elfall {
+    background: rgba(167, 139, 250, 0.1);
+    border-left: 3px solid #8b5cf6;
+  }
+
+  .note-item.note-tag-difovia {
+    background: rgba(34, 211, 238, 0.1);
+    border-left: 3px solid #06b6d4;
   }
 }
 

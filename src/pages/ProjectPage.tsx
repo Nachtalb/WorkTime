@@ -6,7 +6,7 @@ import { TimerIndicator } from '../components/TimerIndicator';
 import { HelpPopup } from '../components/HelpPopup';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ProjectMentionPopup } from '../components/ProjectMentionPopup';
-import { TextWithProjectRefs } from '../components/TextWithProjectRefs';
+import { TextWithProjectRefs, detectNoteTagType } from '../components/TextWithProjectRefs';
 import {
   formatTime,
   formatDuration,
@@ -1155,11 +1155,12 @@ export function ProjectPage() {
                     {dayNotes.map((note) => {
                       const isSelected = note.id === selectedNoteId && effectiveActiveColumn === 'notes';
                       const isEditing = note.id === editingNoteId;
+                      const noteTagType = detectNoteTagType(note.content);
 
                       return (
                         <div
                           key={note.id}
-                          className={`note-item ${isSelected ? 'selected' : ''} ${note.completed ? 'completed' : ''}`}
+                          className={`note-item ${isSelected ? 'selected' : ''} ${note.completed ? 'completed' : ''} ${noteTagType ? `note-tag-${noteTagType}` : ''}`}
                           onClick={() => {
                             if (!isEditing) {
                               setActiveColumn('notes');

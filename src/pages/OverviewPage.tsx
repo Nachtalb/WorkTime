@@ -19,6 +19,7 @@ import {
   exportTodayAsTxt,
   exportTodayAsCsv,
 } from '../utils/export';
+import { detectNoteTagType, NOTE_TAG_PATTERNS, type NoteTagType } from '../components/TextWithProjectRefs';
 
 export function OverviewPage() {
   const {
@@ -176,6 +177,19 @@ export function OverviewPage() {
       .filter((n) => n.projectId === projectId)
       .sort((a, b) => b.createdAt - a.createdAt);
     return projectNotes[0];
+  }, [notes]);
+
+  // Get unique note tag types for a project
+  const getProjectNoteTags = useCallback((projectId: string): Exclude<NoteTagType, null>[] => {
+    const projectNotes = notes.filter((n) => n.projectId === projectId);
+    const tagTypes = new Set<Exclude<NoteTagType, null>>();
+    for (const note of projectNotes) {
+      const tagType = detectNoteTagType(note.content);
+      if (tagType) {
+        tagTypes.add(tagType);
+      }
+    }
+    return Array.from(tagTypes);
   }, [notes]);
 
   // Cycle project priority
@@ -677,6 +691,7 @@ export function OverviewPage() {
           const lastNote = getLastNote(project.id);
           const isActive = isProjectActive(project.id);
           const isSelected = index === selectedIndex;
+          const noteTags = getProjectNoteTags(project.id);
 
           return (
             <div
@@ -733,6 +748,11 @@ export function OverviewPage() {
                 <span className="tag primary">
                   {formatDuration(getTotalDuration(project.id))}
                 </span>
+                {noteTags.map((tagType) => (
+                  <span key={tagType} className={`tag tag-${tagType}`}>
+                    {NOTE_TAG_PATTERNS[tagType].label}
+                  </span>
+                ))}
               </div>
             </div>
           );
