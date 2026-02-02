@@ -5,7 +5,7 @@ import { HelpPopup } from '../components/HelpPopup';
 import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
 
 export function LandingPage() {
-  const { startGlobalTimer, goToOverview, goToOverviewBrowse, goToProjectBrowse, globalTimers, tasks, projects, activeTaskId, updateGlobalTimerTimes, updateTaskTimes } = useApp();
+  const { startGlobalTimer, goToOverview, goToOverviewBrowse, goToProjectBrowse, globalTimers, tasks, projects, activeTaskId, updateGlobalTimerTimes, updateTaskTimes, deleteTask } = useApp();
   const [time, setTime] = useState(getCurrentTime());
   const [date, setDate] = useState(getCurrentDate());
   const [showHelp, setShowHelp] = useState(false);
@@ -84,6 +84,7 @@ export function LandingPage() {
         activeTaskId={activeTaskId}
         onUpdateTimerTimes={updateGlobalTimerTimes}
         onUpdateTaskTimes={updateTaskTimes}
+        onDeleteTask={deleteTask}
         onProjectClick={goToProjectBrowse}
       />
     </div>

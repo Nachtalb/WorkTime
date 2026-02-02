@@ -47,6 +47,7 @@ export function OverviewPage() {
     updateGlobalTimerStartTime,
     updateGlobalTimerTimes,
     updateTaskTimes,
+    deleteTask,
     updateProject,
   } = useApp();
 
@@ -792,6 +793,7 @@ export function OverviewPage() {
         activeTaskId={activeTaskId}
         onUpdateTimerTimes={updateGlobalTimerTimes}
         onUpdateTaskTimes={updateTaskTimes}
+        onDeleteTask={deleteTask}
         onProjectClick={goToProject}
       />
 

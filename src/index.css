@@ -1264,7 +1264,21 @@ input {
   word-break: break-word;
 }
 
-.task-edit-time-btn {
+.task-actions-overview {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.task-item-overview:hover .task-actions-overview {
+  opacity: 1;
+}
+
+.task-edit-time-btn,
+.task-delete-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1275,18 +1289,17 @@ input {
   background: transparent;
   color: var(--color-text-tertiary);
   cursor: pointer;
-  opacity: 0;
   transition: all var(--transition-fast);
-  margin-left: auto;
-}
-
-.task-item-overview:hover .task-edit-time-btn {
-  opacity: 1;
 }
 
 .task-edit-time-btn:hover {
   background: var(--color-bg-hover);
   color: var(--color-text-secondary);
+}
+
+.task-delete-btn:hover {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
 }
 
 /* Clickable project/breakdown labels */
