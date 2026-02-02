@@ -306,11 +306,26 @@ export function GlobalTodoPopup({
         </div>
 
         <div className="modal-hint">
-          <kbd>↑↓</kbd> navigate
-          <kbd>Space</kbd> toggle
-          <kbd>Enter</kbd> edit
-          <kbd>Del</kbd> delete
-          <kbd>Esc</kbd> close
+          <div className="shortcut-item">
+            <div className="shortcut-keys"><kbd>↑</kbd><kbd>↓</kbd></div>
+            <span className="shortcut-desc">navigate</span>
+          </div>
+          <div className="shortcut-item">
+            <div className="shortcut-keys"><kbd>Space</kbd></div>
+            <span className="shortcut-desc">toggle</span>
+          </div>
+          <div className="shortcut-item">
+            <div className="shortcut-keys"><kbd>Enter</kbd></div>
+            <span className="shortcut-desc">edit</span>
+          </div>
+          <div className="shortcut-item">
+            <div className="shortcut-keys"><kbd>Del</kbd></div>
+            <span className="shortcut-desc">delete</span>
+          </div>
+          <div className="shortcut-item">
+            <div className="shortcut-keys"><kbd>Esc</kbd></div>
+            <span className="shortcut-desc">close</span>
+          </div>
         </div>
       </div>
     </div>

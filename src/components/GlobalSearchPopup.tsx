@@ -246,9 +246,18 @@ export function GlobalSearchPopup({
         </div>
 
         <div className="modal-hint">
-          <kbd>↑↓</kbd> navigate
-          <kbd>Enter</kbd> select
-          <kbd>Esc</kbd> close
+          <div className="shortcut-item">
+            <div className="shortcut-keys"><kbd>↑</kbd><kbd>↓</kbd></div>
+            <span className="shortcut-desc">navigate</span>
+          </div>
+          <div className="shortcut-item">
+            <div className="shortcut-keys"><kbd>Enter</kbd></div>
+            <span className="shortcut-desc">select</span>
+          </div>
+          <div className="shortcut-item">
+            <div className="shortcut-keys"><kbd>Esc</kbd></div>
+            <span className="shortcut-desc">close</span>
+          </div>
         </div>
       </div>
     </div>
