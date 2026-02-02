@@ -545,28 +545,10 @@ export function useAppState(): UseAppStateReturn {
     await db.deleteTask(taskId);
     setTasks(prev => prev.filter(t => t.id !== taskId));
 
-    // If this was the active task, restart the previous one
+    // If this was the active task, just clear it (don't auto-activate another task)
     if (activeTaskId === taskId) {
-      const projectTasks = tasks
-        .filter(t => t.projectId === task.projectId && t.id !== taskId)
-        .sort((a, b) => b.startTime - a.startTime);
-
-      if (projectTasks.length > 0) {
-        const prevTask = projectTasks[0];
-        // Restart the previous task
-        const updatedTask = {
-          ...prevTask,
-          endTime: undefined,
-          duration: undefined,
-        };
-        await db.saveTask(updatedTask);
-        setTasks(prev => prev.map(t => t.id === prevTask.id ? updatedTask : t));
-        setActiveTaskId(prevTask.id);
-        await saveState({ activeTaskId: prevTask.id });
-      } else {
-        setActiveTaskId(null);
-        await saveState({ activeTaskId: null });
-      }
+      setActiveTaskId(null);
+      await saveState({ activeTaskId: null });
     }
   }, [tasks, activeTaskId, saveState]);
 
