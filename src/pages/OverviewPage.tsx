@@ -253,12 +253,13 @@ export function OverviewPage() {
 
       // Handle Escape - clear filter/blur input or show exit confirmation
       if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
         if (isSearchFocused || filter) {
           setFilter('');
           setIsCreatingNew(false);
           searchInputRef.current?.blur();
         } else {
-          e.preventDefault();
           setShowExitConfirm(true);
         }
         return;

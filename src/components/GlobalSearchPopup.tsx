@@ -210,13 +210,9 @@ export function GlobalSearchPopup({
                           project.name
                         )}
                       </span>
-                      {project.subtitle && !showMatchLine && (
+                      {project.subtitle && (
                         <span className="global-search-item-subtitle">
-                          {searchText && matchDetails?.field === 'subtitle' ? (
-                            <HighlightedText text={project.subtitle} matchedIndices={matchDetails.matchedIndices} />
-                          ) : (
-                            project.subtitle
-                          )}
+                          {project.subtitle}
                         </span>
                       )}
                     </div>
