@@ -1395,17 +1395,32 @@ input {
 /* Note item backgrounds for tagged notes */
 .note-item.note-tag-vorgang {
   background: #fef3c7;
-  border-left: 3px solid #f59e0b;
+  border-color: #f59e0b;
+}
+
+.note-item.note-tag-vorgang.selected {
+  background: linear-gradient(135deg, #fde68a 0%, #fef3c7 100%);
+  border-color: #d97706;
 }
 
 .note-item.note-tag-elfall {
   background: #ede9fe;
-  border-left: 3px solid #8b5cf6;
+  border-color: #8b5cf6;
+}
+
+.note-item.note-tag-elfall.selected {
+  background: linear-gradient(135deg, #ddd6fe 0%, #ede9fe 100%);
+  border-color: #7c3aed;
 }
 
 .note-item.note-tag-difovia {
   background: #cffafe;
-  border-left: 3px solid #06b6d4;
+  border-color: #06b6d4;
+}
+
+.note-item.note-tag-difovia.selected {
+  background: linear-gradient(135deg, #a5f3fc 0%, #cffafe 100%);
+  border-color: #0891b2;
 }
 
 /* Dark mode tag colors */
@@ -1427,17 +1442,32 @@ input {
 
   .note-item.note-tag-vorgang {
     background: rgba(251, 191, 36, 0.1);
-    border-left: 3px solid #f59e0b;
+    border-color: #f59e0b;
+  }
+
+  .note-item.note-tag-vorgang.selected {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.25) 0%, rgba(251, 191, 36, 0.1) 100%);
+    border-color: #fbbf24;
   }
 
   .note-item.note-tag-elfall {
     background: rgba(167, 139, 250, 0.1);
-    border-left: 3px solid #8b5cf6;
+    border-color: #8b5cf6;
+  }
+
+  .note-item.note-tag-elfall.selected {
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.25) 0%, rgba(167, 139, 250, 0.1) 100%);
+    border-color: #a78bfa;
   }
 
   .note-item.note-tag-difovia {
     background: rgba(34, 211, 238, 0.1);
-    border-left: 3px solid #06b6d4;
+    border-color: #06b6d4;
+  }
+
+  .note-item.note-tag-difovia.selected {
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.25) 0%, rgba(34, 211, 238, 0.1) 100%);
+    border-color: #22d3ee;
   }
 }
 
