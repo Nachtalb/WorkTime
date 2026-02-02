@@ -398,12 +398,27 @@ export function useAppState(): UseAppStateReturn {
       const { onHoldAt, ...projectWithoutOnHold } = project;
       updatedProject = projectWithoutOnHold as Project;
     } else {
-      // Set on hold
+      // Set on hold - also stop active task if it belongs to this project
+      if (activeTaskId) {
+        const activeTask = tasks.find(t => t.id === activeTaskId);
+        if (activeTask && activeTask.projectId === id && !activeTask.endTime) {
+          const endTime = Date.now();
+          const updatedTask = {
+            ...activeTask,
+            endTime,
+            duration: endTime - activeTask.startTime,
+          };
+          await db.saveTask(updatedTask);
+          setTasks(prev => prev.map(t => t.id === activeTaskId ? updatedTask : t));
+          setActiveTaskId(null);
+          await saveState({ activeTaskId: null });
+        }
+      }
       updatedProject = { ...project, onHoldAt: Date.now() };
     }
     await db.saveProject(updatedProject);
     setProjects(prev => prev.map(p => p.id === id ? updatedProject : p));
-  }, [projects]);
+  }, [projects, activeTaskId, tasks, saveState]);
 
   // Tasks
   const createTask = useCallback(async (projectId: string, description: string): Promise<Task> => {
