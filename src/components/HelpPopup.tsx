@@ -17,7 +17,7 @@ const landingShortcuts: ShortcutCategory[] = [
     shortcuts: [
       { keys: ['Enter'], description: 'Start tracking' },
       { keys: ['Ctrl', 'O'], description: 'Today overview' },
-      { keys: ['Ctrl', 'T'], description: 'Global todos' },
+      { keys: ['Alt', 'T'], description: 'Global todos' },
       { keys: ['?'], description: 'Show help' },
     ],
   },
@@ -61,7 +61,7 @@ const overviewShortcuts: ShortcutCategory[] = [
     title: 'Other',
     shortcuts: [
       { keys: ['Ctrl', 'O'], description: 'Today overview' },
-      { keys: ['Ctrl', 'T'], description: 'Global todos' },
+      { keys: ['Alt', 'T'], description: 'Global todos' },
       { keys: ['Ctrl', 'Alt', 'C'], description: 'Edit start time' },
       { keys: ['?'], description: 'Show help' },
     ],
@@ -100,7 +100,7 @@ const projectShortcuts: ShortcutCategory[] = [
     title: 'Other',
     shortcuts: [
       { keys: ['Ctrl', 'O'], description: 'Today overview' },
-      { keys: ['Ctrl', 'T'], description: 'Global todos' },
+      { keys: ['Alt', 'T'], description: 'Global todos' },
       { keys: ['Ctrl', 'S'], description: 'Today as TXT' },
       { keys: ['Ctrl', 'E'], description: 'Today as CSV' },
       { keys: ['Ctrl', 'Alt', 'S'], description: 'Full as TXT' },
