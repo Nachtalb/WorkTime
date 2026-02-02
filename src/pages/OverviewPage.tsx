@@ -218,11 +218,15 @@ export function OverviewPage() {
       // Don't handle if modals are open
       if (showHelp || showTodayOverview || showImport || showStartTimeEditor || projectToDelete || showExitConfirm) return;
 
-      // Handle Escape - show exit confirmation
+      // Check if search input is focused
+      const isSearchFocused = document.activeElement === searchInputRef.current;
+
+      // Handle Escape - clear filter/blur input or show exit confirmation
       if (e.key === 'Escape') {
-        if (filter) {
+        if (isSearchFocused || filter) {
           setFilter('');
           setIsCreatingNew(false);
+          searchInputRef.current?.blur();
         } else {
           e.preventDefault();
           setShowExitConfirm(true);
@@ -232,7 +236,7 @@ export function OverviewPage() {
 
       // Handle Enter (skip if input is focused - input's onKeyDown handles it)
       if (e.key === 'Enter') {
-        if (document.activeElement === searchInputRef.current) {
+        if (isSearchFocused) {
           return;
         }
         e.preventDefault();
@@ -248,6 +252,9 @@ export function OverviewPage() {
         }
         return;
       }
+
+      // Skip letter shortcuts if search input is focused (let user type)
+      if (isSearchFocused) return;
 
       // Handle "n" for new project
       if (e.key === 'n' && !filter) {
