@@ -435,10 +435,11 @@ export function useAppState(): UseAppStateReturn {
     setActiveTaskId(newTask.id);
     await saveState({ activeTaskId: newTask.id });
 
-    // Update project lastUsed
+    // Update project lastUsed and remove on-hold status if set
     const project = projects.find(p => p.id === projectId);
     if (project) {
-      const updatedProject = { ...project, lastUsed: Date.now() };
+      const { onHoldAt, ...projectWithoutOnHold } = project;
+      const updatedProject = { ...projectWithoutOnHold, lastUsed: Date.now() };
       await db.saveProject(updatedProject);
       setProjects(prev => prev.map(p => p.id === projectId ? updatedProject : p));
     }
@@ -482,10 +483,11 @@ export function useAppState(): UseAppStateReturn {
         await saveState({ activeTaskId: taskId });
       }
 
-      // Update project lastUsed
+      // Update project lastUsed and remove on-hold status if set
       const project = projects.find(p => p.id === task.projectId);
       if (project) {
-        const updatedProject = { ...project, lastUsed: Date.now() };
+        const { onHoldAt, ...projectWithoutOnHold } = project;
+        const updatedProject = { ...projectWithoutOnHold, lastUsed: Date.now() };
         await db.saveProject(updatedProject);
         setProjects(prev => prev.map(p => p.id === task.projectId ? updatedProject : p));
       }
