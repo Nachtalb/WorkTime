@@ -6,7 +6,7 @@ import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
 import { GlobalSearchPopup } from '../components/GlobalSearchPopup';
 
 export function LandingPage() {
-  const { startGlobalTimer, goToOverview, goToOverviewBrowse, goToProjectBrowse, globalTimers, tasks, projects, activeTaskId, updateGlobalTimerTimes, updateTaskTimes, deleteTask } = useApp();
+  const { startGlobalTimer, goToOverview, goToOverviewBrowse, goToProjectBrowse, globalTimers, tasks, notes, projects, activeTaskId, updateGlobalTimerTimes, updateTaskTimes, deleteTask } = useApp();
   const [time, setTime] = useState(getCurrentTime());
   const [date, setDate] = useState(getCurrentDate());
   const [showHelp, setShowHelp] = useState(false);
@@ -108,6 +108,7 @@ export function LandingPage() {
         isOpen={showGlobalSearch}
         onClose={() => setShowGlobalSearch(false)}
         projects={projects}
+        notes={notes}
         onSelectProject={goToProjectBrowse}
       />
     </div>

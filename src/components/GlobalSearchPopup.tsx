@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import type { Project } from '../types';
+import type { Project, Note } from '../types';
+import { searchProjects, filterAndSortProjects } from '../utils/search';
 
 interface GlobalSearchPopupProps {
   isOpen: boolean;
   onClose: () => void;
   projects: Project[];
+  notes: Note[];
   onSelectProject: (projectId: string) => void;
   currentProjectId?: string | null;
 }
@@ -13,6 +15,7 @@ export function GlobalSearchPopup({
   isOpen,
   onClose,
   projects,
+  notes,
   onSelectProject,
   currentProjectId,
 }: GlobalSearchPopupProps) {
@@ -21,38 +24,19 @@ export function GlobalSearchPopup({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Filter and sort projects
+  // Filter and sort projects using shared search utility
   const filteredProjects = useMemo(() => {
-    const searchLower = searchText.toLowerCase();
-
-    // Filter projects
-    let filtered = projects.filter((p) => {
-      if (p.isOther || p.isTodo) return false; // Exclude special projects from search
-      const nameMatch = p.name.toLowerCase().includes(searchLower);
-      const subtitleMatch = p.subtitle?.toLowerCase().includes(searchLower);
-      return nameMatch || subtitleMatch;
+    const searchResults = searchProjects(projects, notes, searchText, {
+      excludeSpecial: true,
+      currentProjectId,
     });
 
-    // Sort: active projects first, then by last used
-    filtered.sort((a, b) => {
-      // Current project first
-      if (a.id === currentProjectId) return -1;
-      if (b.id === currentProjectId) return 1;
-
-      // Done projects last
-      if (a.doneAt && !b.doneAt) return 1;
-      if (!a.doneAt && b.doneAt) return -1;
-
-      // On hold projects after active
-      if (a.onHoldAt && !b.onHoldAt) return 1;
-      if (!a.onHoldAt && b.onHoldAt) return -1;
-
-      // Then by last used
-      return b.lastUsed - a.lastUsed;
+    return filterAndSortProjects(searchResults, {
+      currentProjectId,
+      sortDoneLast: true,
+      sortOnHoldAfterActive: true,
     });
-
-    return filtered;
-  }, [projects, searchText, currentProjectId]);
+  }, [projects, notes, searchText, currentProjectId]);
 
   // Reset state when opening
   useEffect(() => {

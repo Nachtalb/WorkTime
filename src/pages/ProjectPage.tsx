@@ -1495,6 +1495,7 @@ export function ProjectPage() {
         isOpen={showGlobalSearch}
         onClose={() => setShowGlobalSearch(false)}
         projects={projects}
+        notes={notes}
         onSelectProject={(projectId) => {
           setShowGlobalSearch(false);
           goToProject(projectId);

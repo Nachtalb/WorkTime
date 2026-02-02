@@ -21,6 +21,7 @@ import {
   exportTodayAsCsv,
 } from '../utils/export';
 import { detectNoteTagType, NOTE_TAG_PATTERNS, type NoteTagType } from '../components/TextWithProjectRefs';
+import { fuzzyMatch } from '../utils/search';
 
 export function OverviewPage() {
   const {
@@ -144,21 +145,20 @@ export function OverviewPage() {
     });
   }, [projects, sortBy, sortAsc]);
 
-  // Filter projects based on input (matches project name, subtitle, or notes content) and hide done
+  // Filter projects based on input (fuzzy matches project name, subtitle, or notes content) and hide done
   const filteredProjects = useMemo(() => {
     let result = sortedProjects;
 
-    // Filter by name, subtitle, or notes content if filter is set
+    // Filter by name, subtitle, or notes content using fuzzy search
     if (filter) {
-      const lowerFilter = filter.toLowerCase();
       result = result.filter((p) => {
-        // Check project name
-        if (p.name.toLowerCase().includes(lowerFilter)) return true;
-        // Check project subtitle
-        if (p.subtitle?.toLowerCase().includes(lowerFilter)) return true;
-        // Check notes content
+        // Check project name (fuzzy)
+        if (fuzzyMatch(p.name, filter)) return true;
+        // Check project subtitle (fuzzy)
+        if (p.subtitle && fuzzyMatch(p.subtitle, filter)) return true;
+        // Check notes content (fuzzy)
         const projectNotes = notes.filter((n) => n.projectId === p.id);
-        return projectNotes.some((n) => n.content.toLowerCase().includes(lowerFilter));
+        return projectNotes.some((n) => fuzzyMatch(n.content, filter));
       });
     }
 
@@ -843,6 +843,7 @@ export function OverviewPage() {
         isOpen={showGlobalSearch}
         onClose={() => setShowGlobalSearch(false)}
         projects={projects}
+        notes={notes}
         onSelectProject={(projectId) => {
           setShowGlobalSearch(false);
           goToProject(projectId);
