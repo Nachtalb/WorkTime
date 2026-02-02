@@ -1242,13 +1242,12 @@ input {
 }
 
 /* Project Mention Popup */
-.input-with-mention,
-.edit-input-with-mention {
+.input-with-mention {
   position: relative;
-  flex: 1;
 }
 
 .edit-input-with-mention {
+  position: relative;
   display: flex;
   flex: 1;
 }

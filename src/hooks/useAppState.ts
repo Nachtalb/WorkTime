@@ -111,6 +111,40 @@ export function useAppState(): UseAppStateReturn {
     setGlobalTimerActiveState(active);
   }, []);
 
+  // Parse URL to determine initial page
+  const parseUrlPath = useCallback((): { page: Page; projectId: string | null } => {
+    const path = window.location.pathname;
+    if (path.startsWith('/project/')) {
+      const projectId = path.substring('/project/'.length);
+      return { page: 'project', projectId };
+    } else if (path === '/overview' || path === '/overview/') {
+      return { page: 'overview', projectId: null };
+    }
+    return { page: 'landing', projectId: null };
+  }, []);
+
+  // Update URL without triggering navigation
+  const updateUrl = useCallback((page: Page, projectId?: string | null) => {
+    let path = '/';
+    if (page === 'overview') {
+      path = '/overview';
+    } else if (page === 'project' && projectId) {
+      path = `/project/${projectId}`;
+    }
+    window.history.pushState({ page, projectId }, '', path);
+  }, []);
+
+  // Replace URL (for initial load, doesn't create history entry)
+  const replaceUrl = useCallback((page: Page, projectId?: string | null) => {
+    let path = '/';
+    if (page === 'overview') {
+      path = '/overview';
+    } else if (page === 'project' && projectId) {
+      path = `/project/${projectId}`;
+    }
+    window.history.replaceState({ page, projectId }, '', path);
+  }, []);
+
   // Load initial state
   useEffect(() => {
     if (initialized.current) return;
@@ -136,11 +170,27 @@ export function useAppState(): UseAppStateReturn {
         setNotes(loadedNotes);
         setGlobalTimers(loadedTimers);
 
-        if (savedState) {
+        // Check URL first, then fall back to saved state
+        const urlState = parseUrlPath();
+
+        if (urlState.page !== 'landing') {
+          // URL has a specific path, use it
+          setCurrentPage(urlState.page);
+          setCurrentProjectId(urlState.projectId);
+          if (savedState) {
+            setActiveTaskId(savedState.activeTaskId);
+            setGlobalTimerActive(savedState.globalTimerActive);
+          }
+          // Replace URL to set proper state
+          replaceUrl(urlState.page, urlState.projectId);
+        } else if (savedState) {
+          // No URL path, use saved state
           setCurrentPage(savedState.currentPage);
           setCurrentProjectId(savedState.currentProjectId);
           setActiveTaskId(savedState.activeTaskId);
           setGlobalTimerActive(savedState.globalTimerActive);
+          // Update URL to match saved state
+          replaceUrl(savedState.currentPage, savedState.currentProjectId);
         }
 
         setIsLoading(false);
@@ -151,7 +201,26 @@ export function useAppState(): UseAppStateReturn {
     }
 
     init();
-  }, []);
+  }, [parseUrlPath, replaceUrl]);
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state as { page: Page; projectId: string | null } | null;
+      if (state) {
+        setCurrentPage(state.page);
+        setCurrentProjectId(state.projectId);
+      } else {
+        // No state, parse from URL
+        const urlState = parseUrlPath();
+        setCurrentPage(urlState.page);
+        setCurrentProjectId(urlState.projectId);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [parseUrlPath]);
 
   // Save app state - uses refs to always get latest values (avoids stale closure issues)
   const saveState = useCallback(async (state: Partial<AppState>) => {
@@ -194,25 +263,28 @@ export function useAppState(): UseAppStateReturn {
     setCurrentProjectId(null);
     setActiveTaskId(null);
     setGlobalTimerActive(false);
+    updateUrl('landing', null);
     await saveState({
       currentPage: 'landing',
       currentProjectId: null,
       activeTaskId: null,
       globalTimerActive: false,
     });
-  }, [globalTimers, activeTaskId, tasks, saveState]);
+  }, [globalTimers, activeTaskId, tasks, saveState, updateUrl]);
 
   const goToOverview = useCallback(async () => {
     // Keep currentProjectId so overview can select the last viewed project
     setCurrentPage('overview');
+    updateUrl('overview', null);
     await saveState({ currentPage: 'overview' });
-  }, [saveState]);
+  }, [saveState, updateUrl]);
 
   const goToProject = useCallback(async (projectId: string) => {
     setCurrentPage('project');
     setCurrentProjectId(projectId);
+    updateUrl('project', projectId);
     await saveState({ currentPage: 'project', currentProjectId: projectId });
-  }, [saveState]);
+  }, [saveState, updateUrl]);
 
   // Global timer
   const startGlobalTimer = useCallback(async () => {
