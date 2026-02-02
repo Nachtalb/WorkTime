@@ -534,6 +534,7 @@ export function OverviewPage() {
           taskDuration={getCurrentTaskDuration()}
           isActive={globalTimerActive}
           activeTaskInfo={getActiveTaskInfo()}
+          onProjectClick={goToProject}
         />
       </div>
 

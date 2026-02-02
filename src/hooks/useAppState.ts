@@ -67,7 +67,7 @@ export interface UseAppStateReturn {
   getTodayGlobalDuration: () => number;
   getCurrentTaskDuration: () => number;
   getTodayGlobalTimers: () => GlobalTimer[];
-  getActiveTaskInfo: () => { projectName: string; taskDescription: string } | null;
+  getActiveTaskInfo: () => { projectId: string; projectName: string; taskDescription: string } | null;
 }
 
 export function useAppState(): UseAppStateReturn {
@@ -737,6 +737,7 @@ export function useAppState(): UseAppStateReturn {
     if (!activeTask) return null;
     const project = projects.find(p => p.id === activeTask.projectId);
     return {
+      projectId: activeTask.projectId,
       projectName: project?.name || 'Unknown',
       taskDescription: activeTask.description,
     };

@@ -4,10 +4,11 @@ interface TimerIndicatorProps {
   globalDuration: number;
   taskDuration: number;
   isActive: boolean;
-  activeTaskInfo?: { projectName: string; taskDescription: string } | null;
+  activeTaskInfo?: { projectId: string; projectName: string; taskDescription: string } | null;
+  onProjectClick?: (projectId: string) => void;
 }
 
-export function TimerIndicator({ globalDuration, taskDuration, isActive, activeTaskInfo }: TimerIndicatorProps) {
+export function TimerIndicator({ globalDuration, taskDuration, isActive, activeTaskInfo, onProjectClick }: TimerIndicatorProps) {
   if (!isActive && globalDuration === 0) {
     return null;
   }
@@ -27,7 +28,13 @@ export function TimerIndicator({ globalDuration, taskDuration, isActive, activeT
       </div>
       {taskDuration > 0 && activeTaskInfo && (
         <div className="timer-secondary">
-          {activeTaskInfo.projectName} - {truncatedDescription} {formatDurationShort(taskDuration)}
+          <span
+            className="timer-project-link"
+            onClick={() => onProjectClick?.(activeTaskInfo.projectId)}
+          >
+            {activeTaskInfo.projectName}
+          </span>
+          {' - '}{truncatedDescription} {formatDurationShort(taskDuration)}
         </div>
       )}
     </div>

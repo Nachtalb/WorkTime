@@ -902,6 +902,7 @@ export function ProjectPage() {
           taskDuration={getCurrentTaskDuration()}
           isActive={globalTimerActive}
           activeTaskInfo={getActiveTaskInfo()}
+          onProjectClick={goToProject}
         />
       </div>
 

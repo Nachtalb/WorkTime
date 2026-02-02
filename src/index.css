@@ -219,6 +219,17 @@ input {
   color: var(--color-text-secondary);
 }
 
+.timer-project-link {
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.timer-project-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
 .search-filter {
   position: relative;
 }
