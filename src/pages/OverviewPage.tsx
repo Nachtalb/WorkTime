@@ -253,6 +253,60 @@ export function OverviewPage() {
         return;
       }
 
+      // Handle arrow keys for navigation (grid-aware) - works even when search focused
+      // Calculate columns in grid
+      const getColumnsCount = () => {
+        if (!gridRef.current || filteredProjects.length === 0) return 1;
+        const gridStyle = window.getComputedStyle(gridRef.current);
+        const columns = gridStyle.getPropertyValue('grid-template-columns').split(' ').length;
+        return columns || 1;
+      };
+
+      // Handle Ctrl+Up/Down for project priority
+      if (e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && filteredProjects.length > 0) {
+        e.preventDefault();
+        const selectedProject = filteredProjects[selectedIndex];
+        cyclePriority(selectedProject.id, e.key === 'ArrowUp' ? 'up' : 'down');
+        return;
+      }
+
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const cols = getColumnsCount();
+        setSelectedIndex((prev) => Math.max(0, prev - cols));
+        return;
+      }
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const cols = getColumnsCount();
+        setSelectedIndex((prev) => Math.min(filteredProjects.length - 1, prev + cols));
+        return;
+      }
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.max(0, prev - 1));
+        return;
+      }
+
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.min(filteredProjects.length - 1, prev + 1));
+        return;
+      }
+
+      // Handle Tab/Shift+Tab for cycling through projects
+      if (e.key === 'Tab' && filteredProjects.length > 0) {
+        e.preventDefault();
+        if (e.shiftKey) {
+          setSelectedIndex((prev) => (prev <= 0 ? filteredProjects.length - 1 : prev - 1));
+        } else {
+          setSelectedIndex((prev) => (prev >= filteredProjects.length - 1 ? 0 : prev + 1));
+        }
+        return;
+      }
+
       // Skip letter shortcuts if search input is focused (let user type)
       if (isSearchFocused) return;
 
@@ -321,49 +375,6 @@ export function OverviewPage() {
           e.preventDefault();
           setProjectToDelete(selectedProject.id);
         }
-        return;
-      }
-
-      // Handle arrow keys for navigation (grid-aware)
-      // Calculate columns in grid
-      const getColumnsCount = () => {
-        if (!gridRef.current || filteredProjects.length === 0) return 1;
-        const gridStyle = window.getComputedStyle(gridRef.current);
-        const columns = gridStyle.getPropertyValue('grid-template-columns').split(' ').length;
-        return columns || 1;
-      };
-
-      // Handle Ctrl+Up/Down for project priority
-      if (e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && filteredProjects.length > 0) {
-        e.preventDefault();
-        const selectedProject = filteredProjects[selectedIndex];
-        cyclePriority(selectedProject.id, e.key === 'ArrowUp' ? 'up' : 'down');
-        return;
-      }
-
-      if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        const cols = getColumnsCount();
-        setSelectedIndex((prev) => Math.max(0, prev - cols));
-        return;
-      }
-
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        const cols = getColumnsCount();
-        setSelectedIndex((prev) => Math.min(filteredProjects.length - 1, prev + cols));
-        return;
-      }
-
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        setSelectedIndex((prev) => Math.max(0, prev - 1));
-        return;
-      }
-
-      if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        setSelectedIndex((prev) => Math.min(filteredProjects.length - 1, prev + 1));
         return;
       }
 
