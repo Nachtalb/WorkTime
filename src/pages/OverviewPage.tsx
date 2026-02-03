@@ -22,6 +22,7 @@ import {
   exportTodayAsCsv,
 } from '../utils/export';
 import { detectNoteTagType, NOTE_TAG_PATTERNS, type NoteTagType } from '../components/TextWithProjectRefs';
+import { Toast, useToast } from '../components/Toast';
 import { fuzzyMatch } from '../utils/search';
 
 export function OverviewPage() {
@@ -56,7 +57,11 @@ export function OverviewPage() {
     toggleNoteCompleted,
     updateNote,
     deleteNote,
+    getPreviousProject,
   } = useApp();
+
+  // Toast notifications
+  const { toasts, showToast, removeToast } = useToast();
 
   const [filter, setFilter] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -256,6 +261,18 @@ export function OverviewPage() {
 
       // Check if search input is focused
       const isSearchFocused = document.activeElement === searchInputRef.current;
+
+      // Handle 'b' for going back to previous project (when not typing)
+      if (e.key === 'b' && !e.ctrlKey && !e.altKey && !e.metaKey && !isSearchFocused) {
+        e.preventDefault();
+        const previousProject = getPreviousProject();
+        if (previousProject) {
+          goToProject(previousProject.id);
+        } else {
+          showToast('No previous project today', 'error');
+        }
+        return;
+      }
 
       // Handle Escape - clear filter/blur input or show exit confirmation
       if (e.key === 'Escape') {
@@ -534,6 +551,8 @@ export function OverviewPage() {
     cyclePriority,
     getLastTask,
     sortBy,
+    getPreviousProject,
+    showToast,
   ]);
 
   // Reset selected index when filtered projects change
@@ -889,6 +908,8 @@ export function OverviewPage() {
           goToProject(projectId);
         }}
       />
+
+      <Toast messages={toasts} onRemove={removeToast} />
     </div>
   );
 }

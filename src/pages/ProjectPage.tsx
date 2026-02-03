@@ -10,6 +10,7 @@ import { GlobalTodoPopup } from '../components/GlobalTodoPopup';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ProjectMentionPopup } from '../components/ProjectMentionPopup';
 import { TextWithProjectRefs, detectNoteTagType, NOTE_TAG_PATTERNS, type NoteTagType } from '../components/TextWithProjectRefs';
+import { Toast, useToast } from '../components/Toast';
 import {
   formatTime,
   formatDuration,
@@ -63,6 +64,7 @@ export function ProjectPage() {
     updateGlobalTimerTimes,
     updateTaskTimes,
     getTodoProject,
+    getPreviousProject,
   } = useApp();
 
   const [newTaskText, setNewTaskText] = useState('');
@@ -96,6 +98,9 @@ export function ProjectPage() {
   const [showTodayOverview, setShowTodayOverview] = useState(false);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [showGlobalTodo, setShowGlobalTodo] = useState(false);
+
+  // Toast notifications
+  const { toasts, showToast, removeToast } = useToast();
 
   // Mention popup state
   const [mentionPopupOpen, setMentionPopupOpen] = useState(false);
@@ -482,6 +487,20 @@ export function ProjectPage() {
         return;
       }
 
+      // Handle 'b' for going back to previous project (when not typing)
+      if (e.key === 'b' && !e.ctrlKey && !e.altKey && !e.metaKey &&
+          !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId &&
+          !isRenamingProject && !isEditingSubtitle && !editingTaskTimeId) {
+        e.preventDefault();
+        const previousProject = getPreviousProject();
+        if (previousProject) {
+          goToProject(previousProject.id);
+        } else {
+          showToast('No previous project today', 'error');
+        }
+        return;
+      }
+
       // Handle Escape
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -838,6 +857,9 @@ export function ProjectPage() {
     notes,
     cyclePriority,
     cancelTaskTimeEditing,
+    getPreviousProject,
+    goToProject,
+    showToast,
   ]);
 
   const handleDeleteConfirm = useCallback(() => {
@@ -1533,6 +1555,8 @@ export function ProjectPage() {
           goToProject(projectId);
         }}
       />
+
+      <Toast messages={toasts} onRemove={removeToast} />
     </div>
   );
 }

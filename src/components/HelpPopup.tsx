@@ -31,6 +31,7 @@ const overviewShortcuts: ShortcutCategory[] = [
       { keys: ['↑/↓'], description: 'Navigate rows' },
       { keys: ['←/→'], description: 'Navigate columns' },
       { keys: ['Enter'], description: 'Open project' },
+      { keys: ['b'], description: 'Previous project' },
       { keys: ['1-9'], description: 'Filter by number' },
     ],
   },
@@ -76,6 +77,7 @@ const projectShortcuts: ShortcutCategory[] = [
       { keys: ['↑/↓'], description: 'Navigate items' },
       { keys: ['←/→'], description: 'Switch columns' },
       { keys: ['Enter'], description: 'Edit selected' },
+      { keys: ['b'], description: 'Previous project' },
     ],
   },
   {

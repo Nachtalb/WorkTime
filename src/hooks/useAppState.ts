@@ -74,6 +74,7 @@ export interface UseAppStateReturn {
   getCurrentTaskDuration: () => number;
   getTodayGlobalTimers: () => GlobalTimer[];
   getActiveTaskInfo: () => { projectId: string; projectName: string; taskDescription: string } | null;
+  getPreviousProject: () => Project | null;
 }
 
 export function useAppState(): UseAppStateReturn {
@@ -898,6 +899,29 @@ export function useAppState(): UseAppStateReturn {
     };
   }, [activeTaskId, tasks, projects]);
 
+  // Get the previous project based on today's tasks
+  // Returns the project of the most recent task that's different from the current project
+  const getPreviousProject = useCallback(() => {
+    // Get today's tasks, sorted by start time descending (most recent first)
+    const todaysTasks = tasks
+      .filter(t => isTimestampToday(t.startTime))
+      .sort((a, b) => b.startTime - a.startTime);
+
+    if (todaysTasks.length === 0) return null;
+
+    // Find the current project (from active task or most recent task)
+    const currentProjectIdValue = currentProjectId ||
+      (activeTaskId ? tasks.find(t => t.id === activeTaskId)?.projectId : null) ||
+      todaysTasks[0]?.projectId;
+
+    // Find the most recent task on a different project
+    const previousTask = todaysTasks.find(t => t.projectId !== currentProjectIdValue);
+
+    if (!previousTask) return null;
+
+    return projects.find(p => p.id === previousTask.projectId) || null;
+  }, [tasks, projects, currentProjectId, activeTaskId]);
+
   return {
     projects,
     tasks,
@@ -951,5 +975,6 @@ export function useAppState(): UseAppStateReturn {
     getCurrentTaskDuration,
     getTodayGlobalTimers,
     getActiveTaskInfo,
+    getPreviousProject,
   };
 }
