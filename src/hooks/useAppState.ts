@@ -345,7 +345,9 @@ export function useAppState(): UseAppStateReturn {
     await db.saveGlobalTimer(newTimer);
     setGlobalTimers(prev => [...prev, newTimer]);
     setGlobalTimerActive(true);
-    await saveState({ globalTimerActive: true });
+    setBrowseMode(false);
+    browseModeRef.current = false;
+    await saveState({ globalTimerActive: true, browseMode: false });
   }, [saveState]);
 
   const stopGlobalTimer = useCallback(async () => {
