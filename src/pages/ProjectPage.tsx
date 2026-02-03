@@ -487,10 +487,8 @@ export function ProjectPage() {
         return;
       }
 
-      // Handle 'b' for going back to previous project (when not typing)
-      if (e.key === 'b' && !e.ctrlKey && !e.altKey && !e.metaKey &&
-          !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId &&
-          !isRenamingProject && !isEditingSubtitle && !editingTaskTimeId) {
+      // Handle Ctrl+B for going back to previous project
+      if (e.ctrlKey && e.key === 'b' && !e.altKey && !e.metaKey) {
         e.preventDefault();
         const previousProject = getPreviousProject();
         if (previousProject) {
