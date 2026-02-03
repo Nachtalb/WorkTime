@@ -1,24 +1,29 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { Note } from '../types';
+import type { Note, Project } from '../types';
+import { TextWithProjectRefs } from './TextWithProjectRefs';
 
 interface GlobalTodoPopupProps {
   isOpen: boolean;
   onClose: () => void;
   todos: Note[];
+  projects: Project[];
   onCreateTodo: (content: string) => Promise<Note>;
   onToggleTodo: (noteId: string) => Promise<void>;
   onUpdateTodo: (noteId: string, updates: Partial<Note>) => Promise<void>;
   onDeleteTodo: (noteId: string) => Promise<void>;
+  onProjectClick?: (projectId: string) => void;
 }
 
 export function GlobalTodoPopup({
   isOpen,
   onClose,
   todos,
+  projects,
   onCreateTodo,
   onToggleTodo,
   onUpdateTodo,
   onDeleteTodo,
+  onProjectClick,
 }: GlobalTodoPopupProps) {
   const [newTodoText, setNewTodoText] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(-1); // -1 means input is focused
@@ -246,7 +251,13 @@ export function GlobalTodoPopup({
                             onBlur={handleSaveEdit}
                           />
                         ) : (
-                          <span className="global-todo-text">{todo.content}</span>
+                          <span className="global-todo-text">
+                            <TextWithProjectRefs
+                              text={todo.content}
+                              projects={projects}
+                              onProjectClick={onProjectClick}
+                            />
+                          </span>
                         )}
                       </div>
                     );
@@ -294,7 +305,13 @@ export function GlobalTodoPopup({
                             onBlur={handleSaveEdit}
                           />
                         ) : (
-                          <span className="global-todo-text">{todo.content}</span>
+                          <span className="global-todo-text">
+                            <TextWithProjectRefs
+                              text={todo.content}
+                              projects={projects}
+                              onProjectClick={onProjectClick}
+                            />
+                          </span>
                         )}
                       </div>
                     );

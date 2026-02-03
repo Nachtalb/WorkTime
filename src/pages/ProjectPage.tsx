@@ -1518,6 +1518,7 @@ export function ProjectPage() {
         isOpen={showGlobalTodo}
         onClose={() => setShowGlobalTodo(false)}
         todos={notes.filter(n => n.projectId === getTodoProject()?.id)}
+        projects={projects}
         onCreateTodo={(content) => {
           const todoProject = getTodoProject();
           if (!todoProject) return Promise.reject('No todo project');
@@ -1526,6 +1527,10 @@ export function ProjectPage() {
         onToggleTodo={toggleNoteCompleted}
         onUpdateTodo={updateNote}
         onDeleteTodo={deleteNote}
+        onProjectClick={(projectId) => {
+          setShowGlobalTodo(false);
+          goToProject(projectId);
+        }}
       />
     </div>
   );
