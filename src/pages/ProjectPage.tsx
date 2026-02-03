@@ -686,8 +686,11 @@ export function ProjectPage() {
         return;
       }
 
+      // Arrow keys without modifiers for navigation (allow Alt+Arrow for browser back/forward)
+      const noModifiers = !e.altKey && !e.ctrlKey && !e.metaKey;
+
       // Handle Left/Right arrow keys for column switching (skip for ToDo projects and when editing subtitle)
-      if (e.key === 'ArrowLeft' && effectiveActiveColumn === 'notes' && !project?.isTodo && !isEditingSubtitle) {
+      if (e.key === 'ArrowLeft' && noModifiers && effectiveActiveColumn === 'notes' && !project?.isTodo && !isEditingSubtitle) {
         e.preventDefault();
         setActiveColumn('tasks');
         setSelectedNoteId(null);
@@ -697,7 +700,7 @@ export function ProjectPage() {
         return;
       }
 
-      if (e.key === 'ArrowRight' && effectiveActiveColumn === 'tasks' && !project?.isTodo && !isEditingSubtitle) {
+      if (e.key === 'ArrowRight' && noModifiers && effectiveActiveColumn === 'tasks' && !project?.isTodo && !isEditingSubtitle) {
         e.preventDefault();
         setActiveColumn('notes');
         setSelectedTaskId(null);
@@ -707,15 +710,15 @@ export function ProjectPage() {
         return;
       }
 
-      // Handle Ctrl+Up/Down for project priority
-      if (e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      // Handle Ctrl+Up/Down for project priority (explicit Ctrl, no Alt/Meta)
+      if (e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
         e.preventDefault();
         cyclePriority(e.key === 'ArrowUp' ? 'up' : 'down');
         return;
       }
 
       // Handle Up/Down arrow keys for navigation within column
-      if (e.key === 'ArrowUp') {
+      if (e.key === 'ArrowUp' && noModifiers) {
         e.preventDefault();
         if (effectiveActiveColumn === 'tasks' && flattenedTasks.length > 0) {
           if (!selectedTaskId) {
@@ -739,7 +742,7 @@ export function ProjectPage() {
         return;
       }
 
-      if (e.key === 'ArrowDown') {
+      if (e.key === 'ArrowDown' && noModifiers) {
         e.preventDefault();
         if (effectiveActiveColumn === 'tasks' && flattenedTasks.length > 0) {
           if (!selectedTaskId) {

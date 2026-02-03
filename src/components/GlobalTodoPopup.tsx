@@ -131,10 +131,13 @@ export function GlobalTodoPopup({
   }, [editingId, editingText, onUpdateTodo]);
 
   const handleInputKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    // Only handle keys without modifiers (allow Alt+Arrow for browser back/forward)
+    const noModifiers = !e.altKey && !e.ctrlKey && !e.metaKey;
+
+    if (e.key === 'Enter' && noModifiers) {
       e.preventDefault();
       handleAddTodo();
-    } else if (e.key === 'ArrowDown') {
+    } else if (e.key === 'ArrowDown' && noModifiers) {
       e.preventDefault();
       if (sortedTodos.length > 0) {
         setSelectedIndex(0);
@@ -145,9 +148,12 @@ export function GlobalTodoPopup({
   const handleListKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (editingId) return; // Don't handle navigation while editing
 
+    // Only handle keys without modifiers (allow Alt+Arrow for browser back/forward)
+    const noModifiers = !e.altKey && !e.ctrlKey && !e.metaKey;
+
     const todo = sortedTodos[selectedIndex];
 
-    if (e.key === 'ArrowUp') {
+    if (e.key === 'ArrowUp' && noModifiers) {
       e.preventDefault();
       if (selectedIndex <= 0) {
         setSelectedIndex(-1);
@@ -155,18 +161,18 @@ export function GlobalTodoPopup({
       } else {
         setSelectedIndex(selectedIndex - 1);
       }
-    } else if (e.key === 'ArrowDown') {
+    } else if (e.key === 'ArrowDown' && noModifiers) {
       e.preventDefault();
       if (selectedIndex < sortedTodos.length - 1) {
         setSelectedIndex(selectedIndex + 1);
       }
-    } else if (e.key === ' ' && todo) {
+    } else if (e.key === ' ' && noModifiers && todo) {
       e.preventDefault();
       onToggleTodo(todo.id);
-    } else if (e.key === 'Enter' && todo) {
+    } else if (e.key === 'Enter' && noModifiers && todo) {
       e.preventDefault();
       handleStartEdit(todo);
-    } else if ((e.key === 'Backspace' || e.key === 'Delete') && todo) {
+    } else if ((e.key === 'Backspace' || e.key === 'Delete') && noModifiers && todo) {
       e.preventDefault();
       onDeleteTodo(todo.id);
       // Adjust selection if needed

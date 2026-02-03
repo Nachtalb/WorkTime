@@ -307,27 +307,30 @@ export function OverviewPage() {
         return;
       }
 
-      if (e.key === 'ArrowUp') {
+      // Arrow keys without modifiers for navigation (allow Alt+Arrow for browser back/forward)
+      const noModifiers = !e.altKey && !e.ctrlKey && !e.metaKey;
+
+      if (e.key === 'ArrowUp' && noModifiers) {
         e.preventDefault();
         const cols = getColumnsCount();
         setSelectedIndex((prev) => Math.max(0, prev - cols));
         return;
       }
 
-      if (e.key === 'ArrowDown') {
+      if (e.key === 'ArrowDown' && noModifiers) {
         e.preventDefault();
         const cols = getColumnsCount();
         setSelectedIndex((prev) => Math.min(filteredProjects.length - 1, prev + cols));
         return;
       }
 
-      if (e.key === 'ArrowLeft') {
+      if (e.key === 'ArrowLeft' && noModifiers) {
         e.preventDefault();
         setSelectedIndex((prev) => Math.max(0, prev - 1));
         return;
       }
 
-      if (e.key === 'ArrowRight') {
+      if (e.key === 'ArrowRight' && noModifiers) {
         e.preventDefault();
         setSelectedIndex((prev) => Math.min(filteredProjects.length - 1, prev + 1));
         return;

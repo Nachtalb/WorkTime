@@ -138,13 +138,16 @@ export function GlobalSearchPopup({
   }, [isOpen, onClose]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') {
+    // Only handle arrow keys without modifiers (allow Alt+Arrow for browser back/forward)
+    const noModifiers = !e.altKey && !e.ctrlKey && !e.metaKey;
+
+    if (e.key === 'ArrowDown' && noModifiers) {
       e.preventDefault();
       setSelectedIndex((prev) => Math.min(prev + 1, searchResults.length - 1));
-    } else if (e.key === 'ArrowUp') {
+    } else if (e.key === 'ArrowUp' && noModifiers) {
       e.preventDefault();
       setSelectedIndex((prev) => Math.max(prev - 1, 0));
-    } else if (e.key === 'Enter') {
+    } else if (e.key === 'Enter' && noModifiers) {
       e.preventDefault();
       if (searchResults.length > 0) {
         onSelectProject(searchResults[selectedIndex].project.id);
