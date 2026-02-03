@@ -243,9 +243,7 @@ export function GlobalTodoPopup({
                             e.stopPropagation();
                             onToggleTodo(todo.id);
                           }}
-                        >
-                          ☐
-                        </span>
+                        />
                         {isEditing ? (
                           <input
                             ref={editInputRef}
@@ -297,9 +295,7 @@ export function GlobalTodoPopup({
                             e.stopPropagation();
                             onToggleTodo(todo.id);
                           }}
-                        >
-                          ☑
-                        </span>
+                        />
                         {isEditing ? (
                           <input
                             ref={editInputRef}

@@ -1598,22 +1598,38 @@ input {
 }
 
 .todo-checkbox {
-  font-size: 18px;
   cursor: pointer;
   user-select: none;
   flex-shrink: 0;
-  width: 24px;
-  text-align: center;
-  color: var(--color-text-muted);
-  transition: color var(--transition-fast);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
 .todo-checkbox:hover {
-  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
 }
 
 .todo-checkbox.checked {
-  color: var(--color-success);
+  border-color: var(--color-success);
+  background: var(--color-success);
+}
+
+.todo-checkbox.checked::after {
+  content: '';
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
 }
 
 .note-item.completed {

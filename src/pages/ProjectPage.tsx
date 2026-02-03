@@ -1373,9 +1373,7 @@ export function ProjectPage() {
                                 e.stopPropagation();
                                 toggleNoteCompleted(note.id);
                               }}
-                            >
-                              {note.completed ? '☑' : '☐'}
-                            </span>
+                            />
                           )}
                           {!project?.isTodo && (
                             <span className="note-time">{formatTime(note.createdAt)}</span>
