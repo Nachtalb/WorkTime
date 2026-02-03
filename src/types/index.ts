@@ -15,6 +15,7 @@ export interface Note {
   content: string;
   createdAt: number; // timestamp
   completed?: boolean; // for todo items
+  completedAt?: number; // timestamp when marked as done
 }
 
 export interface Project {

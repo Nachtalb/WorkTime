@@ -33,12 +33,18 @@ export function GlobalTodoPopup({
   const listRef = useRef<HTMLDivElement>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
 
-  // Sort todos: incomplete first, then by creation date (newest first)
+  // Sort todos: incomplete first (by createdAt ASC so uncompleted items go to bottom),
+  // then completed (by completedAt DESC so newly completed items are at top)
   const sortedTodos = [...todos].sort((a, b) => {
     if (a.completed !== b.completed) {
       return a.completed ? 1 : -1;
     }
-    return b.createdAt - a.createdAt;
+    if (a.completed) {
+      // Both completed: sort by completedAt DESC (newest at top)
+      return (b.completedAt || 0) - (a.completedAt || 0);
+    }
+    // Both incomplete: sort by createdAt ASC (oldest at top, newest at bottom)
+    return a.createdAt - b.createdAt;
   });
 
   // Focus input when opened

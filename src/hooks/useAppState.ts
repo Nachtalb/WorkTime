@@ -770,7 +770,14 @@ export function useAppState(): UseAppStateReturn {
     const note = notes.find(n => n.id === noteId);
     if (!note) return;
 
-    const updatedNote = { ...note, completed: !note.completed };
+    const isCompleting = !note.completed;
+    const updatedNote = {
+      ...note,
+      completed: isCompleting,
+      completedAt: isCompleting ? Date.now() : undefined,
+      // When uncompleting, update createdAt so it appears at the bottom of the todo list
+      createdAt: isCompleting ? note.createdAt : Date.now(),
+    };
     await db.saveNote(updatedNote);
     setNotes(prev => prev.map(n => n.id === noteId ? updatedNote : n));
   }, [notes]);
