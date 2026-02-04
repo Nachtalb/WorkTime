@@ -18,12 +18,14 @@ interface Part {
 // Vorgang: exactly 12 numeric chars starting with "20"
 // EL-Fall: exactly 4 char alphabetic starting with "p" (case insensitive)
 // Difovia: exactly 5 char numeric starting with "0"
-export type NoteTagType = 'vorgang' | 'elfall' | 'difovia' | null;
+// MF-Nummer: exactly 6 numeric chars
+export type NoteTagType = 'vorgang' | 'elfall' | 'difovia' | 'mfnummer' | null;
 
 export const NOTE_TAG_PATTERNS: Record<Exclude<NoteTagType, null>, { regex: RegExp; label: string }> = {
   vorgang: { regex: /^20\d{10}$/, label: 'Vorgang' },
   elfall: { regex: /^[pP][a-zA-Z]{3}$/, label: 'EL-Fall' },
   difovia: { regex: /^0\d{4}$/, label: 'Difovia' },
+  mfnummer: { regex: /^\d{6}$/, label: 'MF-Nummer' },
 };
 
 export function detectNoteTagType(content: string): NoteTagType {

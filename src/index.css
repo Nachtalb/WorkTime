@@ -1962,6 +1962,11 @@ input {
   background: #cffafe;
 }
 
+.tag.tag-mfnummer {
+  color: #be185d;
+  background: #fce7f3;
+}
+
 /* Note item backgrounds for tagged notes */
 .note-item.note-tag-vorgang {
   background: #fef3c7;
@@ -1993,6 +1998,16 @@ input {
   border-color: #0891b2;
 }
 
+.note-item.note-tag-mfnummer {
+  background: #fce7f3;
+  border-color: #ec4899;
+}
+
+.note-item.note-tag-mfnummer.selected {
+  background: linear-gradient(135deg, #fbcfe8 0%, #fce7f3 100%);
+  border-color: #be185d;
+}
+
 /* Dark mode tag colors */
 @media (prefers-color-scheme: dark) {
   .tag.tag-vorgang {
@@ -2008,6 +2023,11 @@ input {
   .tag.tag-difovia {
     color: #22d3ee;
     background: rgba(34, 211, 238, 0.15);
+  }
+
+  .tag.tag-mfnummer {
+    color: #f472b6;
+    background: rgba(244, 114, 182, 0.15);
   }
 
   .note-item.note-tag-vorgang {
@@ -2038,6 +2058,16 @@ input {
   .note-item.note-tag-difovia.selected {
     background: linear-gradient(135deg, rgba(34, 211, 238, 0.25) 0%, rgba(34, 211, 238, 0.1) 100%);
     border-color: #22d3ee;
+  }
+
+  .note-item.note-tag-mfnummer {
+    background: rgba(244, 114, 182, 0.1);
+    border-color: #ec4899;
+  }
+
+  .note-item.note-tag-mfnummer.selected {
+    background: linear-gradient(135deg, rgba(244, 114, 182, 0.25) 0%, rgba(244, 114, 182, 0.1) 100%);
+    border-color: #f472b6;
   }
 }
 
