@@ -405,6 +405,43 @@ export function ProjectPage() {
     }
   }, [mentionPopupOpen, closeMentionPopup]);
 
+  // Handle text formatting shortcuts (Ctrl+B/I/U and Ctrl+2/3/4/5)
+  // Returns true if a formatting was applied
+  const handleTextFormatting = useCallback((
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+    text: string,
+    setText: (newText: string) => void
+  ): boolean => {
+    if (!e.ctrlKey || e.altKey || e.metaKey) return false;
+
+    let marker: string | null = null;
+    if (e.key === 'b' || e.key === '2') marker = '**';      // Bold
+    else if (e.key === 'i' || e.key === '3') marker = '*';  // Italic
+    else if (e.key === 'u' || e.key === '4') marker = '__'; // Underline
+    else if (e.key === '5') marker = '~~';                  // Strikethrough
+
+    if (!marker) return false;
+
+    const input = e.currentTarget;
+    const start = input.selectionStart ?? 0;
+    const end = input.selectionEnd ?? 0;
+
+    if (start === end) return false; // No selection
+
+    e.preventDefault();
+    const before = text.substring(0, start);
+    const selected = text.substring(start, end);
+    const after = text.substring(end);
+    const newText = before + marker + selected + marker + after;
+    setText(newText);
+
+    setTimeout(() => {
+      input.setSelectionRange(start + marker!.length, end + marker!.length);
+    }, 0);
+
+    return true;
+  }, []);
+
   // Focus management
   useEffect(() => {
     if (isTypingNew && newTaskInputRef.current) {
@@ -1136,35 +1173,9 @@ export function ProjectPage() {
           }}
           onKeyDown={(e) => {
             // Handle mention popup navigation first
-            if (handleMentionKeyDown(e)) {
-              return;
-            }
-            // Handle text formatting shortcuts (Ctrl+B/I/U and Ctrl+2/3/4/5)
-            if (e.ctrlKey && !e.altKey && !e.metaKey) {
-              let marker: string | null = null;
-              if (e.key === 'b' || e.key === '2') marker = '**';      // Bold
-              else if (e.key === 'i' || e.key === '3') marker = '*';  // Italic
-              else if (e.key === 'u' || e.key === '4') marker = '__'; // Underline
-              else if (e.key === '5') marker = '~~';                  // Strikethrough
-
-              if (marker) {
-                e.preventDefault();
-                const input = e.currentTarget;
-                const start = input.selectionStart ?? 0;
-                const end = input.selectionEnd ?? 0;
-                if (start !== end) {
-                  const before = newInputText.substring(0, start);
-                  const selected = newInputText.substring(start, end);
-                  const after = newInputText.substring(end);
-                  const newText = before + marker + selected + marker + after;
-                  setNewInputText(newText);
-                  setTimeout(() => {
-                    input.setSelectionRange(start + marker.length, end + marker.length);
-                  }, 0);
-                }
-                return;
-              }
-            }
+            if (handleMentionKeyDown(e)) return;
+            // Handle text formatting shortcuts
+            if (handleTextFormatting(e, newInputText, setNewInputText)) return;
             // Handle Ctrl+Left/Right to switch between task and note modes (only for non-ToDo projects)
             if (e.ctrlKey && !e.altKey && !e.metaKey && !project?.isTodo) {
               if (e.key === 'ArrowLeft' && effectiveActiveColumn === 'notes') {
@@ -1331,35 +1342,8 @@ export function ProjectPage() {
                                   checkForMentionTrigger(e.target.value, cursorPos, 'editTask', e.target);
                                 }}
                                 onKeyDown={(e) => {
-                                  if (handleMentionKeyDown(e)) {
-                                    return;
-                                  }
-                                  // Handle text formatting shortcuts (Ctrl+B/I/U and Ctrl+2/3/4/5)
-                                  if (e.ctrlKey && !e.altKey && !e.metaKey) {
-                                    let marker: string | null = null;
-                                    if (e.key === 'b' || e.key === '2') marker = '**';
-                                    else if (e.key === 'i' || e.key === '3') marker = '*';
-                                    else if (e.key === 'u' || e.key === '4') marker = '__';
-                                    else if (e.key === '5') marker = '~~';
-
-                                    if (marker) {
-                                      e.preventDefault();
-                                      const input = e.currentTarget;
-                                      const start = input.selectionStart ?? 0;
-                                      const end = input.selectionEnd ?? 0;
-                                      if (start !== end) {
-                                        const before = editingTaskText.substring(0, start);
-                                        const selected = editingTaskText.substring(start, end);
-                                        const after = editingTaskText.substring(end);
-                                        const newText = before + marker + selected + marker + after;
-                                        setEditingTaskText(newText);
-                                        setTimeout(() => {
-                                          input.setSelectionRange(start + marker.length, end + marker.length);
-                                        }, 0);
-                                      }
-                                      return;
-                                    }
-                                  }
+                                  if (handleMentionKeyDown(e)) return;
+                                  handleTextFormatting(e, editingTaskText, setEditingTaskText);
                                 }}
                                 onBlur={() => {
                                   updateTask(task.id, { description: editingTaskText });
@@ -1494,35 +1478,8 @@ export function ProjectPage() {
                                   checkForMentionTrigger(e.target.value, cursorPos, 'editNote', e.target);
                                 }}
                                 onKeyDown={(e) => {
-                                  if (handleMentionKeyDown(e)) {
-                                    return;
-                                  }
-                                  // Handle text formatting shortcuts (Ctrl+B/I/U and Ctrl+2/3/4/5)
-                                  if (e.ctrlKey && !e.altKey && !e.metaKey) {
-                                    let marker: string | null = null;
-                                    if (e.key === 'b' || e.key === '2') marker = '**';
-                                    else if (e.key === 'i' || e.key === '3') marker = '*';
-                                    else if (e.key === 'u' || e.key === '4') marker = '__';
-                                    else if (e.key === '5') marker = '~~';
-
-                                    if (marker) {
-                                      e.preventDefault();
-                                      const textarea = e.currentTarget;
-                                      const start = textarea.selectionStart ?? 0;
-                                      const end = textarea.selectionEnd ?? 0;
-                                      if (start !== end) {
-                                        const before = editingNoteText.substring(0, start);
-                                        const selected = editingNoteText.substring(start, end);
-                                        const after = editingNoteText.substring(end);
-                                        const newText = before + marker + selected + marker + after;
-                                        setEditingNoteText(newText);
-                                        setTimeout(() => {
-                                          textarea.setSelectionRange(start + marker.length, end + marker.length);
-                                        }, 0);
-                                      }
-                                      return;
-                                    }
-                                  }
+                                  if (handleMentionKeyDown(e)) return;
+                                  handleTextFormatting(e, editingNoteText, setEditingNoteText);
                                 }}
                                 onBlur={() => {
                                   updateNote(note.id, { content: editingNoteText });
