@@ -67,8 +67,8 @@ export function ProjectPage() {
     getPreviousProject,
   } = useApp();
 
-  const [newTaskText, setNewTaskText] = useState('');
-  const [isTypingNewTask, setIsTypingNewTask] = useState(false);
+  const [newInputText, setNewInputText] = useState('');
+  const [isTypingNew, setIsTypingNew] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTaskText, setEditingTaskText] = useState('');
@@ -89,8 +89,6 @@ export function ProjectPage() {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteText, setEditingNoteText] = useState('');
-  const [isTypingNewNote, setIsTypingNewNote] = useState(false);
-  const [newNoteText, setNewNoteText] = useState('');
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
   const [showDoneConfirm, setShowDoneConfirm] = useState(false);
   const [showActionError, setShowActionError] = useState(false);
@@ -108,7 +106,7 @@ export function ProjectPage() {
   const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0);
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
   const [mentionStartIndex, setMentionStartIndex] = useState(0);
-  const [mentionInputType, setMentionInputType] = useState<'newTask' | 'newNote' | 'editTask' | 'editNote' | null>(null);
+  const [mentionInputType, setMentionInputType] = useState<'newInput' | 'editTask' | 'editNote' | null>(null);
 
   // Column selection (tasks or notes)
   const [activeColumn, setActiveColumn] = useState<Column>('tasks');
@@ -298,6 +296,35 @@ export function ProjectPage() {
     );
   }, [projects, mentionSearchText]);
 
+  // Close mention popup
+  const closeMentionPopup = useCallback(() => {
+    setMentionPopupOpen(false);
+    setMentionSearchText('');
+    setMentionSelectedIndex(0);
+    setMentionInputType(null);
+  }, []);
+
+  // Insert selected project into the current input
+  const insertMentionProject = useCallback((selectedProject: { name: string }) => {
+    const projectRef = `#${selectedProject.name}`;
+
+    if (mentionInputType === 'newInput') {
+      const beforeMention = newInputText.substring(0, mentionStartIndex);
+      const afterMention = newInputText.substring(mentionStartIndex + 1 + mentionSearchText.length);
+      setNewInputText(beforeMention + projectRef + afterMention);
+    } else if (mentionInputType === 'editTask') {
+      const beforeMention = editingTaskText.substring(0, mentionStartIndex);
+      const afterMention = editingTaskText.substring(mentionStartIndex + 1 + mentionSearchText.length);
+      setEditingTaskText(beforeMention + projectRef + afterMention);
+    } else if (mentionInputType === 'editNote') {
+      const beforeMention = editingNoteText.substring(0, mentionStartIndex);
+      const afterMention = editingNoteText.substring(mentionStartIndex + 1 + mentionSearchText.length);
+      setEditingNoteText(beforeMention + projectRef + afterMention);
+    }
+
+    closeMentionPopup();
+  }, [mentionInputType, mentionStartIndex, mentionSearchText, newInputText, editingTaskText, editingNoteText, closeMentionPopup]);
+
   // Handle mention popup keyboard navigation
   const handleMentionKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (!mentionPopupOpen) return false;
@@ -332,49 +359,13 @@ export function ProjectPage() {
     }
 
     return false;
-  }, [mentionPopupOpen, filteredMentionProjects, mentionSelectedIndex]);
-
-  // Insert selected project into the current input
-  const insertMentionProject = useCallback((selectedProject: { name: string }) => {
-    const projectRef = `#${selectedProject.name}`;
-
-    if (mentionInputType === 'newTask' || mentionInputType === 'newNote') {
-      const currentText = mentionInputType === 'newTask' ? newTaskText : newNoteText;
-      const beforeMention = currentText.substring(0, mentionStartIndex);
-      const afterMention = currentText.substring(mentionStartIndex + 1 + mentionSearchText.length);
-      const newText = beforeMention + projectRef + afterMention;
-
-      if (mentionInputType === 'newTask') {
-        setNewTaskText(newText);
-      } else {
-        setNewNoteText(newText);
-      }
-    } else if (mentionInputType === 'editTask') {
-      const beforeMention = editingTaskText.substring(0, mentionStartIndex);
-      const afterMention = editingTaskText.substring(mentionStartIndex + 1 + mentionSearchText.length);
-      setEditingTaskText(beforeMention + projectRef + afterMention);
-    } else if (mentionInputType === 'editNote') {
-      const beforeMention = editingNoteText.substring(0, mentionStartIndex);
-      const afterMention = editingNoteText.substring(mentionStartIndex + 1 + mentionSearchText.length);
-      setEditingNoteText(beforeMention + projectRef + afterMention);
-    }
-
-    closeMentionPopup();
-  }, [mentionInputType, mentionStartIndex, mentionSearchText, newTaskText, newNoteText, editingTaskText, editingNoteText]);
-
-  // Close mention popup
-  const closeMentionPopup = useCallback(() => {
-    setMentionPopupOpen(false);
-    setMentionSearchText('');
-    setMentionSelectedIndex(0);
-    setMentionInputType(null);
-  }, []);
+  }, [mentionPopupOpen, filteredMentionProjects, mentionSelectedIndex, insertMentionProject, closeMentionPopup]);
 
   // Check for # trigger in text and open mention popup
   const checkForMentionTrigger = useCallback((
     text: string,
     cursorPosition: number,
-    inputType: 'newTask' | 'newNote' | 'editTask' | 'editNote',
+    inputType: 'newInput' | 'editTask' | 'editNote',
     inputElement: HTMLInputElement | HTMLTextAreaElement | null
   ) => {
     // Find the last # before cursor that isn't followed by a space before cursor
@@ -416,10 +407,10 @@ export function ProjectPage() {
 
   // Focus management
   useEffect(() => {
-    if (isTypingNewTask && newTaskInputRef.current) {
+    if (isTypingNew && newTaskInputRef.current) {
       newTaskInputRef.current.focus();
     }
-  }, [isTypingNewTask]);
+  }, [isTypingNew]);
 
   useEffect(() => {
     if (editingTaskId && editTaskInputRef.current) {
@@ -474,7 +465,7 @@ export function ProjectPage() {
       }
 
       // Handle / for global search (when not in an input)
-      if (e.key === '/' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle) {
+      if (e.key === '/' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle) {
         e.preventDefault();
         setShowGlobalSearch(true);
         return;
@@ -502,12 +493,9 @@ export function ProjectPage() {
       // Handle Escape
       if (e.key === 'Escape') {
         e.preventDefault();
-        if (isTypingNewTask) {
-          setIsTypingNewTask(false);
-          setNewTaskText('');
-        } else if (isTypingNewNote) {
-          setIsTypingNewNote(false);
-          setNewNoteText('');
+        if (isTypingNew) {
+          setIsTypingNew(false);
+          setNewInputText('');
         } else if (editingTaskId) {
           setEditingTaskId(null);
           setEditingTaskText('');
@@ -532,14 +520,14 @@ export function ProjectPage() {
       }
 
       // Handle F2 for renaming project (only when not in edit mode)
-      if (e.key === 'F2' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle && project && !project.isOther) {
+      if (e.key === 'F2' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle && project && !project.isOther) {
         e.preventDefault();
         setIsRenamingProject(true);
         return;
       }
 
       // Handle F3 for editing subtitle (only when not in edit mode)
-      if (e.key === 'F3' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle && project && !project.isOther) {
+      if (e.key === 'F3' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle && project && !project.isOther) {
         e.preventDefault();
         setSubtitleEdit(project.subtitle || '');
         setIsEditingSubtitle(true);
@@ -547,7 +535,7 @@ export function ProjectPage() {
       }
 
       // Handle ? for help
-      if (e.key === '?' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject) {
+      if (e.key === '?' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject) {
         e.preventDefault();
         setShowHelp(true);
         return;
@@ -561,14 +549,14 @@ export function ProjectPage() {
       }
 
       // Handle Ctrl+D for marking project as done
-      if (e.ctrlKey && e.key === 'd' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther && !project.doneAt) {
+      if (e.ctrlKey && e.key === 'd' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther && !project.doneAt) {
         e.preventDefault();
         setShowDoneConfirm(true);
         return;
       }
 
       // Handle Ctrl+H for toggling on hold status
-      if (e.ctrlKey && e.key === 'h' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther) {
+      if (e.ctrlKey && e.key === 'h' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther) {
         e.preventDefault();
         // Don't allow toggling on-hold for done projects
         if (project.doneAt) {
@@ -645,7 +633,7 @@ export function ProjectPage() {
       }
 
       // If typing a new task or note, let the input's onKeyDown handle Enter
-      if (isTypingNewTask || isTypingNewNote) {
+      if (isTypingNew) {
         return;
       }
 
@@ -680,7 +668,7 @@ export function ProjectPage() {
       }
 
       // Handle Space for toggling todo completion or duplicating task
-      if (e.key === ' ' && !isTypingNewTask && !isTypingNewNote && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle) {
+      if (e.key === ' ' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle) {
         e.preventDefault();
         // For ToDo project: toggle note completion
         if (project?.isTodo && selectedNoteId) {
@@ -789,8 +777,8 @@ export function ProjectPage() {
         !e.ctrlKey &&
         !e.metaKey &&
         !e.altKey &&
-        !isTypingNewTask &&
-        !isTypingNewNote &&
+        !isTypingNew &&
+        !isTypingNew &&
         !editingTaskId &&
         !editingNoteId &&
         !isRenamingProject &&
@@ -799,12 +787,12 @@ export function ProjectPage() {
       ) {
         e.preventDefault();
         if (effectiveActiveColumn === 'tasks') {
-          setIsTypingNewTask(true);
-          setNewTaskText(e.key);
+          setIsTypingNew(true);
+          setNewInputText(e.key);
           setSelectedTaskId(null);
         } else {
-          setIsTypingNewNote(true);
-          setNewNoteText(e.key);
+          setIsTypingNew(true);
+          setNewInputText(e.key);
           setSelectedNoteId(null);
         }
         // Immediately focus the input so subsequent keystrokes go directly to it
@@ -823,8 +811,7 @@ export function ProjectPage() {
     showTodayOverview,
     showGlobalSearch,
     showGlobalTodo,
-    isTypingNewTask,
-    isTypingNewNote,
+    isTypingNew,
     editingTaskId,
     editingTaskTimeId,
     editingNoteId,
@@ -834,8 +821,7 @@ export function ProjectPage() {
     selectedNoteId,
     activeColumn,
     effectiveActiveColumn,
-    newTaskText,
-    newNoteText,
+    newInputText,
     editingTaskText,
     editingNoteText,
     projectNameEdit,
@@ -1084,33 +1070,21 @@ export function ProjectPage() {
         <input
           ref={newTaskInputRef}
           type="text"
-          className={`new-task-input ${isTypingNewTask || isTypingNewNote ? 'typing' : ''} ${showInputError ? 'error-shake' : ''}`}
+          className={`new-task-input ${isTypingNew ? 'typing' : ''} ${showInputError ? 'error-shake' : ''}`}
           placeholder={effectiveActiveColumn === 'tasks' ? 'Start typing to create a new task...' : (project?.isTodo ? 'Start typing to add a todo item...' : 'Start typing to create a new note...')}
-          value={effectiveActiveColumn === 'tasks' ? newTaskText : newNoteText}
+          value={newInputText}
           onChange={(e) => {
             const value = e.target.value;
             const cursorPos = e.target.selectionStart || 0;
-            if (effectiveActiveColumn === 'tasks') {
-              setNewTaskText(value);
-              if (!value) {
-                setIsTypingNewTask(false);
-                newTaskInputRef.current?.blur();
-                closeMentionPopup();
-              } else if (!isTypingNewTask) {
-                setIsTypingNewTask(true);
-              }
-              checkForMentionTrigger(value, cursorPos, 'newTask', e.target);
-            } else {
-              setNewNoteText(value);
-              if (!value) {
-                setIsTypingNewNote(false);
-                newTaskInputRef.current?.blur();
-                closeMentionPopup();
-              } else if (!isTypingNewNote) {
-                setIsTypingNewNote(true);
-              }
-              checkForMentionTrigger(value, cursorPos, 'newNote', e.target);
+            setNewInputText(value);
+            if (!value) {
+              setIsTypingNew(false);
+              newTaskInputRef.current?.blur();
+              closeMentionPopup();
+            } else if (!isTypingNew) {
+              setIsTypingNew(true);
             }
+            checkForMentionTrigger(value, cursorPos, 'newInput', e.target);
           }}
           onKeyDown={(e) => {
             // Handle mention popup navigation first
@@ -1132,50 +1106,42 @@ export function ProjectPage() {
             }
             if (e.key === 'Enter') {
               e.preventDefault();
-              if (effectiveActiveColumn === 'tasks' && newTaskText.trim()) {
+              if (effectiveActiveColumn === 'tasks' && newInputText.trim()) {
                 // Block task creation for done projects or browse mode - shake the input
                 if (project?.doneAt || browseMode) {
                   setShowInputError(true);
                   setTimeout(() => setShowInputError(false), 400);
                   return;
                 }
-                createTask(currentProjectId!, newTaskText.trim()).then(() => {
-                  setNewTaskText('');
-                  setIsTypingNewTask(false);
+                createTask(currentProjectId!, newInputText.trim()).then(() => {
+                  setNewInputText('');
+                  setIsTypingNew(false);
                   newTaskInputRef.current?.blur();
                 });
-              } else if (effectiveActiveColumn === 'notes' && newNoteText.trim()) {
-                createNote(currentProjectId!, newNoteText.trim()).then(() => {
-                  setNewNoteText('');
-                  setIsTypingNewNote(false);
+              } else if (effectiveActiveColumn === 'notes' && newInputText.trim()) {
+                createNote(currentProjectId!, newInputText.trim()).then(() => {
+                  setNewInputText('');
+                  setIsTypingNew(false);
                   newTaskInputRef.current?.blur();
                 });
               }
             }
           }}
-          onFocus={() => {
-            if (effectiveActiveColumn === 'tasks') {
-              setIsTypingNewTask(true);
-            } else {
-              setIsTypingNewNote(true);
-            }
-          }}
+          onFocus={() => setIsTypingNew(true)}
           onBlur={() => {
-            if (effectiveActiveColumn === 'tasks' && !newTaskText.trim()) {
-              setIsTypingNewTask(false);
-            } else if (effectiveActiveColumn === 'notes' && !newNoteText.trim()) {
-              setIsTypingNewNote(false);
+            if (!newInputText.trim()) {
+              setIsTypingNew(false);
             }
             // Delay closing mention popup to allow click on items
             setTimeout(() => {
-              if (mentionInputType === 'newTask' || mentionInputType === 'newNote') {
+              if (mentionInputType === 'newInput') {
                 closeMentionPopup();
               }
             }, 200);
           }}
         />
         <ProjectMentionPopup
-          isOpen={mentionPopupOpen && (mentionInputType === 'newTask' || mentionInputType === 'newNote')}
+          isOpen={mentionPopupOpen && mentionInputType === 'newInput'}
           projects={projects}
           searchText={mentionSearchText}
           selectedIndex={mentionSelectedIndex}
