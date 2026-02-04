@@ -167,8 +167,8 @@ export function OverviewPage() {
         if (fuzzyMatch(p.name, filter)) return true;
         // Check project subtitle (fuzzy)
         if (p.subtitle && fuzzyMatch(p.subtitle, filter)) return true;
-        // Check notes content (fuzzy)
-        const projectNotes = notes.filter((n) => n.projectId === p.id);
+        // Check notes content (fuzzy) - excluding completed todos
+        const projectNotes = notes.filter((n) => n.projectId === p.id && !n.completed);
         return projectNotes.some((n) => fuzzyMatch(n.content, filter));
       });
     }

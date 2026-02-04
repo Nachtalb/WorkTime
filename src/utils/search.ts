@@ -235,8 +235,8 @@ export function searchProjects(
       }
     }
 
-    // Check notes content
-    const projectNotes = notes.filter((n) => n.projectId === project.id);
+    // Check notes content (excluding completed todos)
+    const projectNotes = notes.filter((n) => n.projectId === project.id && !n.completed);
     for (const note of projectNotes) {
       const noteResult = getMatchScore(note.content, searchText);
       if (noteResult.score !== -1) {
