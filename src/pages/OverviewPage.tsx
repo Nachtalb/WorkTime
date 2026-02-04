@@ -259,8 +259,8 @@ export function OverviewPage() {
       // Check if search input is focused
       const isSearchFocused = document.activeElement === searchInputRef.current;
 
-      // Handle Ctrl+B for going back to previous project
-      if (e.ctrlKey && e.key === 'b' && !e.altKey && !e.metaKey) {
+      // Handle Backspace for going back to previous project (when no filter)
+      if (e.key === 'Backspace' && !filter && !isSearchFocused) {
         e.preventDefault();
         const previousProject = getPreviousProject();
         if (previousProject) {

@@ -478,8 +478,8 @@ export function ProjectPage() {
         return;
       }
 
-      // Handle Ctrl+B for going back to previous project
-      if (e.ctrlKey && e.key === 'b' && !e.altKey && !e.metaKey) {
+      // Handle Backspace for going back to previous project (when not typing)
+      if (e.key === 'Backspace' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle && !editingTaskTimeId) {
         e.preventDefault();
         const previousProject = getPreviousProject();
         if (previousProject) {
@@ -1139,6 +1139,25 @@ export function ProjectPage() {
             if (handleMentionKeyDown(e)) {
               return;
             }
+            // Handle Ctrl+B to make selected text bold
+            if (e.ctrlKey && e.key === 'b' && !e.altKey && !e.metaKey) {
+              e.preventDefault();
+              const input = e.currentTarget;
+              const start = input.selectionStart ?? 0;
+              const end = input.selectionEnd ?? 0;
+              if (start !== end) {
+                const before = newInputText.substring(0, start);
+                const selected = newInputText.substring(start, end);
+                const after = newInputText.substring(end);
+                const newText = before + '**' + selected + '**' + after;
+                setNewInputText(newText);
+                // Restore cursor position after the bold markers
+                setTimeout(() => {
+                  input.setSelectionRange(start + 2, end + 2);
+                }, 0);
+              }
+              return;
+            }
             // Handle Ctrl+Left/Right to switch between task and note modes (only for non-ToDo projects)
             if (e.ctrlKey && !e.altKey && !e.metaKey && !project?.isTodo) {
               if (e.key === 'ArrowLeft' && effectiveActiveColumn === 'notes') {
@@ -1308,6 +1327,24 @@ export function ProjectPage() {
                                   if (handleMentionKeyDown(e)) {
                                     return;
                                   }
+                                  // Handle Ctrl+B to make selected text bold
+                                  if (e.ctrlKey && e.key === 'b' && !e.altKey && !e.metaKey) {
+                                    e.preventDefault();
+                                    const input = e.currentTarget;
+                                    const start = input.selectionStart ?? 0;
+                                    const end = input.selectionEnd ?? 0;
+                                    if (start !== end) {
+                                      const before = editingTaskText.substring(0, start);
+                                      const selected = editingTaskText.substring(start, end);
+                                      const after = editingTaskText.substring(end);
+                                      const newText = before + '**' + selected + '**' + after;
+                                      setEditingTaskText(newText);
+                                      setTimeout(() => {
+                                        input.setSelectionRange(start + 2, end + 2);
+                                      }, 0);
+                                    }
+                                    return;
+                                  }
                                 }}
                                 onBlur={() => {
                                   updateTask(task.id, { description: editingTaskText });
@@ -1443,6 +1480,24 @@ export function ProjectPage() {
                                 }}
                                 onKeyDown={(e) => {
                                   if (handleMentionKeyDown(e)) {
+                                    return;
+                                  }
+                                  // Handle Ctrl+B to make selected text bold
+                                  if (e.ctrlKey && e.key === 'b' && !e.altKey && !e.metaKey) {
+                                    e.preventDefault();
+                                    const textarea = e.currentTarget;
+                                    const start = textarea.selectionStart ?? 0;
+                                    const end = textarea.selectionEnd ?? 0;
+                                    if (start !== end) {
+                                      const before = editingNoteText.substring(0, start);
+                                      const selected = editingNoteText.substring(start, end);
+                                      const after = editingNoteText.substring(end);
+                                      const newText = before + '**' + selected + '**' + after;
+                                      setEditingNoteText(newText);
+                                      setTimeout(() => {
+                                        textarea.setSelectionRange(start + 2, end + 2);
+                                      }, 0);
+                                    }
                                     return;
                                   }
                                 }}
