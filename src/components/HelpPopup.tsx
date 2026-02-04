@@ -76,7 +76,7 @@ const projectShortcuts: ShortcutCategory[] = [
     shortcuts: [
       { keys: ['Esc'], description: 'Back / Cancel' },
       { keys: ['↑/↓'], description: 'Navigate items' },
-      { keys: ['←/→'], description: 'Switch columns' },
+      { keys: ['←/→', 'l/r'], description: 'Switch columns' },
       { keys: ['Enter'], description: 'Edit selected' },
       { keys: ['Ctrl', 'B'], description: 'Previous project' },
     ],

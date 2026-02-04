@@ -715,6 +715,53 @@ export function ProjectPage() {
         return;
       }
 
+      // Handle Ctrl+Left/Right arrow keys for column switching (when not in input)
+      if (e.ctrlKey && !e.altKey && !e.metaKey && !project?.isTodo && !isEditingSubtitle) {
+        if (e.key === 'ArrowLeft' && effectiveActiveColumn === 'notes') {
+          e.preventDefault();
+          setActiveColumn('tasks');
+          setSelectedNoteId(null);
+          if (flattenedTasks.length > 0 && !selectedTaskId) {
+            setSelectedTaskId(flattenedTasks[0].id);
+          }
+          return;
+        }
+        if (e.key === 'ArrowRight' && effectiveActiveColumn === 'tasks') {
+          e.preventDefault();
+          setActiveColumn('notes');
+          setSelectedTaskId(null);
+          if (flattenedNotes.length > 0 && !selectedNoteId) {
+            setSelectedNoteId(flattenedNotes[0].id);
+          }
+          return;
+        }
+      }
+
+      // Handle l/r and Ctrl+l/Ctrl+r for column switching (when not typing)
+      if (!isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle && !project?.isTodo) {
+        const isCtrlL = (e.key === 'l' || e.key === 'L') && (e.ctrlKey || noModifiers);
+        const isCtrlR = (e.key === 'r' || e.key === 'R') && (e.ctrlKey || noModifiers);
+
+        if (isCtrlL && effectiveActiveColumn === 'notes') {
+          e.preventDefault();
+          setActiveColumn('tasks');
+          setSelectedNoteId(null);
+          if (flattenedTasks.length > 0 && !selectedTaskId) {
+            setSelectedTaskId(flattenedTasks[0].id);
+          }
+          return;
+        }
+        if (isCtrlR && effectiveActiveColumn === 'tasks') {
+          e.preventDefault();
+          setActiveColumn('notes');
+          setSelectedTaskId(null);
+          if (flattenedNotes.length > 0 && !selectedNoteId) {
+            setSelectedNoteId(flattenedNotes[0].id);
+          }
+          return;
+        }
+      }
+
       // Handle Ctrl+Up/Down for project priority (explicit Ctrl, no Alt/Meta)
       if (e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
         e.preventDefault();
