@@ -1729,6 +1729,12 @@ input {
   color: white;
 }
 
+/* Ideas tag */
+.tag.ideas {
+  background: #7c3aed;
+  color: white;
+}
+
 /* On Hold project styling */
 .project-card.on-hold {
   border-color: var(--color-warning);
@@ -1839,6 +1845,18 @@ input {
 .project-card-id.todo {
   background: var(--color-primary-light);
   color: var(--color-primary);
+}
+
+.project-card-id.ideas {
+  background: #faf5ff;
+  color: #7c3aed;
+}
+
+@media (prefers-color-scheme: dark) {
+  .project-card-id.ideas {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
+  }
 }
 
 /* Project Mention Popup */

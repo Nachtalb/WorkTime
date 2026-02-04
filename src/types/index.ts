@@ -26,6 +26,7 @@ export interface Project {
   lastUsed: number; // timestamp
   isOther?: boolean; // special "Other" project
   isTodo?: boolean; // special "ToDo" project
+  isIdeas?: boolean; // special "Ideas" project
   doneAt?: number; // timestamp when marked as done
   onHoldAt?: number; // timestamp when marked as on hold
   priority?: ProjectPriority; // default is 'normal'

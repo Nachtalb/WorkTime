@@ -42,6 +42,7 @@ export function OverviewPage() {
     deleteProject,
     getOtherProject,
     getTodoProject,
+    getIdeasProject,
     getTotalDuration,
     getTodayGlobalDuration,
     getCurrentTaskDuration,
@@ -110,11 +111,13 @@ export function OverviewPage() {
   // Sort projects based on selected sort option
   const sortedProjects = useMemo(() => {
     return [...projects].sort((a, b) => {
-      // Special projects should always be at the end (ToDo then Other)
+      // Special projects should always be at the end (Ideas, then ToDo, then Other)
       if (a.isOther) return 1;
       if (b.isOther) return -1;
       if (a.isTodo) return 1;
       if (b.isTodo) return -1;
+      if (a.isIdeas) return 1;
+      if (b.isIdeas) return -1;
 
       let comparison = 0;
       switch (sortBy) {
@@ -388,6 +391,16 @@ export function OverviewPage() {
         return;
       }
 
+      // Handle "i" for "Ideas" project
+      if (e.key === 'i' && !filter && !e.ctrlKey) {
+        e.preventDefault();
+        const ideasProject = getIdeasProject();
+        if (ideasProject) {
+          goToProject(ideasProject.id);
+        }
+        return;
+      }
+
       // Handle "h" to toggle hiding done projects
       if (e.key === 'h' && !filter) {
         e.preventDefault();
@@ -535,6 +548,7 @@ export function OverviewPage() {
     createProject,
     getOtherProject,
     getTodoProject,
+    getIdeasProject,
     tasks,
     notes,
     projects,
@@ -765,6 +779,7 @@ export function OverviewPage() {
                 </span>
                 {project.isOther && <span className="project-card-id">Special</span>}
                 {project.isTodo && <span className="project-card-id todo">ToDo</span>}
+                {project.isIdeas && <span className="project-card-id ideas">Ideas</span>}
                 {project.doneAt && <span className="project-card-id done" title={`Done on ${getTooltipDate(project.doneAt)} at ${formatTime(project.doneAt)}`}>Done</span>}
                 {project.onHoldAt && !project.doneAt && <span className="project-card-id on-hold" title={`On hold since ${getTooltipDate(project.onHoldAt)} at ${formatTime(project.onHoldAt)}`}>On Hold</span>}
               </div>

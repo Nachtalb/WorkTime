@@ -42,6 +42,7 @@ const overviewShortcuts: ShortcutCategory[] = [
       { keys: ['n'], description: 'New project' },
       { keys: ['o'], description: 'Open "Other"' },
       { keys: ['t'], description: 'Open "ToDo"' },
+      { keys: ['i'], description: 'Open "Ideas"' },
       { keys: ['h'], description: 'Hide/show done' },
       { keys: ['s'], description: 'Cycle sort' },
       { keys: ['a'], description: 'Toggle asc/desc' },

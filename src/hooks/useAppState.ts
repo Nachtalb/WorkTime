@@ -38,6 +38,7 @@ export interface UseAppStateReturn {
   getProjectById: (id: string) => Project | undefined;
   getOtherProject: () => Project | undefined;
   getTodoProject: () => Project | undefined;
+  getIdeasProject: () => Project | undefined;
   markProjectDone: (id: string) => Promise<void>;
   reopenProject: (id: string) => Promise<void>;
   toggleProjectOnHold: (id: string) => Promise<void>;
@@ -164,6 +165,7 @@ export function useAppState(): UseAppStateReturn {
         // Ensure special projects exist
         await db.ensureOtherProject();
         await db.ensureTodoProject();
+        await db.ensureIdeasProject();
 
         // Load all data
         const [loadedProjects, loadedTasks, loadedNotes, loadedTimers, savedState] = await Promise.all([
@@ -460,7 +462,7 @@ export function useAppState(): UseAppStateReturn {
 
   const deleteProject = useCallback(async (id: string) => {
     const project = projects.find(p => p.id === id);
-    if (project?.isOther) return; // Can't delete "Other" project
+    if (project?.isOther || project?.isTodo || project?.isIdeas) return; // Can't delete special projects
 
     await db.deleteProject(id);
     setProjects(prev => prev.filter(p => p.id !== id));
@@ -485,9 +487,13 @@ export function useAppState(): UseAppStateReturn {
     return projects.find(p => p.isTodo);
   }, [projects]);
 
+  const getIdeasProject = useCallback(() => {
+    return projects.find(p => p.isIdeas);
+  }, [projects]);
+
   const markProjectDone = useCallback(async (id: string) => {
     const project = projects.find(p => p.id === id);
-    if (project?.isOther || project?.isTodo) return; // Can't mark special projects as done
+    if (project?.isOther || project?.isTodo || project?.isIdeas) return; // Can't mark special projects as done
 
     const updatedProject = { ...project!, doneAt: Date.now() };
     await db.saveProject(updatedProject);
@@ -505,7 +511,7 @@ export function useAppState(): UseAppStateReturn {
 
   const toggleProjectOnHold = useCallback(async (id: string) => {
     const project = projects.find(p => p.id === id);
-    if (!project || project.isOther || project.isTodo) return; // Can't toggle special projects
+    if (!project || project.isOther || project.isTodo || project.isIdeas) return; // Can't toggle special projects
 
     let updatedProject: Project;
     if (project.onHoldAt) {
@@ -949,6 +955,7 @@ export function useAppState(): UseAppStateReturn {
     getProjectById,
     getOtherProject,
     getTodoProject,
+    getIdeasProject,
     markProjectDone,
     reopenProject,
     toggleProjectOnHold,

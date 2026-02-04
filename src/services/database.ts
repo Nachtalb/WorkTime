@@ -146,6 +146,25 @@ export async function ensureTodoProject(): Promise<Project> {
   return todoProject;
 }
 
+export async function ensureIdeasProject(): Promise<Project> {
+  const db = await getDB();
+  const projects = await db.getAll('projects');
+  let ideasProject = projects.find(p => p.isIdeas);
+
+  if (!ideasProject) {
+    ideasProject = {
+      id: 'ideas',
+      name: 'Ideas',
+      createdAt: Date.now(),
+      lastUsed: Date.now(),
+      isIdeas: true,
+    };
+    await db.put('projects', ideasProject);
+  }
+
+  return ideasProject;
+}
+
 // Tasks
 export async function getTasksByProject(projectId: string): Promise<Task[]> {
   const db = await getDB();

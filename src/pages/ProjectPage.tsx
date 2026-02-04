@@ -520,14 +520,14 @@ export function ProjectPage() {
       }
 
       // Handle F2 for renaming project (only when not in edit mode)
-      if (e.key === 'F2' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle && project && !project.isOther) {
+      if (e.key === 'F2' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle && project && !project.isOther && !project.isIdeas) {
         e.preventDefault();
         setIsRenamingProject(true);
         return;
       }
 
       // Handle F3 for editing subtitle (only when not in edit mode)
-      if (e.key === 'F3' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle && project && !project.isOther) {
+      if (e.key === 'F3' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && !isEditingSubtitle && project && !project.isOther && !project.isIdeas) {
         e.preventDefault();
         setSubtitleEdit(project.subtitle || '');
         setIsEditingSubtitle(true);
@@ -549,14 +549,14 @@ export function ProjectPage() {
       }
 
       // Handle Ctrl+D for marking project as done
-      if (e.ctrlKey && e.key === 'd' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther && !project.doneAt) {
+      if (e.ctrlKey && e.key === 'd' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther && !project.isTodo && !project.isIdeas && !project.doneAt) {
         e.preventDefault();
         setShowDoneConfirm(true);
         return;
       }
 
       // Handle Ctrl+H for toggling on hold status
-      if (e.ctrlKey && e.key === 'h' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther) {
+      if (e.ctrlKey && e.key === 'h' && !isTypingNew && !editingTaskId && !editingNoteId && !isRenamingProject && project && !project.isOther && !project.isTodo && !project.isIdeas) {
         e.preventDefault();
         // Don't allow toggling on-hold for done projects
         if (project.doneAt) {
@@ -930,6 +930,7 @@ export function ProjectPage() {
               {project.priority === 'medium' && <span className="priority-indicator">❗</span>}
               {project.name || 'Unnamed Project'}
               {project.isOther && <span className="tag">Special</span>}
+              {project.isIdeas && <span className="tag ideas">Ideas</span>}
             </h1>
           )}
 
@@ -964,7 +965,7 @@ export function ProjectPage() {
               }}
             />
           ) : (
-            !project.isOther && (
+            !project.isOther && !project.isIdeas && (
               <div
                 className={`project-subtitle ${!project.subtitle ? 'empty' : ''}`}
                 onClick={() => {
@@ -1005,7 +1006,7 @@ export function ProjectPage() {
           </div>
         </div>
 
-        {!project.isOther && (
+        {!project.isOther && !project.isTodo && !project.isIdeas && (
           <div className="project-actions">
             {!project.doneAt && (
               <button
