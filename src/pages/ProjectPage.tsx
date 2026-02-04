@@ -406,7 +406,7 @@ export function ProjectPage() {
   }, [mentionPopupOpen, closeMentionPopup]);
 
   // Handle text formatting shortcuts (Ctrl+B/I/U and Ctrl+2/3/4/5)
-  // Returns true if a formatting was applied
+  // Returns true if a formatting was applied or removed
   const handleTextFormatting = useCallback((
     e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
     text: string,
@@ -429,18 +429,55 @@ export function ProjectPage() {
     if (start === end) return false; // No selection
 
     e.preventDefault();
-    const before = text.substring(0, start);
-    const selected = text.substring(start, end);
-    const after = text.substring(end);
-    const newText = before + marker + selected + marker + after;
-    setText(newText);
 
+    const selected = text.substring(start, end);
+    const markerLen = marker.length;
+
+    // Check if selection is already wrapped with this marker (inside the selection)
+    if (selected.startsWith(marker) && selected.endsWith(marker) && selected.length > markerLen * 2) {
+      // Unwrap: remove markers from inside selection
+      const unwrapped = selected.slice(markerLen, -markerLen);
+      const newText = text.substring(0, start) + unwrapped + text.substring(end);
+      setText(newText);
+      setTimeout(() => {
+        input.setSelectionRange(start, start + unwrapped.length);
+      }, 0);
+      return true;
+    }
+
+    // Check if the text around selection has markers (selection is the content)
+    const beforeStart = start - markerLen;
+    const afterEnd = end + markerLen;
+    if (beforeStart >= 0 && afterEnd <= text.length) {
+      const markerBefore = text.substring(beforeStart, start);
+      const markerAfter = text.substring(end, afterEnd);
+      if (markerBefore === marker && markerAfter === marker) {
+        // Unwrap: remove markers from around selection
+        const newText = text.substring(0, beforeStart) + selected + text.substring(afterEnd);
+        setText(newText);
+        setTimeout(() => {
+          input.setSelectionRange(beforeStart, beforeStart + selected.length);
+        }, 0);
+        return true;
+      }
+    }
+
+    // Wrap: add markers around selection
+    const newText = text.substring(0, start) + marker + selected + marker + text.substring(end);
+    setText(newText);
     setTimeout(() => {
-      input.setSelectionRange(start + marker!.length, end + marker!.length);
+      input.setSelectionRange(start + markerLen, end + markerLen);
     }, 0);
 
     return true;
   }, []);
+
+  // Set default column for Ideas project (notes instead of tasks)
+  useEffect(() => {
+    if (project?.isIdeas) {
+      setActiveColumn('notes');
+    }
+  }, [currentProjectId, project?.isIdeas]);
 
   // Focus management
   useEffect(() => {

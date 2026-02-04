@@ -46,55 +46,81 @@ interface FormatPart {
   content: string;
 }
 
-// Parse text for formatting markers and return parts
-// Order matters: parse longer markers first to avoid conflicts
+// Format patterns with their markers and types
+const FORMAT_PATTERNS: Array<{ marker: string; type: FormatType; regex: RegExp }> = [
+  { marker: '**', type: 'bold', regex: /\*\*(.+?)\*\*/g },
+  { marker: '__', type: 'underline', regex: /__(.+?)__/g },
+  { marker: '~~', type: 'strikethrough', regex: /~~(.+?)~~/g },
+  { marker: '*', type: 'italic', regex: /\*(.+?)\*/g },
+];
+
+// Parse text for formatting markers and return parts (supports nesting)
 function parseFormattedText(text: string): FormatPart[] {
-  // Combined regex that matches all format types
-  // Order: ** (bold), __ (underline), ~~ (strikethrough), * (italic)
-  const formatRegex = /\*\*([^*]+)\*\*|__([^_]+)__|~~([^~]+)~~|\*([^*]+)\*/g;
-  const parts: FormatPart[] = [];
-  let lastIndex = 0;
-  let match;
+  // Try each pattern in order (longer markers first to avoid conflicts)
+  for (const { regex, type } of FORMAT_PATTERNS) {
+    // Reset regex state
+    regex.lastIndex = 0;
+    const match = regex.exec(text);
 
-  while ((match = formatRegex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+    if (match) {
+      const parts: FormatPart[] = [];
+      const beforeMatch = text.slice(0, match.index);
+      const afterMatch = text.slice(match.index + match[0].length);
+
+      // Add text before the match
+      if (beforeMatch) {
+        parts.push(...parseFormattedText(beforeMatch));
+      }
+
+      // Add the formatted part (content may have nested formatting)
+      parts.push({ type, content: match[1] });
+
+      // Add text after the match
+      if (afterMatch) {
+        parts.push(...parseFormattedText(afterMatch));
+      }
+
+      return parts;
     }
-
-    if (match[1] !== undefined) {
-      parts.push({ type: 'bold', content: match[1] });
-    } else if (match[2] !== undefined) {
-      parts.push({ type: 'underline', content: match[2] });
-    } else if (match[3] !== undefined) {
-      parts.push({ type: 'strikethrough', content: match[3] });
-    } else if (match[4] !== undefined) {
-      parts.push({ type: 'italic', content: match[4] });
-    }
-
-    lastIndex = formatRegex.lastIndex;
   }
 
-  if (lastIndex < text.length) {
-    parts.push({ type: 'text', content: text.slice(lastIndex) });
-  }
-
-  return parts;
+  // No formatting found, return as plain text
+  return text ? [{ type: 'text', content: text }] : [];
 }
 
-// Render a format part with appropriate HTML element
-function renderFormatPart(part: FormatPart, key: number): ReactNode {
-  switch (part.type) {
-    case 'bold':
-      return <strong key={key}>{part.content}</strong>;
-    case 'italic':
-      return <em key={key}>{part.content}</em>;
-    case 'underline':
-      return <u key={key}>{part.content}</u>;
-    case 'strikethrough':
-      return <s key={key}>{part.content}</s>;
-    default:
-      return <span key={key}>{part.content}</span>;
+// Recursively render formatted text with nesting support
+function renderFormattedText(text: string, key: string | number = 0): ReactNode {
+  const parts = parseFormattedText(text);
+
+  if (parts.length === 0) return null;
+  if (parts.length === 1 && parts[0].type === 'text') {
+    return <span key={key}>{parts[0].content}</span>;
   }
+
+  return (
+    <span key={key}>
+      {parts.map((part, index) => {
+        const childKey = `${key}-${index}`;
+        // Recursively render content for nested formatting
+        const content = part.type === 'text'
+          ? part.content
+          : renderFormattedText(part.content, `${childKey}-inner`);
+
+        switch (part.type) {
+          case 'bold':
+            return <strong key={childKey}>{content}</strong>;
+          case 'italic':
+            return <em key={childKey}>{content}</em>;
+          case 'underline':
+            return <u key={childKey}>{content}</u>;
+          case 'strikethrough':
+            return <s key={childKey}>{content}</s>;
+          default:
+            return <span key={childKey}>{part.content}</span>;
+        }
+      })}
+    </span>
+  );
 }
 
 export function TextWithProjectRefs({ text, projects, onProjectClick }: TextWithProjectRefsProps) {
@@ -148,16 +174,8 @@ export function TextWithProjectRefs({ text, projects, onProjectClick }: TextWith
             </span>
           );
         }
-        // For text parts, also parse formatting markers
-        const formatParts = parseFormattedText(part.content);
-        if (formatParts.length === 1 && formatParts[0].type === 'text') {
-          return <span key={index}>{part.content}</span>;
-        }
-        return (
-          <span key={index}>
-            {formatParts.map((fp, fpIndex) => renderFormatPart(fp, fpIndex))}
-          </span>
-        );
+        // For text parts, render with formatting support (including nesting)
+        return renderFormattedText(part.content, index);
       })}
     </>
   );
