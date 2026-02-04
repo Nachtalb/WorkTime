@@ -23,7 +23,7 @@ import {
 } from '../utils/export';
 import { detectNoteTagType, NOTE_TAG_PATTERNS, type NoteTagType } from '../components/TextWithProjectRefs';
 import { Toast, useToast } from '../components/Toast';
-import { fuzzyMatch } from '../utils/search';
+import { searchProjects } from '../utils/search';
 
 export function OverviewPage() {
   const {
@@ -160,17 +160,11 @@ export function OverviewPage() {
   const filteredProjects = useMemo(() => {
     let result = sortedProjects;
 
-    // Filter by name, subtitle, or notes content using fuzzy search
+    // Filter by name, subtitle, or notes content using shared fuzzy search
     if (filter) {
-      result = result.filter((p) => {
-        // Check project name (fuzzy)
-        if (fuzzyMatch(p.name, filter)) return true;
-        // Check project subtitle (fuzzy)
-        if (p.subtitle && fuzzyMatch(p.subtitle, filter)) return true;
-        // Check notes content (fuzzy) - excluding completed todos
-        const projectNotes = notes.filter((n) => n.projectId === p.id && !n.completed);
-        return projectNotes.some((n) => fuzzyMatch(n.content, filter));
-      });
+      const searchResults = searchProjects(sortedProjects, notes, filter);
+      const matchedIds = new Set(searchResults.map((r) => r.project.id));
+      result = result.filter((p) => matchedIds.has(p.id));
     }
 
     // Hide done projects if enabled
