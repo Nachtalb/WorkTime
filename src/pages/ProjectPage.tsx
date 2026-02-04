@@ -36,76 +36,60 @@ interface StyleState {
   underscore: boolean;
   strike: boolean;
   mono: boolean;
+  [key: string]: boolean;
 }
 
-/**
- * Normalizes selection by ignoring surrounding whitespace and punctuation.
- */
 function getNormalizedRange(text: string, start: number, end: number): { nS: number; nE: number } {
   let nS = start, nE = end;
   const punct = ',!.?;:';
   const isSkip = (c: string) => /\s/.test(c) || punct.includes(c);
-
   while (nS < nE && isSkip(text[nS])) nS++;
   while (nE > nS && isSkip(text[nE - 1])) nE--;
-
   return (nS === nE) ? { nS: start, nE: end } : { nS, nE };
 }
 
-/**
- * Strips formatting to find the raw text and current style state.
- */
 function analyzeStyles(text: string): { styles: StyleState; cleanText: string } {
   let cleanText = (text || '').trim();
   const styles: StyleState = { bold: false, italic: false, underscore: false, strike: false, mono: false };
   let found: boolean;
   do {
     found = false;
-    if (cleanText.startsWith('**') && cleanText.endsWith('**') && cleanText.length > 4) {
+    if (cleanText.startsWith('**') && cleanText.endsWith('**')) {
       styles.bold = true; cleanText = cleanText.slice(2, -2); found = true;
-    } else if (cleanText.startsWith('__') && cleanText.endsWith('__') && cleanText.length > 4) {
+    } else if (cleanText.startsWith('__') && cleanText.endsWith('__')) {
       styles.underscore = true; cleanText = cleanText.slice(2, -2); found = true;
-    } else if (cleanText.startsWith('~~') && cleanText.endsWith('~~') && cleanText.length > 4) {
+    } else if (cleanText.startsWith('~~') && cleanText.endsWith('~~')) {
       styles.strike = true; cleanText = cleanText.slice(2, -2); found = true;
-    } else if (cleanText.startsWith('`') && cleanText.endsWith('`') && cleanText.length > 2) {
+    } else if (cleanText.startsWith('`') && cleanText.endsWith('`')) {
       styles.mono = true; cleanText = cleanText.slice(1, -1); found = true;
-    } else if (
-      ((cleanText.startsWith('*') && cleanText.endsWith('*') && !cleanText.startsWith('**')) ||
-       (cleanText.startsWith('_') && cleanText.endsWith('_') && !cleanText.startsWith('__'))) &&
-      cleanText.length > 2
-    ) {
+    } else if ((cleanText.startsWith('*') && cleanText.endsWith('*') && !cleanText.startsWith('**')) ||
+               (cleanText.startsWith('_') && cleanText.endsWith('_') && !cleanText.startsWith('__'))) {
       styles.italic = true; cleanText = cleanText.slice(1, -1); found = true;
     }
   } while (found);
   return { styles, cleanText };
 }
 
-/**
- * Toggles style. Handles cursor-only (empty) and text selections.
- * Returns the new text and inner range for the clean text.
- */
 function applyFormatting(
   fullText: string,
   start: number,
   end: number,
   action: string
 ): { newText: string; newRange: [number, number] } {
-  // Handle Empty Selection (Insert placeholder and put cursor in middle)
+  // Zero-selection (Cursor only)
   if (start === end) {
     const placeholders: Record<string, string> = { bold: '****', italic: '__', underscore: '____', strike: '~~~~', mono: '``' };
-    const sym = placeholders[action] || '';
-    const half = sym.length / 2;
+    const sym = placeholders[action];
+    const offset = sym.length / 2;
     return {
       newText: fullText.substring(0, start) + sym + fullText.substring(end),
-      newRange: [start + half, start + half]
+      newRange: [start + offset, start + offset]
     };
   }
 
-  // Handle Range Selection
+  // Range selection
   let { nS, nE } = getNormalizedRange(fullText, start, end);
   const syms = ['**', '__', '~~', '_', '*', '`'];
-
-  // Expand to find existing markers
   let expanded = true;
   while (expanded) {
     expanded = false;
@@ -117,29 +101,22 @@ function applyFormatting(
   }
 
   const { styles, cleanText } = analyzeStyles(fullText.substring(nS, nE));
-  if (action === 'bold') styles.bold = !styles.bold;
-  else if (action === 'italic') styles.italic = !styles.italic;
-  else if (action === 'underscore') styles.underscore = !styles.underscore;
-  else if (action === 'strike') styles.strike = !styles.strike;
-  else if (action === 'mono') styles.mono = !styles.mono;
+  if (action in styles) styles[action] = !styles[action];
 
-  // Rebuild with proper marker ordering
   let res = cleanText;
   if (styles.mono) res = `\`${res}\``;
   if (styles.strike) res = `~~${res}~~`;
   if (styles.bold) res = `**${res}**`;
   if (styles.underscore) res = `__${res}__`;
   if (styles.italic) {
-    // Use * for italic when underscore is also applied (to differentiate)
-    const char = styles.underscore ? '*' : '_';
-    res = `${char}${res}${char}`;
+    const c = styles.underscore ? '*' : '_';
+    res = `${c}${res}${c}`;
   }
 
-  // Calculate inner range (text only, exclude symbols)
-  const prefixLen = res.indexOf(cleanText);
+  const innerStart = nS + res.indexOf(cleanText);
   return {
     newText: fullText.substring(0, nS) + res + fullText.substring(nE),
-    newRange: [nS + prefixLen, nS + prefixLen + cleanText.length]
+    newRange: [innerStart, innerStart + cleanText.length]
   };
 }
 

@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import type { Project } from '../types';
 
 interface TextWithProjectRefsProps {
@@ -40,54 +39,34 @@ export function detectNoteTagType(content: string): NoteTagType {
 }
 
 /**
- * Renders Markdown-style formatting to React elements.
- * Supports: `code`, ~~strike~~, **bold**, __underline__, *italic* or _italic_
+ * Renders Markdown-style formatting to HTML string.
+ * Supports: `code`, ~~strike~~, **bold**, __underline__, *italic* or _italic_, [text](url)
+ * Backslash escapes formatting characters.
  */
-function renderFormattedText(text: string, key: string | number = 0): ReactNode {
-  if (!text) return null;
+function renderMarkdown(text: string): string {
+  if (!text) return '';
+  let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-  // Process formatting patterns in order (most specific first)
-  // Each pattern: [regex, wrapper function]
-  const patterns: Array<[RegExp, (content: ReactNode, k: string) => ReactNode]> = [
-    [/`([^`]+)`/g, (c, k) => <code key={k} className="inline-code">{c}</code>],
-    [/~~([^~]+)~~/g, (c, k) => <s key={k}>{c}</s>],
-    [/\*\*([^*]+)\*\*/g, (c, k) => <strong key={k}>{c}</strong>],
-    [/__([^_]+)__/g, (c, k) => <u key={k}>{c}</u>],
-    [/(\*|_)([^*_]+)\1/g, (c, k) => <em key={k}>{c}</em>],
-  ];
+  // Link: [text](url) - if [ not preceded by \
+  html = html.replace(/(?<!\\)\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 
-  // Try each pattern
-  for (const [regex, wrapper] of patterns) {
-    regex.lastIndex = 0;
-    const match = regex.exec(text);
+  // Logic: Match symbols only if not preceded by \
+  html = html.replace(/(?<!\\)`([^`]+)(?<!\\)`/g, '<code class="inline-code">$1</code>');
+  html = html.replace(/(?<!\\)~~([\s\S]+?)(?<!\\)~~/g, '<del>$1</del>');
+  html = html.replace(/(?<!\\)\*\*([\s\S]+?)(?<!\\)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/(?<!\\)__([\s\S]+?)(?<!\\)__/g, '<u>$1</u>');
+  html = html.replace(/(?<!\\)([*_])(?!\1)([\s\S]+?)(?<!\\)\1/g, '<em>$2</em>');
 
-    if (match) {
-      const parts: ReactNode[] = [];
-      const beforeMatch = text.slice(0, match.index);
-      const afterMatch = text.slice(match.index + match[0].length);
-      // For italic pattern, capture group is at index 2, otherwise index 1
-      const content = match[2] !== undefined ? match[2] : match[1];
+  // Final pass: clean up the backslashes
+  html = html.replace(/\\(.)/g, '$1');
+  return html.replace(/\n/g, '<br>');
+}
 
-      // Add text before the match (recursively process)
-      if (beforeMatch) {
-        parts.push(renderFormattedText(beforeMatch, `${key}-before`));
-      }
-
-      // Add the formatted part (recursively process content for nesting)
-      const innerContent = renderFormattedText(content, `${key}-inner`);
-      parts.push(wrapper(innerContent, `${key}-fmt`));
-
-      // Add text after the match (recursively process)
-      if (afterMatch) {
-        parts.push(renderFormattedText(afterMatch, `${key}-after`));
-      }
-
-      return <span key={key}>{parts}</span>;
-    }
-  }
-
-  // No formatting found, return as plain text
-  return <span key={key}>{text}</span>;
+/**
+ * React component that renders formatted text using dangerouslySetInnerHTML
+ */
+function FormattedText({ text, className }: { text: string; className?: string }) {
+  return <span className={className} dangerouslySetInnerHTML={{ __html: renderMarkdown(text) }} />;
 }
 
 export function TextWithProjectRefs({ text, projects, onProjectClick }: TextWithProjectRefsProps) {
@@ -142,7 +121,7 @@ export function TextWithProjectRefs({ text, projects, onProjectClick }: TextWith
           );
         }
         // For text parts, render with formatting support (including nesting)
-        return renderFormattedText(part.content, index);
+        return <FormattedText key={index} text={part.content} />;
       })}
     </>
   );
