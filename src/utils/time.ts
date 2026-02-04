@@ -2,12 +2,16 @@ import {
   format,
   isToday,
   isYesterday,
+  isSameWeek,
   differenceInDays,
   startOfDay,
   endOfDay,
   startOfWeek,
   isWithinInterval,
   subWeeks,
+  addDays,
+  subDays,
+  parseISO,
 } from 'date-fns';
 
 export function formatTime(timestamp: number): string {
@@ -132,4 +136,48 @@ export function getCurrentTime(): string {
 
 export function getCurrentDate(): string {
   return format(new Date(), 'EEEE, MMMM d, yyyy');
+}
+
+export function getOverviewTitle(dateString: string): string {
+  const date = parseISO(dateString);
+
+  if (isToday(date)) {
+    return "Today's Overview";
+  }
+
+  if (isYesterday(date)) {
+    return "Yesterday's Overview";
+  }
+
+  // Check if in same week as today
+  if (isSameWeek(date, new Date(), { weekStartsOn: 1 })) {
+    return `${format(date, 'EEEE')}'s Overview`;
+  }
+
+  // Otherwise use DD.MM.YYYY format
+  return `${format(date, 'dd.MM.yyyy')}'s Overview`;
+}
+
+export function getDateString(date: Date): string {
+  return format(date, 'yyyy-MM-dd');
+}
+
+export function getNextDay(dateString: string): string {
+  return getDateString(addDays(parseISO(dateString), 1));
+}
+
+export function getPreviousDay(dateString: string): string {
+  return getDateString(subDays(parseISO(dateString), 1));
+}
+
+export function isDateInFuture(dateString: string): boolean {
+  return parseISO(dateString) > new Date();
+}
+
+export function formatDateForPicker(dateString: string): string {
+  return dateString; // Already in yyyy-MM-dd format
+}
+
+export function formatDateDisplay(dateString: string): string {
+  return format(parseISO(dateString), 'dd.MM.yyyy');
 }

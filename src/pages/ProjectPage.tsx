@@ -794,7 +794,8 @@ export function ProjectPage() {
         !editingTaskId &&
         !editingNoteId &&
         !isRenamingProject &&
-        !isEditingSubtitle
+        !isEditingSubtitle &&
+        !editingTaskTimeId
       ) {
         e.preventDefault();
         if (effectiveActiveColumn === 'tasks') {

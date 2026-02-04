@@ -1,8 +1,18 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Modal } from './Modal';
 import { ConfirmDialog } from './ConfirmDialog';
+import { Toast, useToast } from './Toast';
 import type { Task, Project, GlobalTimer } from '../types';
-import { formatTime, formatDuration, isTimestampToday, getTodayDateString } from '../utils/time';
+import {
+  formatTime,
+  formatDuration,
+  formatDate,
+  getTodayDateString,
+  getOverviewTitle,
+  getNextDay,
+  getPreviousDay,
+  isDateInFuture,
+} from '../utils/time';
 
 interface TodayOverviewPopupProps {
   isOpen: boolean;
@@ -29,8 +39,92 @@ export function TodayOverviewPopup({
   onDeleteTask,
   onProjectClick,
 }: TodayOverviewPopupProps) {
-  const today = getTodayDateString();
-  const todayTimers = globalTimers.filter((t) => t.date === today).sort((a, b) => a.startTime - b.startTime);
+  const [selectedDate, setSelectedDate] = useState(getTodayDateString());
+  const [datePickerShake, setDatePickerShake] = useState(false);
+
+  const { toasts, showToast, removeToast } = useToast();
+
+  // Reset to today when popup opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedDate(getTodayDateString());
+    }
+  }, [isOpen]);
+
+  // Get all dates that have data
+  const datesWithData = useMemo(() => {
+    const dates = new Set<string>();
+    for (const timer of globalTimers) {
+      dates.add(timer.date);
+    }
+    for (const task of tasks) {
+      dates.add(formatDate(task.startTime));
+    }
+    return dates;
+  }, [globalTimers, tasks]);
+
+  // Check if a date has data
+  const hasDataForDate = useCallback((dateString: string) => {
+    return datesWithData.has(dateString);
+  }, [datesWithData]);
+
+  // Filter data for selected date
+  const selectedTimers = useMemo(() => {
+    return globalTimers
+      .filter((t) => t.date === selectedDate)
+      .sort((a, b) => a.startTime - b.startTime);
+  }, [globalTimers, selectedDate]);
+
+  const selectedTasks = useMemo(() => {
+    return tasks
+      .filter((t) => formatDate(t.startTime) === selectedDate)
+      .sort((a, b) => a.startTime - b.startTime);
+  }, [tasks, selectedDate]);
+
+  // Check if navigation is possible
+  const canGoNext = useMemo(() => {
+    const nextDate = getNextDay(selectedDate);
+    return !isDateInFuture(nextDate) && hasDataForDate(nextDate);
+  }, [selectedDate, hasDataForDate]);
+
+  const canGoPrev = useMemo(() => {
+    const prevDate = getPreviousDay(selectedDate);
+    return hasDataForDate(prevDate);
+  }, [selectedDate, hasDataForDate]);
+
+  // Navigation handlers
+  const goToNextDate = useCallback(() => {
+    if (canGoNext) {
+      setSelectedDate(getNextDay(selectedDate));
+    }
+  }, [selectedDate, canGoNext]);
+
+  const goToPrevDate = useCallback(() => {
+    if (canGoPrev) {
+      setSelectedDate(getPreviousDay(selectedDate));
+    }
+  }, [selectedDate, canGoPrev]);
+
+  const handleDatePickerChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = e.target.value;
+    if (!newDate) return;
+
+    if (isDateInFuture(newDate)) {
+      showToast('Cannot view future dates', 'error');
+      setDatePickerShake(true);
+      setTimeout(() => setDatePickerShake(false), 500);
+      return;
+    }
+
+    if (!hasDataForDate(newDate)) {
+      showToast('No data for this date', 'error');
+      setDatePickerShake(true);
+      setTimeout(() => setDatePickerShake(false), 500);
+      return;
+    }
+
+    setSelectedDate(newDate);
+  }, [hasDataForDate, showToast]);
 
   // Session editing state
   const [editingTimerId, setEditingTimerId] = useState<string | null>(null);
@@ -110,7 +204,7 @@ export function TodayOverviewPopup({
   const saveEditing = useCallback(async () => {
     if (!editingTimerId || !onUpdateTimerTimes) return;
 
-    const timer = todayTimers.find(t => t.id === editingTimerId);
+    const timer = selectedTimers.find(t => t.id === editingTimerId);
     if (!timer) return;
 
     const [startHours, startMinutes] = editStartTime.split(':').map(Number);
@@ -142,9 +236,9 @@ export function TodayOverviewPopup({
     }
 
     // Find adjacent timers for boundary validation
-    const timerIndex = todayTimers.findIndex(t => t.id === editingTimerId);
-    const prevTimer = timerIndex > 0 ? todayTimers[timerIndex - 1] : null;
-    const nextTimer = timerIndex < todayTimers.length - 1 ? todayTimers[timerIndex + 1] : null;
+    const timerIndex = selectedTimers.findIndex(t => t.id === editingTimerId);
+    const prevTimer = timerIndex > 0 ? selectedTimers[timerIndex - 1] : null;
+    const nextTimer = timerIndex < selectedTimers.length - 1 ? selectedTimers[timerIndex + 1] : null;
 
     // Validate: cannot overlap with previous session
     if (prevTimer && prevTimer.endTime && newStartTime < prevTimer.endTime) {
@@ -161,14 +255,12 @@ export function TodayOverviewPopup({
     await onUpdateTimerTimes(editingTimerId, newStartTime, newEndTime);
     setEditingTimerId(null);
     setEditError(null);
-  }, [editingTimerId, editStartTime, editEndTime, todayTimers, onUpdateTimerTimes]);
-
-  const todayTasks = tasks.filter((t) => isTimestampToday(t.startTime)).sort((a, b) => a.startTime - b.startTime);
+  }, [editingTimerId, editStartTime, editEndTime, selectedTimers, onUpdateTimerTimes]);
 
   const saveTaskEditing = useCallback(async () => {
     if (!editingTaskId || !onUpdateTaskTimes) return;
 
-    const task = todayTasks.find(t => t.id === editingTaskId);
+    const task = selectedTasks.find(t => t.id === editingTaskId);
     if (!task) return;
 
     const [startHours, startMinutes] = taskEditStartTime.split(':').map(Number);
@@ -217,17 +309,17 @@ export function TodayOverviewPopup({
     await onUpdateTaskTimes(editingTaskId, newStartTime, newEndTime);
     setEditingTaskId(null);
     setTaskEditError(null);
-  }, [editingTaskId, taskEditStartTime, taskEditEndTime, todayTasks, onUpdateTaskTimes]);
+  }, [editingTaskId, taskEditStartTime, taskEditEndTime, selectedTasks, onUpdateTaskTimes]);
 
   // Calculate total work time
-  const totalWorkTime = todayTimers.reduce((total, timer) => {
+  const totalWorkTime = selectedTimers.reduce((total, timer) => {
     const endTime = timer.endTime || Date.now();
     return total + (endTime - timer.startTime);
   }, 0);
 
   // Calculate time per project
   const projectDurations = new Map<string, number>();
-  for (const task of todayTasks) {
+  for (const task of selectedTasks) {
     const duration =
       task.duration || (task.endTime ? task.endTime - task.startTime : Date.now() - task.startTime);
     const existing = projectDurations.get(task.projectId) || 0;
@@ -251,8 +343,47 @@ export function TodayOverviewPopup({
     }
   }, [onProjectClick, onClose]);
 
+  const title = getOverviewTitle(selectedDate);
+  const isToday = selectedDate === getTodayDateString();
+
+  // Custom title component with date navigation
+  const titleContent = (
+    <div className="overview-title-nav">
+      <span className="overview-title-text">{title}</span>
+      <div className="overview-date-nav">
+        <button
+          className="overview-nav-btn"
+          onClick={goToPrevDate}
+          disabled={!canGoPrev}
+          title="Previous day with data"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <input
+          type="date"
+          className={`overview-date-picker ${datePickerShake ? 'shake' : ''}`}
+          value={selectedDate}
+          onChange={handleDatePickerChange}
+          max={getTodayDateString()}
+        />
+        <button
+          className="overview-nav-btn"
+          onClick={goToNextDate}
+          disabled={!canGoNext}
+          title="Next day with data"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Today's Overview" wide>
+    <Modal isOpen={isOpen} onClose={handleClose} title={titleContent} wide>
       <div className="overview-stats">
         <div className="stat-card">
           <div className="stat-value">{formatDuration(totalWorkTime)}</div>
@@ -263,8 +394,8 @@ export function TodayOverviewPopup({
           <div className="stat-label">Project Time</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">{todayTasks.length}</div>
-          <div className="stat-label">Tasks Today</div>
+          <div className="stat-value">{selectedTasks.length}</div>
+          <div className="stat-label">Tasks {isToday ? 'Today' : ''}</div>
         </div>
         <div className="stat-card">
           <div className="stat-value">{projectDurations.size}</div>
@@ -276,14 +407,14 @@ export function TodayOverviewPopup({
         <div className="overview-column">
           <div className="work-sessions">
             <h4>Work Sessions</h4>
-            {todayTimers.length === 0 ? (
-              <p className="empty-state-text">No work sessions today</p>
+            {selectedTimers.length === 0 ? (
+              <p className="empty-state-text">No work sessions {isToday ? 'today' : 'this day'}</p>
             ) : (
-              todayTimers.map((timer) => {
+              selectedTimers.map((timer) => {
                 const endTime = timer.endTime || Date.now();
                 const duration = endTime - timer.startTime;
                 const isEditing = editingTimerId === timer.id;
-                const canEdit = timer.endTime && onUpdateTimerTimes;
+                const canEdit = timer.endTime && onUpdateTimerTimes && isToday;
 
                 if (isEditing) {
                   return (
@@ -346,7 +477,7 @@ export function TodayOverviewPopup({
           <div className="project-breakdown">
             <h4>Project Breakdown</h4>
             {sortedProjects.length === 0 ? (
-              <p className="empty-state-text">No project work today</p>
+              <p className="empty-state-text">No project work {isToday ? 'today' : 'this day'}</p>
             ) : (
               sortedProjects.map(([projectId, duration]) => {
                 const project = projects.find((p) => p.id === projectId);
@@ -374,18 +505,18 @@ export function TodayOverviewPopup({
 
         <div className="overview-column">
           <div className="tasks-today">
-            <h4>Tasks Today</h4>
-            {todayTasks.length === 0 ? (
-              <p className="empty-state-text">No tasks today</p>
+            <h4>Tasks {isToday ? 'Today' : ''}</h4>
+            {selectedTasks.length === 0 ? (
+              <p className="empty-state-text">No tasks {isToday ? 'today' : 'this day'}</p>
             ) : (
-              todayTasks.map((task) => {
+              selectedTasks.map((task) => {
                 const project = projects.find((p) => p.id === task.projectId);
                 const projectName = project?.name || 'Unknown';
                 const endTime = task.endTime || Date.now();
                 const duration = task.duration || (endTime - task.startTime);
                 const isEditing = editingTaskId === task.id;
                 const isActive = task.id === activeTaskId;
-                const canEdit = onUpdateTaskTimes !== undefined;
+                const canEdit = onUpdateTaskTimes !== undefined && isToday;
 
                 if (isEditing) {
                   return (
@@ -451,7 +582,7 @@ export function TodayOverviewPopup({
                             </svg>
                           </button>
                         )}
-                        {onDeleteTask && !isActive && (
+                        {onDeleteTask && !isActive && isToday && (
                           <button
                             className="task-delete-btn"
                             onClick={() => setTaskToDelete(task)}
@@ -486,6 +617,8 @@ export function TodayOverviewPopup({
         message="Are you sure you want to delete task"
         itemName={taskToDelete?.description}
       />
+
+      <Toast messages={toasts} onRemove={removeToast} />
     </Modal>
   );
 }
