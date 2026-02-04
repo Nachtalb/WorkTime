@@ -89,6 +89,7 @@ const projectShortcuts: ShortcutCategory[] = [
       { keys: ['Ctrl', 'I/3'], description: 'Italic' },
       { keys: ['Ctrl', 'U/4'], description: 'Underline' },
       { keys: ['Ctrl', '5'], description: 'Strikethrough' },
+      { keys: ['Ctrl', '6'], description: 'Code' },
       { keys: ['Space'], description: 'Duplicate task / Toggle todo' },
       { keys: ['Del'], description: 'Delete item' },
       { keys: ['Ctrl', 'Z'], description: 'Undo delete' },

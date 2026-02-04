@@ -854,6 +854,16 @@ input {
   font-family: inherit;
 }
 
+/* Inline Code */
+.inline-code {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+  font-size: 0.9em;
+  background-color: var(--color-bg-hover);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
 /* Edit Button */
 .edit-button {
   display: flex;

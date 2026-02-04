@@ -7,7 +7,7 @@ interface TextWithProjectRefsProps {
   onProjectClick?: (projectId: string) => void;
 }
 
-type PartType = 'text' | 'ref' | 'bold';
+type PartType = 'text' | 'ref';
 
 interface Part {
   type: PartType;
@@ -39,88 +39,55 @@ export function detectNoteTagType(content: string): NoteTagType {
   return null;
 }
 
-type FormatType = 'text' | 'bold' | 'italic' | 'underline' | 'strikethrough';
+/**
+ * Renders Markdown-style formatting to React elements.
+ * Supports: `code`, ~~strike~~, **bold**, __underline__, *italic* or _italic_
+ */
+function renderFormattedText(text: string, key: string | number = 0): ReactNode {
+  if (!text) return null;
 
-interface FormatPart {
-  type: FormatType;
-  content: string;
-}
+  // Process formatting patterns in order (most specific first)
+  // Each pattern: [regex, wrapper function]
+  const patterns: Array<[RegExp, (content: ReactNode, k: string) => ReactNode]> = [
+    [/`([^`]+)`/g, (c, k) => <code key={k} className="inline-code">{c}</code>],
+    [/~~([^~]+)~~/g, (c, k) => <s key={k}>{c}</s>],
+    [/\*\*([^*]+)\*\*/g, (c, k) => <strong key={k}>{c}</strong>],
+    [/__([^_]+)__/g, (c, k) => <u key={k}>{c}</u>],
+    [/(\*|_)([^*_]+)\1/g, (c, k) => <em key={k}>{c}</em>],
+  ];
 
-// Format patterns with their markers and types
-const FORMAT_PATTERNS: Array<{ marker: string; type: FormatType; regex: RegExp }> = [
-  { marker: '**', type: 'bold', regex: /\*\*(.+?)\*\*/g },
-  { marker: '__', type: 'underline', regex: /__(.+?)__/g },
-  { marker: '~~', type: 'strikethrough', regex: /~~(.+?)~~/g },
-  { marker: '*', type: 'italic', regex: /\*(.+?)\*/g },
-];
-
-// Parse text for formatting markers and return parts (supports nesting)
-function parseFormattedText(text: string): FormatPart[] {
-  // Try each pattern in order (longer markers first to avoid conflicts)
-  for (const { regex, type } of FORMAT_PATTERNS) {
-    // Reset regex state
+  // Try each pattern
+  for (const [regex, wrapper] of patterns) {
     regex.lastIndex = 0;
     const match = regex.exec(text);
 
     if (match) {
-      const parts: FormatPart[] = [];
+      const parts: ReactNode[] = [];
       const beforeMatch = text.slice(0, match.index);
       const afterMatch = text.slice(match.index + match[0].length);
+      // For italic pattern, capture group is at index 2, otherwise index 1
+      const content = match[2] !== undefined ? match[2] : match[1];
 
-      // Add text before the match
+      // Add text before the match (recursively process)
       if (beforeMatch) {
-        parts.push(...parseFormattedText(beforeMatch));
+        parts.push(renderFormattedText(beforeMatch, `${key}-before`));
       }
 
-      // Add the formatted part (content may have nested formatting)
-      parts.push({ type, content: match[1] });
+      // Add the formatted part (recursively process content for nesting)
+      const innerContent = renderFormattedText(content, `${key}-inner`);
+      parts.push(wrapper(innerContent, `${key}-fmt`));
 
-      // Add text after the match
+      // Add text after the match (recursively process)
       if (afterMatch) {
-        parts.push(...parseFormattedText(afterMatch));
+        parts.push(renderFormattedText(afterMatch, `${key}-after`));
       }
 
-      return parts;
+      return <span key={key}>{parts}</span>;
     }
   }
 
   // No formatting found, return as plain text
-  return text ? [{ type: 'text', content: text }] : [];
-}
-
-// Recursively render formatted text with nesting support
-function renderFormattedText(text: string, key: string | number = 0): ReactNode {
-  const parts = parseFormattedText(text);
-
-  if (parts.length === 0) return null;
-  if (parts.length === 1 && parts[0].type === 'text') {
-    return <span key={key}>{parts[0].content}</span>;
-  }
-
-  return (
-    <span key={key}>
-      {parts.map((part, index) => {
-        const childKey = `${key}-${index}`;
-        // Recursively render content for nested formatting
-        const content = part.type === 'text'
-          ? part.content
-          : renderFormattedText(part.content, `${childKey}-inner`);
-
-        switch (part.type) {
-          case 'bold':
-            return <strong key={childKey}>{content}</strong>;
-          case 'italic':
-            return <em key={childKey}>{content}</em>;
-          case 'underline':
-            return <u key={childKey}>{content}</u>;
-          case 'strikethrough':
-            return <s key={childKey}>{content}</s>;
-          default:
-            return <span key={childKey}>{part.content}</span>;
-        }
-      })}
-    </span>
-  );
+  return <span key={key}>{text}</span>;
 }
 
 export function TextWithProjectRefs({ text, projects, onProjectClick }: TextWithProjectRefsProps) {
