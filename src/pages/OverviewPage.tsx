@@ -249,8 +249,8 @@ export function OverviewPage() {
       // Don't handle if modals are open
       if (showHelp || showTodayOverview || showImport || showStartTimeEditor || projectToDelete || showExitConfirm || showGlobalSearch || showGlobalTodo) return;
 
-      // Handle Ctrl+K for global search
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      // Handle Ctrl+G for global search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
         e.preventDefault();
         setShowGlobalSearch(true);
         return;

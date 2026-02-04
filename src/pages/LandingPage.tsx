@@ -35,8 +35,8 @@ export function LandingPage() {
       // Don't handle if a modal is open
       if (showHelp || showTodayOverview || showGlobalSearch || showGlobalTodo) return;
 
-      // Handle Ctrl+K for global search
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      // Handle Ctrl+G for global search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
         e.preventDefault();
         setShowGlobalSearch(true);
         return;

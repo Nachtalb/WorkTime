@@ -506,6 +506,33 @@ export function ProjectPage() {
   ): boolean => {
     if (!e.ctrlKey || e.altKey || e.metaKey) return false;
 
+    const input = e.currentTarget;
+    const start = input.selectionStart ?? 0;
+    const end = input.selectionEnd ?? 0;
+
+    // Handle Ctrl+K for links (never removes, only adds)
+    if (e.key === 'k') {
+      e.preventDefault();
+      if (start === end) {
+        // No selection: insert []() with cursor inside []
+        const newText = text.substring(0, start) + '[]()' + text.substring(end);
+        setText(newText);
+        setTimeout(() => {
+          input.setSelectionRange(start + 1, start + 1);
+        }, 0);
+      } else {
+        // With selection: wrap as [selection]() with cursor inside ()
+        const selected = text.substring(start, end);
+        const newText = text.substring(0, start) + '[' + selected + ']()' + text.substring(end);
+        setText(newText);
+        setTimeout(() => {
+          const cursorPos = start + selected.length + 3; // position inside ()
+          input.setSelectionRange(cursorPos, cursorPos);
+        }, 0);
+      }
+      return true;
+    }
+
     let action: string | null = null;
     if (e.key === 'b' || e.key === '2') action = 'bold';
     else if (e.key === 'i' || e.key === '3') action = 'italic';
@@ -516,10 +543,6 @@ export function ProjectPage() {
     if (!action) return false;
 
     e.preventDefault();
-
-    const input = e.currentTarget;
-    const start = input.selectionStart ?? 0;
-    const end = input.selectionEnd ?? 0;
 
     const result = applyFormatting(text, start, end, action);
     setText(result.newText);
@@ -590,8 +613,8 @@ export function ProjectPage() {
       // Don't handle if modals are open
       if (showHelp || taskToDelete || noteToDelete || showDoneConfirm || showTodayOverview || showGlobalSearch || showGlobalTodo) return;
 
-      // Handle Ctrl+K for global search
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      // Handle Ctrl+G for global search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
         e.preventDefault();
         setShowGlobalSearch(true);
         return;

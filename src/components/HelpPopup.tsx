@@ -62,6 +62,7 @@ const overviewShortcuts: ShortcutCategory[] = [
   {
     title: 'Other',
     shortcuts: [
+      { keys: ['Ctrl', 'G'], description: 'Global search' },
       { keys: ['Ctrl', 'O'], description: 'Today overview' },
       { keys: ['Alt', 'T'], description: 'Global todos' },
       { keys: ['Ctrl', 'Alt', 'C'], description: 'Edit start time' },
@@ -90,6 +91,7 @@ const projectShortcuts: ShortcutCategory[] = [
       { keys: ['Ctrl', 'U/4'], description: 'Underline' },
       { keys: ['Ctrl', '5'], description: 'Strikethrough' },
       { keys: ['Ctrl', '6'], description: 'Code' },
+      { keys: ['Ctrl', 'K'], description: 'Link' },
       { keys: ['Space'], description: 'Duplicate task / Toggle todo' },
       { keys: ['Del'], description: 'Delete item' },
       { keys: ['Ctrl', 'Z'], description: 'Undo delete' },
@@ -108,6 +110,7 @@ const projectShortcuts: ShortcutCategory[] = [
   {
     title: 'Other',
     shortcuts: [
+      { keys: ['Ctrl', 'G'], description: 'Global search' },
       { keys: ['Ctrl', 'O'], description: 'Today overview' },
       { keys: ['Alt', 'T'], description: 'Global todos' },
       { keys: ['Ctrl', 'S'], description: 'Today as TXT' },
