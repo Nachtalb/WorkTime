@@ -1117,6 +1117,19 @@ export function ProjectPage() {
             if (handleMentionKeyDown(e)) {
               return;
             }
+            // Handle Ctrl+Left/Right to switch between task and note modes (only for non-ToDo projects)
+            if (e.ctrlKey && !e.altKey && !e.metaKey && !project?.isTodo) {
+              if (e.key === 'ArrowLeft' && effectiveActiveColumn === 'notes') {
+                e.preventDefault();
+                setActiveColumn('tasks');
+                return;
+              }
+              if (e.key === 'ArrowRight' && effectiveActiveColumn === 'tasks') {
+                e.preventDefault();
+                setActiveColumn('notes');
+                return;
+              }
+            }
             if (e.key === 'Enter') {
               e.preventDefault();
               if (effectiveActiveColumn === 'tasks' && newTaskText.trim()) {
