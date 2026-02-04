@@ -420,6 +420,11 @@ input {
   padding-top: 12px;
 }
 
+.project-card-tags.project-card-note-tags {
+  margin-top: 0;
+  padding-top: 6px;
+}
+
 .tag {
   font-size: 12px;
   padding: 4px 10px;

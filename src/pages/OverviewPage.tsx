@@ -806,12 +806,16 @@ export function OverviewPage() {
                 <span className="tag primary">
                   {formatDuration(getTotalDuration(project.id))}
                 </span>
-                {noteTags.map((tag) => (
-                  <span key={tag.content} className={`tag tag-${tag.type}`} data-tooltip={NOTE_TAG_PATTERNS[tag.type].label}>
-                    {tag.content}
-                  </span>
-                ))}
               </div>
+              {noteTags.length > 0 && (
+                <div className="project-card-tags project-card-note-tags">
+                  {noteTags.map((tag) => (
+                    <span key={tag.content} className={`tag tag-${tag.type}`} data-tooltip={NOTE_TAG_PATTERNS[tag.type].label}>
+                      {tag.content}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
