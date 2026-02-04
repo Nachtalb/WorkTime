@@ -6,7 +6,7 @@ interface TextWithProjectRefsProps {
   onProjectClick?: (projectId: string) => void;
 }
 
-type PartType = 'text' | 'ref';
+type PartType = 'text' | 'ref' | 'bold';
 
 interface Part {
   type: PartType;
@@ -36,6 +36,28 @@ export function detectNoteTagType(content: string): NoteTagType {
     }
   }
   return null;
+}
+
+// Parse text for bold markers (**text**) and return parts
+function parseBoldText(text: string): Array<{ type: 'text' | 'bold'; content: string }> {
+  const parts: Array<{ type: 'text' | 'bold'; content: string }> = [];
+  const boldRegex = /\*\*([^*]+)\*\*/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = boldRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: 'bold', content: match[1] });
+    lastIndex = boldRegex.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push({ type: 'text', content: text.slice(lastIndex) });
+  }
+
+  return parts;
 }
 
 export function TextWithProjectRefs({ text, projects, onProjectClick }: TextWithProjectRefsProps) {
@@ -89,7 +111,20 @@ export function TextWithProjectRefs({ text, projects, onProjectClick }: TextWith
             </span>
           );
         }
-        return <span key={index}>{part.content}</span>;
+        // For text parts, also parse bold markers
+        const boldParts = parseBoldText(part.content);
+        if (boldParts.length === 1 && boldParts[0].type === 'text') {
+          return <span key={index}>{part.content}</span>;
+        }
+        return (
+          <span key={index}>
+            {boldParts.map((bp, bpIndex) =>
+              bp.type === 'bold'
+                ? <strong key={bpIndex}>{bp.content}</strong>
+                : <span key={bpIndex}>{bp.content}</span>
+            )}
+          </span>
+        );
       })}
     </>
   );
