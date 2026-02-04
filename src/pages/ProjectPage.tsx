@@ -430,40 +430,24 @@ export function ProjectPage() {
 
     e.preventDefault();
 
-    const selected = text.substring(start, end);
     const markerLen = marker.length;
+    const textBefore = text.substring(0, start);
+    const textAfter = text.substring(end);
 
-    // Check if selection is already wrapped with this marker (inside the selection)
-    if (selected.startsWith(marker) && selected.endsWith(marker) && selected.length > markerLen * 2) {
-      // Unwrap: remove markers from inside selection
-      const unwrapped = selected.slice(markerLen, -markerLen);
-      const newText = text.substring(0, start) + unwrapped + text.substring(end);
+    // Check if text immediately before selection ends with marker
+    // and text immediately after selection starts with marker → unwrap
+    if (textBefore.endsWith(marker) && textAfter.startsWith(marker)) {
+      const newText = textBefore.slice(0, -markerLen) + text.substring(start, end) + textAfter.slice(markerLen);
       setText(newText);
       setTimeout(() => {
-        input.setSelectionRange(start, start + unwrapped.length);
+        input.setSelectionRange(start - markerLen, end - markerLen);
       }, 0);
       return true;
     }
 
-    // Check if the text around selection has markers (selection is the content)
-    const beforeStart = start - markerLen;
-    const afterEnd = end + markerLen;
-    if (beforeStart >= 0 && afterEnd <= text.length) {
-      const markerBefore = text.substring(beforeStart, start);
-      const markerAfter = text.substring(end, afterEnd);
-      if (markerBefore === marker && markerAfter === marker) {
-        // Unwrap: remove markers from around selection
-        const newText = text.substring(0, beforeStart) + selected + text.substring(afterEnd);
-        setText(newText);
-        setTimeout(() => {
-          input.setSelectionRange(beforeStart, beforeStart + selected.length);
-        }, 0);
-        return true;
-      }
-    }
-
     // Wrap: add markers around selection
-    const newText = text.substring(0, start) + marker + selected + marker + text.substring(end);
+    const selected = text.substring(start, end);
+    const newText = textBefore + marker + selected + marker + textAfter;
     setText(newText);
     setTimeout(() => {
       input.setSelectionRange(start + markerLen, end + markerLen);
