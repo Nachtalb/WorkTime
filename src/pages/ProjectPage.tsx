@@ -1139,24 +1139,31 @@ export function ProjectPage() {
             if (handleMentionKeyDown(e)) {
               return;
             }
-            // Handle Ctrl+B to make selected text bold
-            if (e.ctrlKey && e.key === 'b' && !e.altKey && !e.metaKey) {
-              e.preventDefault();
-              const input = e.currentTarget;
-              const start = input.selectionStart ?? 0;
-              const end = input.selectionEnd ?? 0;
-              if (start !== end) {
-                const before = newInputText.substring(0, start);
-                const selected = newInputText.substring(start, end);
-                const after = newInputText.substring(end);
-                const newText = before + '**' + selected + '**' + after;
-                setNewInputText(newText);
-                // Restore cursor position after the bold markers
-                setTimeout(() => {
-                  input.setSelectionRange(start + 2, end + 2);
-                }, 0);
+            // Handle text formatting shortcuts (Ctrl+B/I/U and Ctrl+2/3/4/5)
+            if (e.ctrlKey && !e.altKey && !e.metaKey) {
+              let marker: string | null = null;
+              if (e.key === 'b' || e.key === '2') marker = '**';      // Bold
+              else if (e.key === 'i' || e.key === '3') marker = '*';  // Italic
+              else if (e.key === 'u' || e.key === '4') marker = '__'; // Underline
+              else if (e.key === '5') marker = '~~';                  // Strikethrough
+
+              if (marker) {
+                e.preventDefault();
+                const input = e.currentTarget;
+                const start = input.selectionStart ?? 0;
+                const end = input.selectionEnd ?? 0;
+                if (start !== end) {
+                  const before = newInputText.substring(0, start);
+                  const selected = newInputText.substring(start, end);
+                  const after = newInputText.substring(end);
+                  const newText = before + marker + selected + marker + after;
+                  setNewInputText(newText);
+                  setTimeout(() => {
+                    input.setSelectionRange(start + marker.length, end + marker.length);
+                  }, 0);
+                }
+                return;
               }
-              return;
             }
             // Handle Ctrl+Left/Right to switch between task and note modes (only for non-ToDo projects)
             if (e.ctrlKey && !e.altKey && !e.metaKey && !project?.isTodo) {
@@ -1327,23 +1334,31 @@ export function ProjectPage() {
                                   if (handleMentionKeyDown(e)) {
                                     return;
                                   }
-                                  // Handle Ctrl+B to make selected text bold
-                                  if (e.ctrlKey && e.key === 'b' && !e.altKey && !e.metaKey) {
-                                    e.preventDefault();
-                                    const input = e.currentTarget;
-                                    const start = input.selectionStart ?? 0;
-                                    const end = input.selectionEnd ?? 0;
-                                    if (start !== end) {
-                                      const before = editingTaskText.substring(0, start);
-                                      const selected = editingTaskText.substring(start, end);
-                                      const after = editingTaskText.substring(end);
-                                      const newText = before + '**' + selected + '**' + after;
-                                      setEditingTaskText(newText);
-                                      setTimeout(() => {
-                                        input.setSelectionRange(start + 2, end + 2);
-                                      }, 0);
+                                  // Handle text formatting shortcuts (Ctrl+B/I/U and Ctrl+2/3/4/5)
+                                  if (e.ctrlKey && !e.altKey && !e.metaKey) {
+                                    let marker: string | null = null;
+                                    if (e.key === 'b' || e.key === '2') marker = '**';
+                                    else if (e.key === 'i' || e.key === '3') marker = '*';
+                                    else if (e.key === 'u' || e.key === '4') marker = '__';
+                                    else if (e.key === '5') marker = '~~';
+
+                                    if (marker) {
+                                      e.preventDefault();
+                                      const input = e.currentTarget;
+                                      const start = input.selectionStart ?? 0;
+                                      const end = input.selectionEnd ?? 0;
+                                      if (start !== end) {
+                                        const before = editingTaskText.substring(0, start);
+                                        const selected = editingTaskText.substring(start, end);
+                                        const after = editingTaskText.substring(end);
+                                        const newText = before + marker + selected + marker + after;
+                                        setEditingTaskText(newText);
+                                        setTimeout(() => {
+                                          input.setSelectionRange(start + marker.length, end + marker.length);
+                                        }, 0);
+                                      }
+                                      return;
                                     }
-                                    return;
                                   }
                                 }}
                                 onBlur={() => {
@@ -1482,23 +1497,31 @@ export function ProjectPage() {
                                   if (handleMentionKeyDown(e)) {
                                     return;
                                   }
-                                  // Handle Ctrl+B to make selected text bold
-                                  if (e.ctrlKey && e.key === 'b' && !e.altKey && !e.metaKey) {
-                                    e.preventDefault();
-                                    const textarea = e.currentTarget;
-                                    const start = textarea.selectionStart ?? 0;
-                                    const end = textarea.selectionEnd ?? 0;
-                                    if (start !== end) {
-                                      const before = editingNoteText.substring(0, start);
-                                      const selected = editingNoteText.substring(start, end);
-                                      const after = editingNoteText.substring(end);
-                                      const newText = before + '**' + selected + '**' + after;
-                                      setEditingNoteText(newText);
-                                      setTimeout(() => {
-                                        textarea.setSelectionRange(start + 2, end + 2);
-                                      }, 0);
+                                  // Handle text formatting shortcuts (Ctrl+B/I/U and Ctrl+2/3/4/5)
+                                  if (e.ctrlKey && !e.altKey && !e.metaKey) {
+                                    let marker: string | null = null;
+                                    if (e.key === 'b' || e.key === '2') marker = '**';
+                                    else if (e.key === 'i' || e.key === '3') marker = '*';
+                                    else if (e.key === 'u' || e.key === '4') marker = '__';
+                                    else if (e.key === '5') marker = '~~';
+
+                                    if (marker) {
+                                      e.preventDefault();
+                                      const textarea = e.currentTarget;
+                                      const start = textarea.selectionStart ?? 0;
+                                      const end = textarea.selectionEnd ?? 0;
+                                      if (start !== end) {
+                                        const before = editingNoteText.substring(0, start);
+                                        const selected = editingNoteText.substring(start, end);
+                                        const after = editingNoteText.substring(end);
+                                        const newText = before + marker + selected + marker + after;
+                                        setEditingNoteText(newText);
+                                        setTimeout(() => {
+                                          textarea.setSelectionRange(start + marker.length, end + marker.length);
+                                        }, 0);
+                                      }
+                                      return;
                                     }
-                                    return;
                                   }
                                 }}
                                 onBlur={() => {

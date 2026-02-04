@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Project } from '../types';
 
 interface TextWithProjectRefsProps {
@@ -38,19 +39,39 @@ export function detectNoteTagType(content: string): NoteTagType {
   return null;
 }
 
-// Parse text for bold markers (**text**) and return parts
-function parseBoldText(text: string): Array<{ type: 'text' | 'bold'; content: string }> {
-  const parts: Array<{ type: 'text' | 'bold'; content: string }> = [];
-  const boldRegex = /\*\*([^*]+)\*\*/g;
+type FormatType = 'text' | 'bold' | 'italic' | 'underline' | 'strikethrough';
+
+interface FormatPart {
+  type: FormatType;
+  content: string;
+}
+
+// Parse text for formatting markers and return parts
+// Order matters: parse longer markers first to avoid conflicts
+function parseFormattedText(text: string): FormatPart[] {
+  // Combined regex that matches all format types
+  // Order: ** (bold), __ (underline), ~~ (strikethrough), * (italic)
+  const formatRegex = /\*\*([^*]+)\*\*|__([^_]+)__|~~([^~]+)~~|\*([^*]+)\*/g;
+  const parts: FormatPart[] = [];
   let lastIndex = 0;
   let match;
 
-  while ((match = boldRegex.exec(text)) !== null) {
+  while ((match = formatRegex.exec(text)) !== null) {
     if (match.index > lastIndex) {
       parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
     }
-    parts.push({ type: 'bold', content: match[1] });
-    lastIndex = boldRegex.lastIndex;
+
+    if (match[1] !== undefined) {
+      parts.push({ type: 'bold', content: match[1] });
+    } else if (match[2] !== undefined) {
+      parts.push({ type: 'underline', content: match[2] });
+    } else if (match[3] !== undefined) {
+      parts.push({ type: 'strikethrough', content: match[3] });
+    } else if (match[4] !== undefined) {
+      parts.push({ type: 'italic', content: match[4] });
+    }
+
+    lastIndex = formatRegex.lastIndex;
   }
 
   if (lastIndex < text.length) {
@@ -58,6 +79,22 @@ function parseBoldText(text: string): Array<{ type: 'text' | 'bold'; content: st
   }
 
   return parts;
+}
+
+// Render a format part with appropriate HTML element
+function renderFormatPart(part: FormatPart, key: number): ReactNode {
+  switch (part.type) {
+    case 'bold':
+      return <strong key={key}>{part.content}</strong>;
+    case 'italic':
+      return <em key={key}>{part.content}</em>;
+    case 'underline':
+      return <u key={key}>{part.content}</u>;
+    case 'strikethrough':
+      return <s key={key}>{part.content}</s>;
+    default:
+      return <span key={key}>{part.content}</span>;
+  }
 }
 
 export function TextWithProjectRefs({ text, projects, onProjectClick }: TextWithProjectRefsProps) {
@@ -111,18 +148,14 @@ export function TextWithProjectRefs({ text, projects, onProjectClick }: TextWith
             </span>
           );
         }
-        // For text parts, also parse bold markers
-        const boldParts = parseBoldText(part.content);
-        if (boldParts.length === 1 && boldParts[0].type === 'text') {
+        // For text parts, also parse formatting markers
+        const formatParts = parseFormattedText(part.content);
+        if (formatParts.length === 1 && formatParts[0].type === 'text') {
           return <span key={index}>{part.content}</span>;
         }
         return (
           <span key={index}>
-            {boldParts.map((bp, bpIndex) =>
-              bp.type === 'bold'
-                ? <strong key={bpIndex}>{bp.content}</strong>
-                : <span key={bpIndex}>{bp.content}</span>
-            )}
+            {formatParts.map((fp, fpIndex) => renderFormatPart(fp, fpIndex))}
           </span>
         );
       })}
