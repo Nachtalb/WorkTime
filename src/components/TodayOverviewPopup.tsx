@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Modal } from './Modal';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Toast, useToast } from './Toast';
@@ -9,8 +9,6 @@ import {
   formatDate,
   getTodayDateString,
   getOverviewTitle,
-  getNextDay,
-  getPreviousDay,
   isDateInFuture,
 } from '../utils/time';
 
@@ -27,6 +25,18 @@ interface TodayOverviewPopupProps {
   onProjectClick?: (projectId: string) => void;
 }
 
+// Get heatmap color intensity (0-1) based on work duration
+// 4h = minimum visible, 10h = maximum intensity
+function getHeatmapIntensity(durationMs: number): number {
+  const hours = durationMs / (1000 * 60 * 60);
+  const minHours = 4;
+  const maxHours = 10;
+
+  if (hours < minHours) return hours / minHours * 0.3; // Very light for < 4h
+  const normalized = (Math.min(hours, maxHours) - minHours) / (maxHours - minHours);
+  return 0.3 + normalized * 0.7; // 0.3 to 1.0 range
+}
+
 export function TodayOverviewPopup({
   isOpen,
   onClose,
@@ -41,6 +51,12 @@ export function TodayOverviewPopup({
 }: TodayOverviewPopupProps) {
   const [selectedDate, setSelectedDate] = useState(getTodayDateString());
   const [datePickerShake, setDatePickerShake] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const today = new Date();
+    return { year: today.getFullYear(), month: today.getMonth() };
+  });
+  const calendarRef = useRef<HTMLDivElement>(null);
 
   const { toasts, showToast, removeToast } = useToast();
 
@@ -48,25 +64,92 @@ export function TodayOverviewPopup({
   useEffect(() => {
     if (isOpen) {
       setSelectedDate(getTodayDateString());
+      const today = new Date();
+      setCalendarMonth({ year: today.getFullYear(), month: today.getMonth() });
     }
   }, [isOpen]);
 
-  // Get all dates that have data
-  const datesWithData = useMemo(() => {
-    const dates = new Set<string>();
+  // Close calendar when clicking outside
+  useEffect(() => {
+    if (!showCalendar) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (calendarRef.current && !calendarRef.current.contains(e.target as Node)) {
+        setShowCalendar(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showCalendar]);
+
+  // Get all dates that have data with their work durations
+  const dateDataMap = useMemo(() => {
+    const map = new Map<string, number>();
+
+    // Calculate work duration from global timers
     for (const timer of globalTimers) {
-      dates.add(timer.date);
+      const duration = (timer.endTime || Date.now()) - timer.startTime;
+      const existing = map.get(timer.date) || 0;
+      map.set(timer.date, existing + duration);
     }
+
+    // Also track dates with tasks (even if no timer)
     for (const task of tasks) {
-      dates.add(formatDate(task.startTime));
+      const dateStr = formatDate(task.startTime);
+      if (!map.has(dateStr)) {
+        map.set(dateStr, 0);
+      }
     }
-    return dates;
+
+    return map;
   }, [globalTimers, tasks]);
+
+  // Get sorted list of dates with data
+  const sortedDatesWithData = useMemo(() => {
+    return Array.from(dateDataMap.keys()).sort();
+  }, [dateDataMap]);
 
   // Check if a date has data
   const hasDataForDate = useCallback((dateString: string) => {
-    return datesWithData.has(dateString);
-  }, [datesWithData]);
+    return dateDataMap.has(dateString);
+  }, [dateDataMap]);
+
+  // Find closest date with data in a direction
+  const findClosestDateWithData = useCallback((fromDate: string, direction: 'prev' | 'next'): string | null => {
+    const sortedDates = sortedDatesWithData;
+    const currentIndex = sortedDates.indexOf(fromDate);
+
+    if (direction === 'prev') {
+      // Find the closest previous date
+      if (currentIndex > 0) {
+        return sortedDates[currentIndex - 1];
+      }
+      // If current date is not in list, find the closest one before it
+      for (let i = sortedDates.length - 1; i >= 0; i--) {
+        if (sortedDates[i] < fromDate) {
+          return sortedDates[i];
+        }
+      }
+    } else {
+      // Find the closest next date
+      const today = getTodayDateString();
+      if (currentIndex >= 0 && currentIndex < sortedDates.length - 1) {
+        const nextDate = sortedDates[currentIndex + 1];
+        if (nextDate <= today) {
+          return nextDate;
+        }
+      }
+      // If current date is not in list, find the closest one after it
+      for (let i = 0; i < sortedDates.length; i++) {
+        if (sortedDates[i] > fromDate && sortedDates[i] <= today) {
+          return sortedDates[i];
+        }
+      }
+    }
+
+    return null;
+  }, [sortedDatesWithData]);
 
   // Filter data for selected date
   const selectedTimers = useMemo(() => {
@@ -83,48 +166,112 @@ export function TodayOverviewPopup({
 
   // Check if navigation is possible
   const canGoNext = useMemo(() => {
-    const nextDate = getNextDay(selectedDate);
-    return !isDateInFuture(nextDate) && hasDataForDate(nextDate);
-  }, [selectedDate, hasDataForDate]);
+    return findClosestDateWithData(selectedDate, 'next') !== null;
+  }, [selectedDate, findClosestDateWithData]);
 
   const canGoPrev = useMemo(() => {
-    const prevDate = getPreviousDay(selectedDate);
-    return hasDataForDate(prevDate);
-  }, [selectedDate, hasDataForDate]);
+    return findClosestDateWithData(selectedDate, 'prev') !== null;
+  }, [selectedDate, findClosestDateWithData]);
 
   // Navigation handlers
   const goToNextDate = useCallback(() => {
-    if (canGoNext) {
-      setSelectedDate(getNextDay(selectedDate));
+    const nextDate = findClosestDateWithData(selectedDate, 'next');
+    if (nextDate) {
+      setSelectedDate(nextDate);
     }
-  }, [selectedDate, canGoNext]);
+  }, [selectedDate, findClosestDateWithData]);
 
   const goToPrevDate = useCallback(() => {
-    if (canGoPrev) {
-      setSelectedDate(getPreviousDay(selectedDate));
+    const prevDate = findClosestDateWithData(selectedDate, 'prev');
+    if (prevDate) {
+      setSelectedDate(prevDate);
     }
-  }, [selectedDate, canGoPrev]);
+  }, [selectedDate, findClosestDateWithData]);
 
-  const handleDatePickerChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = e.target.value;
-    if (!newDate) return;
-
-    if (isDateInFuture(newDate)) {
+  const handleDateSelect = useCallback((dateString: string) => {
+    if (isDateInFuture(dateString)) {
       showToast('Cannot view future dates', 'error');
       setDatePickerShake(true);
       setTimeout(() => setDatePickerShake(false), 500);
       return;
     }
 
-    if (!hasDataForDate(newDate)) {
+    if (!hasDataForDate(dateString)) {
       showToast('No data for this date', 'error');
       setDatePickerShake(true);
       setTimeout(() => setDatePickerShake(false), 500);
       return;
     }
 
-    setSelectedDate(newDate);
+    setSelectedDate(dateString);
+    setShowCalendar(false);
   }, [hasDataForDate, showToast]);
+
+  // Generate calendar days for current month view
+  const calendarDays = useMemo(() => {
+    const { year, month } = calendarMonth;
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDayOfWeek = (firstDay.getDay() + 6) % 7; // Monday = 0
+
+    const days: { date: string; dayNum: number; isCurrentMonth: boolean; isToday: boolean; isFuture: boolean; hasData: boolean; intensity: number }[] = [];
+
+    // Add days from previous month
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = startDayOfWeek - 1; i >= 0; i--) {
+      const day = prevMonthLastDay - i;
+      const date = new Date(year, month - 1, day);
+      const dateStr = formatDate(date.getTime());
+      const duration = dateDataMap.get(dateStr) || 0;
+      days.push({
+        date: dateStr,
+        dayNum: day,
+        isCurrentMonth: false,
+        isToday: dateStr === getTodayDateString(),
+        isFuture: isDateInFuture(dateStr),
+        hasData: hasDataForDate(dateStr),
+        intensity: getHeatmapIntensity(duration),
+      });
+    }
+
+    // Add days of current month
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+      const date = new Date(year, month, day);
+      const dateStr = formatDate(date.getTime());
+      const duration = dateDataMap.get(dateStr) || 0;
+      days.push({
+        date: dateStr,
+        dayNum: day,
+        isCurrentMonth: true,
+        isToday: dateStr === getTodayDateString(),
+        isFuture: isDateInFuture(dateStr),
+        hasData: hasDataForDate(dateStr),
+        intensity: getHeatmapIntensity(duration),
+      });
+    }
+
+    // Add days from next month to fill the grid
+    const remaining = 42 - days.length; // 6 rows * 7 days
+    for (let day = 1; day <= remaining; day++) {
+      const date = new Date(year, month + 1, day);
+      const dateStr = formatDate(date.getTime());
+      const duration = dateDataMap.get(dateStr) || 0;
+      days.push({
+        date: dateStr,
+        dayNum: day,
+        isCurrentMonth: false,
+        isToday: dateStr === getTodayDateString(),
+        isFuture: isDateInFuture(dateStr),
+        hasData: hasDataForDate(dateStr),
+        intensity: getHeatmapIntensity(duration),
+      });
+    }
+
+    return days;
+  }, [calendarMonth, dateDataMap, hasDataForDate]);
+
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
 
   // Session editing state
   const [editingTimerId, setEditingTimerId] = useState<string | null>(null);
@@ -188,7 +335,9 @@ export function TodayOverviewPopup({
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        if (editingTimerId || editingTaskId) {
+        if (showCalendar) {
+          setShowCalendar(false);
+        } else if (editingTimerId || editingTaskId) {
           cancelEditing();
         } else {
           onClose();
@@ -199,7 +348,7 @@ export function TodayOverviewPopup({
     // Use capture phase to intercept before Modal's handler
     document.addEventListener('keydown', handleKeyDown, true);
     return () => document.removeEventListener('keydown', handleKeyDown, true);
-  }, [isOpen, editingTimerId, editingTaskId, cancelEditing, onClose]);
+  }, [isOpen, editingTimerId, editingTaskId, showCalendar, cancelEditing, onClose]);
 
   const saveEditing = useCallback(async () => {
     if (!editingTimerId || !onUpdateTimerTimes) return;
@@ -346,6 +495,12 @@ export function TodayOverviewPopup({
   const title = getOverviewTitle(selectedDate);
   const isToday = selectedDate === getTodayDateString();
 
+  // Format selected date for display
+  const selectedDateFormatted = useMemo(() => {
+    const [year, month, day] = selectedDate.split('-');
+    return `${day}.${month}.${year}`;
+  }, [selectedDate]);
+
   // Custom title component with date navigation
   const titleContent = (
     <div className="overview-title-nav">
@@ -361,13 +516,80 @@ export function TodayOverviewPopup({
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <input
-          type="date"
-          className={`overview-date-picker ${datePickerShake ? 'shake' : ''}`}
-          value={selectedDate}
-          onChange={handleDatePickerChange}
-          max={getTodayDateString()}
-        />
+        <div className="overview-date-picker-container" ref={calendarRef}>
+          <button
+            className={`overview-date-picker-btn ${datePickerShake ? 'shake' : ''}`}
+            onClick={() => setShowCalendar(!showCalendar)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span>{selectedDateFormatted}</span>
+          </button>
+          {showCalendar && (
+            <div className="overview-calendar">
+              <div className="calendar-header">
+                <button
+                  className="calendar-nav-btn"
+                  onClick={() => setCalendarMonth(prev => {
+                    if (prev.month === 0) {
+                      return { year: prev.year - 1, month: 11 };
+                    }
+                    return { ...prev, month: prev.month - 1 };
+                  })}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+                <span className="calendar-month-year">
+                  {monthNames[calendarMonth.month]} {calendarMonth.year}
+                </span>
+                <button
+                  className="calendar-nav-btn"
+                  onClick={() => setCalendarMonth(prev => {
+                    if (prev.month === 11) {
+                      return { year: prev.year + 1, month: 0 };
+                    }
+                    return { ...prev, month: prev.month + 1 };
+                  })}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              </div>
+              <div className="calendar-weekdays">
+                <span>Mo</span>
+                <span>Tu</span>
+                <span>We</span>
+                <span>Th</span>
+                <span>Fr</span>
+                <span>Sa</span>
+                <span>Su</span>
+              </div>
+              <div className="calendar-days">
+                {calendarDays.map((day, i) => (
+                  <button
+                    key={i}
+                    className={`calendar-day ${!day.isCurrentMonth ? 'other-month' : ''} ${day.isToday ? 'today' : ''} ${day.date === selectedDate ? 'selected' : ''} ${day.isFuture ? 'future' : ''} ${!day.hasData && !day.isFuture ? 'no-data' : ''}`}
+                    onClick={() => handleDateSelect(day.date)}
+                    disabled={day.isFuture}
+                    style={day.hasData && !day.isFuture ? {
+                      backgroundColor: `rgba(34, 197, 94, ${day.intensity})`,
+                    } : undefined}
+                    title={day.hasData ? formatDuration(dateDataMap.get(day.date) || 0) : undefined}
+                  >
+                    {day.dayNum}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
         <button
           className="overview-nav-btn"
           onClick={goToNextDate}
