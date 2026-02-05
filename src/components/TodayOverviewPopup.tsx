@@ -636,7 +636,7 @@ export function TodayOverviewPopup({
                 const endTime = timer.endTime || Date.now();
                 const duration = endTime - timer.startTime;
                 const isEditing = editingTimerId === timer.id;
-                const canEdit = timer.endTime && onUpdateTimerTimes && isToday;
+                const canEdit = timer.endTime && onUpdateTimerTimes;
 
                 if (isEditing) {
                   return (
@@ -738,7 +738,7 @@ export function TodayOverviewPopup({
                 const duration = task.duration || (endTime - task.startTime);
                 const isEditing = editingTaskId === task.id;
                 const isActive = task.id === activeTaskId;
-                const canEdit = onUpdateTaskTimes !== undefined && isToday;
+                const canEdit = onUpdateTaskTimes !== undefined;
 
                 if (isEditing) {
                   return (
@@ -804,7 +804,7 @@ export function TodayOverviewPopup({
                             </svg>
                           </button>
                         )}
-                        {onDeleteTask && !isActive && isToday && (
+                        {onDeleteTask && !isActive && (
                           <button
                             className="task-delete-btn"
                             onClick={() => setTaskToDelete(task)}
