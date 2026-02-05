@@ -1396,19 +1396,25 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  width: 24px;
+  height: 24px;
   border: none;
-  background: var(--color-danger);
-  color: white;
+  background: transparent;
+  color: var(--color-text-tertiary);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background var(--transition-fast), transform var(--transition-fast);
-  flex-shrink: 0;
+  transition: all var(--transition-fast);
+  margin-left: auto;
+  opacity: 0;
+}
+
+.session-item:hover .session-stop-btn {
+  opacity: 1;
 }
 
 .session-stop-btn:hover {
-  background: #dc2626;
-  transform: scale(1.05);
+  background: var(--color-danger-light);
+  color: var(--color-danger);
 }
 
 .session-time {
