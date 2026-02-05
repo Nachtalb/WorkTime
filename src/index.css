@@ -1286,20 +1286,9 @@ input {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 0;
+  padding: 8px 4px 8px 0;
+  margin-right: -4px;
   border-bottom: 1px solid var(--color-border);
-}
-
-.session-item.editable {
-  cursor: pointer;
-  padding: 8px 4px;
-  margin: 0 -4px;
-  border-radius: var(--radius-sm);
-  transition: background var(--transition-fast);
-}
-
-.session-item.editable:hover {
-  background: var(--color-bg-hover);
 }
 
 .session-item.editing {
@@ -1375,46 +1364,29 @@ input {
   padding: 4px 0;
 }
 
-.session-edit-icon {
+.session-item.ongoing {
+  border-left: 3px solid var(--color-active);
+  padding-left: 10px;
+  margin-left: -10px;
+  background: var(--color-active-bg);
+  border-radius: var(--radius-sm);
+}
+
+.session-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
   margin-left: auto;
-  color: var(--color-text-tertiary);
+  min-width: 28px; /* Fixed width for 1 button to ensure alignment */
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
 
-.session-item.editable:hover .session-edit-icon {
+.session-item:hover .session-actions,
+.session-item:focus-within .session-actions,
+.session-actions:focus-within {
   opacity: 1;
-}
-
-.session-item.ongoing {
-  border-left: 3px solid var(--color-active);
-  padding-left: 9px;
-  background: var(--color-active-bg);
-}
-
-.session-stop-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  color: var(--color-text-tertiary);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  margin-left: auto;
-  opacity: 0;
-}
-
-.session-item:hover .session-stop-btn {
-  opacity: 1;
-}
-
-.session-stop-btn:hover {
-  background: var(--color-danger-light);
-  color: var(--color-danger);
 }
 
 .session-time {
@@ -1482,8 +1454,11 @@ input {
 .task-item-overview.active {
   border-left: 3px solid var(--color-active);
   padding-left: 10px;
+  padding-right: 4px;
   margin-left: -10px;
+  margin-right: -4px;
   background: var(--color-active-bg);
+  border-radius: var(--radius-sm);
 }
 
 .task-item-header {
@@ -1503,13 +1478,17 @@ input {
 .task-actions-overview {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 4px;
   margin-left: auto;
+  min-width: 52px; /* Fixed width for 2 buttons (24px × 2 + 4px gap) to ensure alignment */
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
 
-.task-item-overview:hover .task-actions-overview {
+.task-item-overview:hover .task-actions-overview,
+.task-item-overview:focus-within .task-actions-overview,
+.task-actions-overview:focus-within {
   opacity: 1;
 }
 
