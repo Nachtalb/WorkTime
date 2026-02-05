@@ -473,6 +473,28 @@ input {
   gap: 12px;
 }
 
+.title-edit-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  opacity: 0;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.title-edit-button:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+.project-title:hover .title-edit-button {
+  opacity: 1;
+}
+
 .project-title.error-shake {
   animation: shake 0.4s ease-in-out;
   color: var(--color-danger);
