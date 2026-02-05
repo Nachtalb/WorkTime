@@ -641,6 +641,12 @@ export function TodayOverviewPopup({
                 const canEdit = timer.endTime && onUpdateTimerTimes;
 
                 if (isEditing) {
+                  const handleKeyDown = (e: React.KeyboardEvent) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      saveEditing();
+                    }
+                  };
                   return (
                     <div key={timer.id} className="session-item editing">
                       <div className="session-edit-row">
@@ -648,6 +654,7 @@ export function TodayOverviewPopup({
                           type="time"
                           value={editStartTime}
                           onChange={(e) => { setEditError(null); setEditStartTime(e.target.value); }}
+                          onKeyDown={handleKeyDown}
                           className="session-time-input"
                         />
                         <span className="session-time-separator">-</span>
@@ -655,6 +662,7 @@ export function TodayOverviewPopup({
                           type="time"
                           value={editEndTime}
                           onChange={(e) => { setEditError(null); setEditEndTime(e.target.value); }}
+                          onKeyDown={handleKeyDown}
                           className="session-time-input"
                         />
                         <button className="session-edit-btn save" onClick={saveEditing} title="Save">
@@ -697,7 +705,7 @@ export function TodayOverviewPopup({
                       )}
                       {!timer.endTime && onForceStopTimer && (
                         <button
-                          className="task-edit-time-btn"
+                          className="task-delete-btn"
                           onClick={() => onForceStopTimer(timer.id)}
                           title="Force stop this session"
                         >
@@ -758,6 +766,12 @@ export function TodayOverviewPopup({
                 const canEdit = onUpdateTaskTimes !== undefined;
 
                 if (isEditing) {
+                  const handleKeyDown = (e: React.KeyboardEvent) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      saveTaskEditing();
+                    }
+                  };
                   return (
                     <div key={task.id} className="session-item editing">
                       <div className="session-edit-row">
@@ -765,6 +779,7 @@ export function TodayOverviewPopup({
                           type="time"
                           value={taskEditStartTime}
                           onChange={(e) => { setTaskEditError(null); setTaskEditStartTime(e.target.value); }}
+                          onKeyDown={handleKeyDown}
                           className="session-time-input"
                         />
                         <span className="session-time-separator">-</span>
@@ -772,6 +787,7 @@ export function TodayOverviewPopup({
                           type="time"
                           value={taskEditEndTime}
                           onChange={(e) => { setTaskEditError(null); setTaskEditEndTime(e.target.value); }}
+                          onKeyDown={handleKeyDown}
                           className="session-time-input"
                           placeholder={isActive ? 'ongoing' : undefined}
                           disabled={isActive}

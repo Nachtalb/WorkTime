@@ -7,7 +7,7 @@ import { GlobalSearchPopup } from '../components/GlobalSearchPopup';
 import { GlobalTodoPopup } from '../components/GlobalTodoPopup';
 
 export function LandingPage() {
-  const { startGlobalTimer, goToOverview, goToOverviewBrowse, goToProjectBrowse, globalTimers, tasks, notes, projects, activeTaskId, updateGlobalTimerTimes, updateTaskTimes, deleteTask, getTodoProject, createNote, toggleNoteCompleted, updateNote, deleteNote } = useApp();
+  const { startGlobalTimer, goToOverview, goToOverviewBrowse, goToProjectBrowse, globalTimers, tasks, notes, projects, activeTaskId, updateGlobalTimerTimes, updateTaskTimes, deleteTask, forceStopTimer, getTodoProject, createNote, toggleNoteCompleted, updateNote, deleteNote } = useApp();
   const [time, setTime] = useState(getCurrentTime());
   const [date, setDate] = useState(getCurrentDate());
   const [showHelp, setShowHelp] = useState(false);
@@ -110,6 +110,7 @@ export function LandingPage() {
         onUpdateTimerTimes={updateGlobalTimerTimes}
         onUpdateTaskTimes={updateTaskTimes}
         onDeleteTask={deleteTask}
+        onForceStopTimer={forceStopTimer}
         onProjectClick={goToProjectBrowse}
       />
 

@@ -155,6 +155,7 @@ export function ProjectPage() {
     globalTimers,
     updateGlobalTimerTimes,
     updateTaskTimes,
+    forceStopTimer,
     getTodoProject,
     getPreviousProject,
   } = useApp();
@@ -1702,6 +1703,7 @@ export function ProjectPage() {
         onUpdateTimerTimes={updateGlobalTimerTimes}
         onUpdateTaskTimes={updateTaskTimes}
         onDeleteTask={deleteTask}
+        onForceStopTimer={forceStopTimer}
         onProjectClick={goToProject}
       />
 
