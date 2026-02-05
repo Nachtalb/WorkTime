@@ -1,0 +1,144 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useApp } from '../hooks/AppContext';
+import { getCurrentTime, getCurrentDate } from '../utils/time';
+import { HelpPopup } from '../components/HelpPopup';
+import { TodayOverviewPopup } from '../components/TodayOverviewPopup';
+import { GlobalSearchPopup } from '../components/GlobalSearchPopup';
+import { GlobalTodoPopup } from '../components/GlobalTodoPopup';
+
+export function LandingPage() {
+  const { startGlobalTimer, goToOverview, goToOverviewBrowse, goToProjectBrowse, globalTimers, tasks, notes, projects, activeTaskId, updateGlobalTimerTimes, updateTaskTimes, deleteTask, getTodoProject, createNote, toggleNoteCompleted, updateNote, deleteNote } = useApp();
+  const [time, setTime] = useState(getCurrentTime());
+  const [date, setDate] = useState(getCurrentDate());
+  const [showHelp, setShowHelp] = useState(false);
+  const [showTodayOverview, setShowTodayOverview] = useState(false);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [showGlobalTodo, setShowGlobalTodo] = useState(false);
+
+  // Update time every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTime(getCurrentTime());
+      setDate(getCurrentDate());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleStart = useCallback(async () => {
+    await startGlobalTimer();
+    goToOverview();
+  }, [startGlobalTimer, goToOverview]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle if a modal is open
+      if (showHelp || showTodayOverview || showGlobalSearch || showGlobalTodo) return;
+
+      // Handle Ctrl+G for global search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+        return;
+      }
+
+      // Handle / for global search (when not in an input)
+      if (e.key === '/' && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+        return;
+      }
+
+      // Handle Ctrl+O for today overview
+      if (e.ctrlKey && e.key === 'o') {
+        e.preventDefault();
+        setShowTodayOverview(true);
+        return;
+      }
+
+      // Handle Alt+T for global todo popup
+      if (e.altKey && e.key === 't') {
+        e.preventDefault();
+        setShowGlobalTodo(true);
+        return;
+      }
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleStart();
+      } else if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        goToOverviewBrowse();
+      } else if (e.key === '?') {
+        e.preventDefault();
+        setShowHelp(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleStart, goToOverviewBrowse, showHelp, showTodayOverview, showGlobalSearch, showGlobalTodo]);
+
+  return (
+    <div className="page landing-page">
+      <div className="landing-datetime">
+        <div className="landing-time">{time}</div>
+        <div className="landing-date">{date}</div>
+      </div>
+
+      <button className="start-button" onClick={handleStart}>
+        START
+      </button>
+
+      <button className="browse-link" onClick={goToOverviewBrowse}>
+        or just browse
+      </button>
+
+      <p className="landing-hint">
+        Press <kbd>Enter</kbd> to start &middot; <kbd>B</kbd> to browse &middot; <kbd>/</kbd> search &middot; <kbd>?</kbd> help
+      </p>
+
+      <HelpPopup isOpen={showHelp} onClose={() => setShowHelp(false)} currentPage="landing" />
+
+      <TodayOverviewPopup
+        isOpen={showTodayOverview}
+        onClose={() => setShowTodayOverview(false)}
+        globalTimers={globalTimers}
+        tasks={tasks}
+        projects={projects}
+        activeTaskId={activeTaskId}
+        onUpdateTimerTimes={updateGlobalTimerTimes}
+        onUpdateTaskTimes={updateTaskTimes}
+        onDeleteTask={deleteTask}
+        onProjectClick={goToProjectBrowse}
+      />
+
+      <GlobalSearchPopup
+        isOpen={showGlobalSearch}
+        onClose={() => setShowGlobalSearch(false)}
+        projects={projects}
+        notes={notes}
+        onSelectProject={goToProjectBrowse}
+      />
+
+      <GlobalTodoPopup
+        isOpen={showGlobalTodo}
+        onClose={() => setShowGlobalTodo(false)}
+        todos={notes.filter(n => n.projectId === getTodoProject()?.id)}
+        projects={projects}
+        onCreateTodo={(content) => {
+          const todoProject = getTodoProject();
+          if (!todoProject) return Promise.reject('No todo project');
+          return createNote(todoProject.id, content);
+        }}
+        onToggleTodo={toggleNoteCompleted}
+        onUpdateTodo={updateNote}
+        onDeleteTodo={deleteNote}
+        onProjectClick={(projectId) => {
+          setShowGlobalTodo(false);
+          goToProjectBrowse(projectId);
+        }}
+      />
+    </div>
+  );
+}
