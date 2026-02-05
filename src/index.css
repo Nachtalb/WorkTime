@@ -1383,7 +1383,9 @@ input {
   transition: opacity var(--transition-fast);
 }
 
-.session-item:hover .session-actions {
+.session-item:hover .session-actions,
+.session-item:focus-within .session-actions,
+.session-actions:focus-within {
   opacity: 1;
 }
 
@@ -1484,7 +1486,9 @@ input {
   transition: opacity var(--transition-fast);
 }
 
-.task-item-overview:hover .task-actions-overview {
+.task-item-overview:hover .task-actions-overview,
+.task-item-overview:focus-within .task-actions-overview,
+.task-actions-overview:focus-within {
   opacity: 1;
 }
 
