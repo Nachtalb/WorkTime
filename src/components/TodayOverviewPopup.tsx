@@ -676,36 +676,37 @@ export function TodayOverviewPopup({
                 return (
                   <div
                     key={timer.id}
-                    className={`session-item ${canEdit ? 'editable' : ''} ${!timer.endTime ? 'ongoing' : ''}`}
-                    onClick={() => canEdit && startEditing(timer)}
-                    title={canEdit ? 'Click to edit times' : undefined}
+                    className={`session-item ${!timer.endTime ? 'ongoing' : ''}`}
                   >
                     <span className="session-time">
                       {formatTime(timer.startTime)} - {timer.endTime ? formatTime(timer.endTime) : 'ongoing'}
                     </span>
                     <span className="session-duration">({formatDuration(duration)})</span>
-                    {canEdit && (
-                      <span className="session-edit-icon">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                      </span>
-                    )}
-                    {!timer.endTime && onForceStopTimer && (
-                      <button
-                        className="session-stop-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onForceStopTimer(timer.id);
-                        }}
-                        title="Force stop this session"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="6" y="6" width="12" height="12" rx="2"/>
-                        </svg>
-                      </button>
-                    )}
+                    <div className="session-actions">
+                      {canEdit && (
+                        <button
+                          className="task-edit-time-btn"
+                          onClick={() => startEditing(timer)}
+                          title="Edit times"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </button>
+                      )}
+                      {!timer.endTime && onForceStopTimer && (
+                        <button
+                          className="task-edit-time-btn"
+                          onClick={() => onForceStopTimer(timer.id)}
+                          title="Force stop this session"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="6" y="6" width="12" height="12" rx="2"/>
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })
