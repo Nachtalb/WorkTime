@@ -1389,7 +1389,11 @@ input {
 .session-item.ongoing {
   border-left: 3px solid var(--color-active);
   padding-left: 9px;
+  padding-right: 4px;
+  margin-left: -4px;
+  margin-right: -4px;
   background: var(--color-active-bg);
+  border-radius: var(--radius-sm);
 }
 
 .session-stop-btn {
@@ -1482,8 +1486,11 @@ input {
 .task-item-overview.active {
   border-left: 3px solid var(--color-active);
   padding-left: 10px;
+  padding-right: 4px;
   margin-left: -10px;
+  margin-right: -4px;
   background: var(--color-active-bg);
+  border-radius: var(--radius-sm);
 }
 
 .task-item-header {
@@ -1503,8 +1510,10 @@ input {
 .task-actions-overview {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 4px;
   margin-left: auto;
+  min-width: 52px; /* Fixed width for 2 buttons (24px × 2 + 4px gap) to ensure alignment */
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
