@@ -27,12 +27,11 @@ const overviewShortcuts: ShortcutCategory[] = [
   {
     title: 'Navigation',
     shortcuts: [
-      { keys: ['Esc'], description: 'Back to landing' },
       { keys: ['↑/↓'], description: 'Navigate rows' },
       { keys: ['←/→'], description: 'Navigate columns' },
       { keys: ['Enter'], description: 'Open project' },
       { keys: ['Backspace'], description: 'Previous project' },
-      { keys: ['1-9'], description: 'Filter by number' },
+      { keys: ['Esc'], description: 'Back to landing' },
     ],
   },
   {
@@ -40,14 +39,30 @@ const overviewShortcuts: ShortcutCategory[] = [
     shortcuts: [
       { keys: ['/','f'], description: 'Focus search' },
       { keys: ['n'], description: 'New project' },
-      { keys: ['o'], description: 'Open "Other"' },
-      { keys: ['t'], description: 'Open "ToDo"' },
-      { keys: ['i'], description: 'Open "Ideas"' },
+      { keys: ['o'], description: 'Other project' },
+      { keys: ['t'], description: 'ToDo project' },
+      { keys: ['i'], description: 'Ideas project' },
+      { keys: ['Del'], description: 'Delete project' },
+      { keys: ['Ctrl', '↑/↓'], description: 'Change priority' },
+    ],
+  },
+  {
+    title: 'View',
+    shortcuts: [
       { keys: ['h'], description: 'Hide/show done' },
       { keys: ['s'], description: 'Cycle sort' },
       { keys: ['a'], description: 'Toggle asc/desc' },
-      { keys: ['Del'], description: 'Delete project' },
-      { keys: ['Ctrl', '↑/↓'], description: 'Project priority' },
+      { keys: ['1-9'], description: 'Filter by number' },
+    ],
+  },
+  {
+    title: 'Global',
+    shortcuts: [
+      { keys: ['Ctrl', 'G'], description: 'Search' },
+      { keys: ['Ctrl', 'O'], description: 'Today overview' },
+      { keys: ['Alt', 'T'], description: 'Todos' },
+      { keys: ['Ctrl', 'Alt', 'C'], description: 'Edit start time' },
+      { keys: ['?'], description: 'Help' },
     ],
   },
   {
@@ -59,65 +74,65 @@ const overviewShortcuts: ShortcutCategory[] = [
       { keys: ['Ctrl', 'Alt', 'I'], description: 'Import DB' },
     ],
   },
-  {
-    title: 'Other',
-    shortcuts: [
-      { keys: ['Ctrl', 'G'], description: 'Global search' },
-      { keys: ['Ctrl', 'O'], description: 'Today overview' },
-      { keys: ['Alt', 'T'], description: 'Global todos' },
-      { keys: ['Ctrl', 'Alt', 'C'], description: 'Edit start time' },
-      { keys: ['?'], description: 'Show help' },
-    ],
-  },
 ];
 
 const projectShortcuts: ShortcutCategory[] = [
   {
     title: 'Navigation',
     shortcuts: [
-      { keys: ['Esc'], description: 'Back / Cancel' },
       { keys: ['↑/↓'], description: 'Navigate items' },
       { keys: ['←/→', 'l/r'], description: 'Switch columns' },
       { keys: ['Enter'], description: 'Edit selected' },
       { keys: ['Backspace'], description: 'Previous project' },
+      { keys: ['Esc'], description: 'Back / Cancel' },
     ],
   },
   {
-    title: 'Tasks & Notes',
+    title: 'Formatting',
     shortcuts: [
-      { keys: ['Ctrl', '←/→'], description: 'Switch task/note mode' },
       { keys: ['Ctrl', 'B/2'], description: 'Bold' },
       { keys: ['Ctrl', 'I/3'], description: 'Italic' },
       { keys: ['Ctrl', 'U/4'], description: 'Underline' },
       { keys: ['Ctrl', '5'], description: 'Strikethrough' },
       { keys: ['Ctrl', '6'], description: 'Code' },
       { keys: ['Ctrl', 'K'], description: 'Link' },
-      { keys: ['Space'], description: 'Duplicate task / Toggle todo' },
+    ],
+  },
+  {
+    title: 'Items',
+    shortcuts: [
+      { keys: ['Ctrl', '←/→'], description: 'Task/note mode' },
+      { keys: ['Space'], description: 'Duplicate / Toggle' },
       { keys: ['Del'], description: 'Delete item' },
       { keys: ['Ctrl', 'Z'], description: 'Undo delete' },
-      { keys: ['Ctrl', '↑/↓'], description: 'Project priority' },
     ],
   },
   {
     title: 'Project',
     shortcuts: [
-      { keys: ['F2'], description: 'Rename project' },
+      { keys: ['F2'], description: 'Rename' },
       { keys: ['F3'], description: 'Edit subtitle' },
-      { keys: ['Ctrl', 'D'], description: 'Mark as done' },
+      { keys: ['Ctrl', 'D'], description: 'Mark done' },
       { keys: ['Ctrl', 'H'], description: 'Toggle on hold' },
+      { keys: ['Ctrl', '↑/↓'], description: 'Change priority' },
     ],
   },
   {
-    title: 'Other',
+    title: 'Global',
     shortcuts: [
-      { keys: ['Ctrl', 'G'], description: 'Global search' },
+      { keys: ['Ctrl', 'G'], description: 'Search' },
       { keys: ['Ctrl', 'O'], description: 'Today overview' },
-      { keys: ['Alt', 'T'], description: 'Global todos' },
-      { keys: ['Ctrl', 'S'], description: 'Today as TXT' },
-      { keys: ['Ctrl', 'E'], description: 'Today as CSV' },
-      { keys: ['Ctrl', 'Alt', 'S'], description: 'Full as TXT' },
-      { keys: ['Ctrl', 'Alt', 'E'], description: 'Full as CSV' },
-      { keys: ['?'], description: 'Show help' },
+      { keys: ['Alt', 'T'], description: 'Todos' },
+      { keys: ['?'], description: 'Help' },
+    ],
+  },
+  {
+    title: 'Export',
+    shortcuts: [
+      { keys: ['Ctrl', 'S'], description: 'Today TXT' },
+      { keys: ['Ctrl', 'E'], description: 'Today CSV' },
+      { keys: ['Ctrl', 'Alt', 'S'], description: 'Full TXT' },
+      { keys: ['Ctrl', 'Alt', 'E'], description: 'Full CSV' },
     ],
   },
 ];

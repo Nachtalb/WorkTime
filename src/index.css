@@ -998,8 +998,8 @@ input {
 /* Help Popup */
 .shortcuts-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px 24px;
 }
 
 .shortcut-category {
@@ -1007,12 +1007,12 @@ input {
 }
 
 .shortcut-category-title {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--color-primary);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   padding-bottom: 4px;
   border-bottom: 1px solid var(--color-border);
 }
@@ -1020,16 +1020,16 @@ input {
 .shortcuts-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .shortcut-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-  font-size: 13px;
+  gap: 6px;
+  padding: 2px 0;
+  font-size: 12px;
 }
 
 .shortcut-desc {
@@ -1049,10 +1049,10 @@ input {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  padding: 2px 6px;
+  padding: 1px 5px;
   font-family: inherit;
-  font-size: 11px;
-  min-width: 20px;
+  font-size: 10px;
+  min-width: 18px;
   text-align: center;
 }
 
@@ -2217,6 +2217,13 @@ input {
 /* Mobile floating sort controls - hidden on desktop */
 .sort-controls-mobile {
   display: none;
+}
+
+/* Tablet Responsive Styles */
+@media (max-width: 900px) {
+  .shortcuts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* Mobile Responsive Styles */
