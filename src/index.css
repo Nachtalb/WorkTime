@@ -1387,23 +1387,23 @@ input {
 }
 
 .session-item.ongoing {
-  border-left: 3px solid var(--color-warning);
+  border-left: 3px solid var(--color-active);
   padding-left: 9px;
-  background: rgba(245, 158, 11, 0.1);
+  background: var(--color-active-bg);
 }
 
 .session-stop-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  padding: 6px;
   border: none;
   background: var(--color-danger);
   color: white;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background var(--transition-fast), transform var(--transition-fast);
-  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .session-stop-btn:hover {
