@@ -28,6 +28,7 @@ export interface UseAppStateReturn {
   // Global timer
   startGlobalTimer: () => Promise<void>;
   stopGlobalTimer: () => Promise<void>;
+  forceStopTimer: (timerId: string) => Promise<void>;
   updateGlobalTimerStartTime: (timerId: string, newStartTime: number) => Promise<void>;
   updateGlobalTimerTimes: (timerId: string, newStartTime: number, newEndTime: number) => Promise<void>;
 
@@ -364,6 +365,28 @@ export function useAppState(): UseAppStateReturn {
     setGlobalTimerActive(false);
     await saveState({ globalTimerActive: false });
   }, [globalTimers, saveState]);
+
+  const forceStopTimer = useCallback(async (timerId: string) => {
+    const timer = globalTimers.find(t => t.id === timerId);
+    if (!timer || timer.endTime) return; // Only stop ongoing timers
+
+    // Calculate end time: end of that day (23:59:59) or now if it's today
+    const timerDate = new Date(timer.startTime);
+    const today = getTodayDateString();
+    let endTime: number;
+
+    if (timer.date === today) {
+      endTime = Date.now();
+    } else {
+      // End at 23:59:59 of that day
+      timerDate.setHours(23, 59, 59, 999);
+      endTime = timerDate.getTime();
+    }
+
+    const updatedTimer = { ...timer, endTime };
+    await db.saveGlobalTimer(updatedTimer);
+    setGlobalTimers(prev => prev.map(t => t.id === timerId ? updatedTimer : t));
+  }, [globalTimers]);
 
   const updateGlobalTimerStartTime = useCallback(async (timerId: string, newStartTime: number) => {
     const timer = globalTimers.find(t => t.id === timerId);
@@ -947,6 +970,7 @@ export function useAppState(): UseAppStateReturn {
     exitBrowseMode,
     startGlobalTimer,
     stopGlobalTimer,
+    forceStopTimer,
     updateGlobalTimerStartTime,
     updateGlobalTimerTimes,
     createProject,

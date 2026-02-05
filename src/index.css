@@ -1386,6 +1386,31 @@ input {
   opacity: 1;
 }
 
+.session-item.ongoing {
+  border-left: 3px solid var(--color-warning);
+  padding-left: 9px;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.session-stop-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  background: var(--color-danger);
+  color: white;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+  margin-left: auto;
+}
+
+.session-stop-btn:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
 .session-time {
   font-weight: 500;
 }

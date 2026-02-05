@@ -51,6 +51,7 @@ export function OverviewPage() {
     importFullDb,
     updateGlobalTimerStartTime,
     updateGlobalTimerTimes,
+    forceStopTimer,
     updateTaskTimes,
     deleteTask,
     updateProject,
@@ -856,6 +857,7 @@ export function OverviewPage() {
         onUpdateTimerTimes={updateGlobalTimerTimes}
         onUpdateTaskTimes={updateTaskTimes}
         onDeleteTask={deleteTask}
+        onForceStopTimer={forceStopTimer}
         onProjectClick={goToProject}
       />
 

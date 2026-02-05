@@ -22,6 +22,7 @@ interface TodayOverviewPopupProps {
   onUpdateTimerTimes?: (timerId: string, newStartTime: number, newEndTime: number) => Promise<void>;
   onUpdateTaskTimes?: (taskId: string, newStartTime: number, newEndTime?: number) => Promise<void>;
   onDeleteTask?: (taskId: string) => Promise<void>;
+  onForceStopTimer?: (timerId: string) => Promise<void>;
   onProjectClick?: (projectId: string) => void;
 }
 
@@ -47,6 +48,7 @@ export function TodayOverviewPopup({
   onUpdateTimerTimes,
   onUpdateTaskTimes,
   onDeleteTask,
+  onForceStopTimer,
   onProjectClick,
 }: TodayOverviewPopupProps) {
   const [selectedDate, setSelectedDate] = useState(getTodayDateString());
@@ -674,7 +676,7 @@ export function TodayOverviewPopup({
                 return (
                   <div
                     key={timer.id}
-                    className={`session-item ${canEdit ? 'editable' : ''}`}
+                    className={`session-item ${canEdit ? 'editable' : ''} ${!timer.endTime ? 'ongoing' : ''}`}
                     onClick={() => canEdit && startEditing(timer)}
                     title={canEdit ? 'Click to edit times' : undefined}
                   >
@@ -689,6 +691,20 @@ export function TodayOverviewPopup({
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                       </span>
+                    )}
+                    {!timer.endTime && onForceStopTimer && (
+                      <button
+                        className="session-stop-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onForceStopTimer(timer.id);
+                        }}
+                        title="Force stop this session"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="6" y="6" width="12" height="12" rx="2"/>
+                        </svg>
+                      </button>
                     )}
                   </div>
                 );
